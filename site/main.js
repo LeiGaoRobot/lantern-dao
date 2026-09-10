@@ -1275,7 +1275,7 @@ function nearShrine() { if (!S.shrines) return null; for (const k in S.shrines) 
 function nearWellVein() { return Math.hypot(P.x, P.z) < 3.8 && !!S.shrines && Object.values(S.shrines).some((s) => s.state === 'done') && !S.shrineActive; }
 function travelVein(from) {
   const dests = Object.values(S.shrines).filter((s) => s.state === 'done' && s !== from).map((s) => ({ x: s.x + 2.4, z: s.z + 2.0 }));
-  if (from) dests.push({ x: 2.5, z: 3.5 });   // the market well is always on the vein (unless we are leaving from it)
+  if (from) dests.push({ x: 2.2, z: 2.6 });   // the market well is always on the vein (unless we are leaving from it)
   S.tpIdx = ((S.tpIdx || 0) + 1) % dests.length;
   const d = dests[S.tpIdx];
   spawnRing(P.x, P.z, 3, 0x8ff0dc, 0.6, 0.12); burstParticles(P.x, 0.8, P.z, 40, [0.55, 0.95, 0.85], 5, 0.4, 0.8, -2);
@@ -1560,7 +1560,7 @@ function gainXp(n) {
   P.xp += n * (1 + 0.1 * P.forge.charm);
   while (P.xp >= P.xpNext && !S.modal && S.phase === 'run') {
     P.xp -= P.xpNext; P.level++;
-    P.xpNext = Math.round(12 + (P.level - 1) * 7 + Math.pow(P.level - 1, 1.6) * 1.4);
+    P.xpNext = Math.round(12 + (P.level - 1) * 7 + Math.pow(P.level - 1, 1.5) * 1.4);   // eased from ^1.6 so Golden Core (13) lands before the tribulation for a steady human run
     openLevelUp();
     break;   // one modal at a time; leftover xp is kept
   }
