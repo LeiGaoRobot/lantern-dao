@@ -295,7 +295,7 @@ const ZH = {
   'Dawn breaks over the wildwood.': '劫云散去,道基已成。', 'The light went out.': '灯灭了。',
   'Ten minutes, and the valley is still here. Keep going — it only gets wilder.': '十分钟过去,天劫已渡。继续吧 —— 问道无尽,只会更凶险。',
   'You kept the light for': '你守住灵灯', 'Go endless  →': '问道无尽  →', 'Try again': '再来一局', 'Back to title': '返回',
-  'Omens': '征兆', 'Dangkang': '当康', 'Time survived': '守灯时长', 'Defeated': '斩妖', 'Elites': '精英', 'Damage dealt': '造成伤害', 'Forge shards': '丹粟',
+  'Omens': '征兆', 'Dangkang': '当康', 'dangkang caught': '捕获当康', 'stones to the sea': '衔石入海', 'Time survived': '守灯时长', 'Defeated': '斩妖', 'Elites': '精英', 'Damage dealt': '造成伤害', 'Forge shards': '丹粟',
   'Rested': '调息完毕', 'Unlocked': '机缘', 'Shrines lit': '点亮法阵', ' shrines': ' 座法阵', 'dawns': '次过山',
   'Hold the shrine for 45 seconds.': '守住法阵 45 秒。', 'THE SHRINE GUTTERS OUT  ·  You strayed too far.': '法阵黯淡  ·  你走得太远。', 'WARD GAINED': '习得护体功法', 'SHRINE': '灵脉法阵', '· too far!': '· 太远了!',
   'Wolfsbane': '天狗·御凶', 'Wisps no longer hunt in packs and hit for half; ill omens return half as often.': '鬿雀不再成群,伤害减半;凶兆重现间隔 +50%。', 'Stonewatch': '猼訑·不畏', 'Your attacks shatter spitter bolts; the rest sting 30% less; elites hit 15% softer.': '你的攻击能击碎毕方火弹,余下伤害 −30%;精英伤害 −15%。',
@@ -467,6 +467,8 @@ const GUIDE = [
   { key: 'attack', text: 'Your sword flies on its own. Keep demons in front of you.', zh: '飞剑会自己出鞘。把妖邪放在身前。', done: () => S.stats.kills >= 3 },
   { key: 'ember', text: 'Cyan langgan jade are qi. Walk over them to break through.', zh: '青色琅玕是灵气,走过去拾取突破。', done: () => (P.xpTotal || 0) >= 5 },
   { key: 'forge', text: 'The refinery in the market reworks your artefacts. Press F beside it.', zh: '坊市里的炼器坊能重炼法宝,走到旁边按 F。', touch: 'The forge in the village reworks your weapons. Tap Forge beside it.', touchZh: '坊市里的炼器坊能重炼法宝,走到旁边点“炼器”。', pad: 'The forge in the village reworks your weapons. Press LB beside it.', padZh: '村里的铁匠铺能重锻武器,走到旁边按 LB。', done: () => S.forgeOpened || P.shards >= 8 },
+  { key: 'omen', text: 'When a beast is seen, what the book says follows: drought, strange fire, plague, or a harvest and peace. Watch the banner.', zh: '异兽"见则"应验:大旱、讹火、大疫,或大穰与安宁。留意横幅。', done: () => (S.stats.omens || 0) >= 1 },
+  { key: 'errand', text: "Jingwei's pile of twigs on Mount Fajiu: press F to carry a stone to the Eastern Sea.", zh: '发鸠山的精卫木石堆旁按 F,帮她把石头送到东海。', done: () => (S.jwDone || 0) >= 1 || (META.jingweiStones || 0) >= 1 },
 ];
 function guideText(g) {
   const zh = SET.lang === 'zh';
@@ -492,7 +494,7 @@ const UNLOCKS = [
   { key: 'demonpath', name: 'Demon heart', how: 'Pass the tribulation on Tribulation difficulty', gives: 'A fourth path at Foundation: the Demon Path', test: (m, run) => run && run.won && run.diff === 'ash' },
 ];
 function loadMeta() {
-  const fresh = { v: META_V, totalKills: 0, bossKills: 0, runsPlayed: 0, bestTime: 0, runs: [], unlocks: {}, byDiff: {}, bestiary: {}, omens: {}, seen: {} };
+  const fresh = { v: META_V, totalKills: 0, bossKills: 0, runsPlayed: 0, bestTime: 0, runs: [], unlocks: {}, byDiff: {}, bestiary: {}, omens: {}, seen: {}, dangkangCaught: 0, jingweiStones: 0 };
   try {
     const m = JSON.parse(localStorage.getItem('emberlight.meta') || 'null');
     if (!m || typeof m !== 'object') return fresh;
@@ -503,6 +505,7 @@ function loadMeta() {
     out.bestiary = {}; if (m.bestiary && typeof m.bestiary === 'object') for (const k of ['wolfking', 'sentinel', 'salamander', 'maw']) if (m.bestiary[k]) out.bestiary[k] = String(m.bestiary[k]);
     out.byDiff = {}; if (m.byDiff && typeof m.byDiff === 'object') for (const k of ['calm', 'standard', 'ash']) if (m.byDiff[k]) out.byDiff[k] = { best: m.byDiff[k].best | 0, wins: m.byDiff[k].wins | 0, runs: m.byDiff[k].runs | 0 };
     out.guided = !!m.guided;
+    for (const k of ['dangkangCaught', 'jingweiStones']) out[k] = Number.isFinite(m[k]) ? Math.max(0, Math.floor(m[k])) : 0;
     out.omens = {}; if (m.omens && typeof m.omens === 'object') for (const k in OMENS) if (m.omens[k]) out.omens[k] = 1;
     out.seen = {}; if (m.seen && typeof m.seen === 'object') for (const k of ['jingwei']) if (m.seen[k]) out.seen[k] = 1;
     out.unlocks = {};
@@ -530,7 +533,7 @@ function recordRun(won) {
 function renderArchive() {
   const box = $('#archiveBody'); if (!box) return;
   const stat = (v, l) => `<div class="stat"><b>${v}</b><span>${l}</span></div>`;
-  let h = `<div class="statrow">${stat(fmtTime(META.bestTime), tr('longest run'))}${stat(META.totalKills, tr('creatures defeated'))}${stat(META.bossKills, tr('wardens felled'))}${stat(META.runsPlayed, tr('runs'))}</div>`;
+  let h = `<div class="statrow">${stat(fmtTime(META.bestTime), tr('longest run'))}${stat(META.totalKills, tr('creatures defeated'))}${stat(META.bossKills, tr('wardens felled'))}${stat(META.runsPlayed, tr('runs'))}${stat(META.dangkangCaught || 0, tr('dangkang caught'))}${stat(META.jingweiStones || 0, tr('stones to the sea'))}</div>`;
   h += '<div class="achgrid">' + UNLOCKS.map((u) => `<div class="ach ${unlocked(u.key) ? 'on' : ''}"><div class="t">${tr(u.name)}</div><div class="d">${tr(u.how)}</div><div class="g">${unlocked(u.key) ? tr(u.gives) : tr('Locked')}</div></div>`).join('') + '</div>';
   const best = META.bestiary || {};
   const zhL = SET.lang === 'zh';
@@ -1217,7 +1220,7 @@ function showBanner(text, secs = 4) { const b = $('#banner'); b.textContent = tr
 // =====================================================================
 function startRun() {
   P = newPlayer();
-  S.phase = 'run'; S.paused = false; S.modal = null; S.t = 0; S.endless = false; S.tribK = 0; S.tribWarned = false; S.tide = null; S.omens = {}; S.omenK = {}; S.omenCd = {}; S.omenClock = 0; S.omenTick = 0; S.dangkang = null; S.fusangLm = null; S.fusangSeen = false; S.fusangT = 0; S.jwQuest = null; S.jwDone = 0; S.danceOn = false; S.tenSuns = false;
+  S.phase = 'run'; S.paused = false; S.modal = null; S.t = 0; S.endless = false; S.tribK = 0; S.tribWarned = false; S.tide = null; S.omens = {}; S.omenK = {}; S.omenCd = {}; S.omenClock = 0; S.omenTick = 0; S.dangkang = null; S.fusangLm = null; S.fusangSeen = false; S.fusangT = 0; S.jwQuest = null; S.jwDone = 0; S.danceOn = false; S.tenSuns = false; S.devourSeen = false;
   S.recorded = false;
   S.enemies.length = 0; S.pickups.length = 0; S.projectiles.length = 0; S.eprojectiles.length = 0; S.burns.length = 0; S.timers.length = 0;
   for (const m of S.slashes) scene.remove(m); S.slashes.length = 0;
@@ -1779,7 +1782,7 @@ function triggerOmen(key) {
   const ill = key === 'drought' || key === 'fire' || key === 'plague';
   S.omens[key] = (o.dur || 1e9) * (key === 'fire' && P.wards && P.wards.ashwalker ? 0.5 : 1);
   S.stats.omens = (S.stats.omens || 0) + 1;   // 鸓鸟御火: strange fire burns out in half the time
-  S.omenCd[key] = o.cd * (ill && P.wards && P.wards.wolfsbane ? 1.5 : 1);                          // 天狗御凶: ill omens return half as often
+  S.omenCd[key] = o.cd * (ill && P.wards && P.wards.wolfsbane ? 1.5 : 1) * (S.endless && ill ? 0.6 : 1);                          // 天狗御凶: ill omens return half as often
   if (key === 'bounty') { const a = Math.random() * 6.28; S.dangkang = { x: P.x + Math.cos(a) * 9, z: P.z + Math.sin(a) * 9, face: 0, spd: 0, wob: Math.random() * 6.28, callT: 1.5 }; const rr = Math.hypot(S.dangkang.x, S.dangkang.z); if (rr > PLAY_R - 4) { S.dangkang.x *= (PLAY_R - 4) / rr; S.dangkang.z *= (PLAY_R - 4) / rr; } }
   showBanner(SET.lang === 'zh' ? o.zh : o.en, 4.5); AUDIO.sfx(o.sfx || 'district');
   META.omens = META.omens || {}; if (!META.omens[key]) { META.omens[key] = 1; saveMeta(); }
@@ -2046,7 +2049,7 @@ function hurtBoss(dmg, crit = false) {
 // district elites: one per outer district, wakes ~8 s after you first arrive (from 1:15 on), two signature moves each
 const MINIS = {
   wildwood:   { key: 'wolfking',   kit: 'WolfKing',   pre: 'M1_', name: 'THE WOLF KING',         hp: 900,  dmg: 18, speed: 5.0, r: 1.1, scale: 1.05, moves: ['pounce', 'howl'] },
-  mossfall:   { key: 'sentinel',   kit: 'Sentinel',   pre: 'M2_', name: 'THE STONE SENTINEL',    hp: 1500, dmg: 24, speed: 2.4, r: 1.25, scale: 1.0, moves: ['slam', 'shards'] },
+  mossfall:   { key: 'sentinel',   kit: 'Sentinel',   pre: 'M2_', name: 'THE STONE SENTINEL',    hp: 1500, dmg: 24, speed: 2.4, r: 1.25, scale: 1.0, moves: ['slam', 'shards', 'devour'] },
   cinder:     { key: 'salamander', kit: 'Salamander', pre: 'M3_', name: 'THE CINDER SALAMANDER', hp: 1100, dmg: 16, speed: 4.4, r: 1.1, scale: 1.05, moves: ['flame', 'spit'] },
   silvermere: { key: 'maw',        kit: 'Maw',        pre: 'M4_', name: 'THE SILVERMERE MAW',    hp: 1350, dmg: 22, speed: 2.9, r: 1.3, scale: 1.0, moves: ['engulf', 'burrow'] },
 };
@@ -2075,6 +2078,7 @@ function spawnMini(distKey) {
 }
 function hurtMini(m, dmg, crit = false) {
   if (!m || m.dead || m.burrowed) return;
+  if (crit && m.key === 'maw') dmg *= 0.6;   // 浑敦无面目: no face to land a killing blow on
   m.hp -= dmg; m.flash = 1; S.stats.dmgDealt += dmg;
   if (P.leech) P.hp = Math.min(P.maxHp, P.hp + dmg * P.leech * healMul());
   showNumber(m.x, 2.4, m.z, String(Math.round(dmg)), crit ? 'crit' : '');
@@ -2113,7 +2117,7 @@ function updateMinis(dt) {
       if (d > m.r + P.r + 0.2) { m.x += nx * sp * dt; m.z += nz * sp * dt; walking = true; }
       m.face = Math.atan2(nx, nz);
       if (d < m.r + P.r + 0.4 && m.atkCd <= 0) { m.atkCd = 1.3; hurtPlayer(d0.dmg, 'mini'); m.animOnce = 'attack'; }
-      if (m.moveCd <= 0 && d < 22) { const mv = d0.moves[m.moveIdx % 2]; m.moveIdx++; m.moveCd = 5.5; startMiniMove(m, mv, nx, nz); }
+      if (m.moveCd <= 0 && d < 22) { let mv = d0.moves[m.moveIdx % d0.moves.length]; m.moveIdx++; if (mv === 'devour' && !S.enemies.some((e) => !e.dying && Math.hypot(e.x - m.x, e.z - m.z) < 6)) mv = d0.moves[0]; m.moveCd = 5.5; startMiniMove(m, mv, nx, nz); }
     } else if (m.phase === 'tele') {
       m.pt -= dt; m.face = Math.atan2(nx, nz);
       if (m.pt <= 0) resolveMiniMove(m, nx, nz, d);
@@ -2144,6 +2148,7 @@ function startMiniMove(m, mv, nx, nz) {
   m.move = mv; m.animOnce = 'special';
   if (mv === 'pounce' || mv === 'flame') { m.phase = 'tele'; m.pt = mv === 'pounce' ? 0.5 : 0.4; m.dx = nx; m.dz = nz; spawnRing(m.x, m.z, 3, 0xff8a4a, 0.5, 0.15); }
   else if (mv === 'howl') { m.phase = 'tele'; m.pt = 0.8; }
+  else if (mv === 'devour') { m.phase = 'tele'; m.pt = 1.1; spawnRing(m.x, m.z, 6, 0xd8c8a0, 1.1, 0.08); AUDIO.sfx('foxcry'); }
   else if (mv === 'slam') { m.phase = 'tele'; m.pt = 0.9; spawnRing(m.x, m.z, 4.5, 0xff4a2a, 0.9, 0.35); }
   else if (mv === 'shards' || mv === 'spit') { m.phase = 'tele'; m.pt = 0.5; }
   else if (mv === 'engulf') { m.phase = 'engulf'; m.pt = 1.3; spawnRing(m.x, m.z, 9, 0x8fd0a0, 1.3, 0.05); }
@@ -2154,6 +2159,7 @@ function resolveMiniMove(m, nx, nz, d) {
   if (mv === 'pounce') { m.phase = 'dash'; m.pt = 0.45; m.dashSp = 22; m.dx = nx; m.dz = nz; AUDIO.sfx('dash'); }
   else if (mv === 'flame') { m.phase = 'dash'; m.pt = 0.75; m.dashSp = 13; m.dx = nx; m.dz = nz; AUDIO.sfx('dash'); }
   else if (mv === 'howl') { for (let k = 0; k < 4; k++) { const a = k / 4 * Math.PI * 2; spawnEnemy('wisp', m.x + Math.cos(a) * 2.5, m.z + Math.sin(a) * 2.5); } m.buffT = 6; AUDIO.sfx('foxcry'); spawnRing(m.x, m.z, 7, 0xffd08a, 0.6, 0.08); }
+  else if (mv === 'devour') { let n = 0; for (const e of S.enemies) { if (e.dying || n >= 3) continue; if (Math.hypot(e.x - m.x, e.z - m.z) < 6) { e.dying = 0.18; e.hp = 0; e.eaten = true; n++; burstParticles(e.x, 0.6, e.z, 12, [0.7, 0.2, 0.2], 3, 0.35, 0.5); } } if (n) { const heal = Math.round(m.maxHp * 0.06 * n); m.hp = Math.min(m.maxHp, m.hp + heal); showNumber(m.x, 2.6, m.z, '+' + heal, 'heal'); AUDIO.sfx('kill', 0.1); if (!S.devourSeen) { S.devourSeen = true; showBanner(SET.lang === 'zh' ? '狍鸮食人 · 吞了身边的妖邪回血,先清场再打' : 'PAOXIAO FEEDS  ·  it eats the demons around it to mend; clear them first', 4); } } }
   else if (mv === 'slam') { if (d < 4.5 + P.r) hurtPlayer(30, 'mini'); for (const e of S.enemies) { const ed = Math.hypot(e.x - m.x, e.z - m.z); if (ed < 4.5) { e.kx += (e.x - m.x) / ed * 8; e.kz += (e.z - m.z) / ed * 8; } } spawnRing(m.x, m.z, 4.5, 0xff6a3d, 0.5, 0.1); burstParticles(m.x, 0.5, m.z, 60, [0.6, 0.6, 0.55], 7, 0.5, 0.8); camShake.amp = 0.5; camShake.t = 0.4; AUDIO.sfx('slam'); }
   else if (mv === 'shards') { for (let k = 0; k < 8; k++) { const a = k / 8 * Math.PI * 2; S.eprojectiles.push({ x: m.x + Math.sin(a) * 1.2, z: m.z + Math.cos(a) * 1.2, vx: Math.sin(a) * 9, vz: Math.cos(a) * 9, life: 1.8, dmg: 10 }); } AUDIO.sfx('spit'); }
   else if (mv === 'spit') { for (let k = -1; k <= 1; k++) { const a = Math.atan2(nx, nz) + k * 0.28; S.eprojectiles.push({ x: m.x + Math.sin(a) * 1.2, z: m.z + Math.cos(a) * 1.2, vx: Math.sin(a) * 10, vz: Math.cos(a) * 10, life: 1.8, dmg: 12 }); } AUDIO.sfx('spit'); }
