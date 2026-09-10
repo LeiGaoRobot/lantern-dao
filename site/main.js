@@ -547,7 +547,7 @@ function renderArchive() {
   if (bdRows) h += `<div class="dbadges">${bdRows}</div>`;
   box.innerHTML = h;
 }
-const dmgMult = () => P.dmgTalent * (1 + 0.2 * P.forge.edge) * ((S.cursedT || 0) > 0 ? 0.85 : 1);   // 山膏善詈: cursed for a few breaths after it lands a hit
+const dmgMult = () => P.dmgTalent * (1 + 0.2 * P.forge.edge) * ((S.cursedT || 0) > 0 ? 0.9 : 1);   // 山膏善詈: cursed for a few breaths after it lands a hit
 const armour = () => Math.min(0.75, P.armourTalent + 0.08 * P.forge.mail);
 const pickupR = () => 3.2 * P.pickupMult * (1 + 0.25 * P.forge.charm);
 const moveSpeed = () => 7.2 * P.speedMult * (S.jwQuest ? 0.88 : 1);
@@ -1633,7 +1633,7 @@ function hurtPlayer(raw, src = 'other') {
   const dmg = Math.max(1, Math.round(scaled * (1 - armour())));
   S.lastHits.push({ src, dmg, t: S.t }); if (S.lastHits.length > 12) S.lastHits.shift();
   S.dmgLog[src] = (S.dmgLog[src] || 0) + dmg;
-  if (src === 'cinder') { S.cursedT = 3; showNumber(P.x, 2.1, P.z, SET.lang === 'zh' ? '被詈' : 'cursed', 'player'); if (!S.curseSeen) { S.curseSeen = true; showBanner(SET.lang === 'zh' ? '山膏善詈 · 被它骂中,三息内出手 −15%' : 'SHANGAO CURSES  ·  its hit leaves you cursed: −15% damage for three breaths', 4); } }
+  if (src === 'cinder') { S.cursedT = 2; showNumber(P.x, 2.1, P.z, SET.lang === 'zh' ? '被詈' : 'cursed', 'player'); if (!S.curseSeen) { S.curseSeen = true; showBanner(SET.lang === 'zh' ? '山膏善詈 · 被它骂中,两息内出手 −10%' : 'SHANGAO CURSES  ·  its hit leaves you cursed: −10% damage for two breaths', 4); } }
   P.hp -= dmg; P.invuln = 0.6 + (P.invBonus || 0); P.hitFlash = 0.2; if (!P.animOnce) P.animOnce = 'hurt';
   if (P.shell) { const sd = 10 * P.shell * dmgMult(); for (const e of S.enemies) { if (!e.dying && (e.x - P.x) ** 2 + (e.z - P.z) ** 2 < 9) { hurtEnemy(e, sd, false, true); const d = Math.hypot(e.x - P.x, e.z - P.z) || 0.5; e.kx += (e.x - P.x) / d * 4 / e.t.mass; e.kz += (e.z - P.z) / d * 4 / e.t.mass; } } spawnRing(P.x, P.z, 3, 0xff8a4a, 0.35, 0.15); }
   showNumber(P.x, 1.6, P.z, '-' + dmg, 'player');
@@ -1795,6 +1795,7 @@ function triggerOmen(key) {
   if (S.omens[key] || (S.omenCd[key] || 0) > 0) return false;
   if (key !== 'dark' && key !== 'calm' && S.omens.calm) return false;   // the phoenix's peace holds ill omens off
   const ill = key === 'drought' || key === 'fire' || key === 'plague';
+  if (ill && (S.t < 150 || ['drought', 'fire', 'plague'].some((k) => k !== key && S.omens[k]))) return false;   // one ill omen at a time, and none before 2:30
   S.omens[key] = (o.dur || 1e9) * (key === 'fire' && P.wards && P.wards.ashwalker ? 0.5 : 1);
   S.stats.omens = (S.stats.omens || 0) + 1;   // 鸓鸟御火: strange fire burns out in half the time
   S.omenCd[key] = o.cd * (ill && P.wards && P.wards.wolfsbane ? 1.5 : 1) * (S.endless && ill ? 0.6 : 1);                          // 天狗御凶: ill omens return half as often
