@@ -18,9 +18,9 @@ const fmtTime = (s) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(
 const pad2 = (n) => String(n).padStart(2, '0');
 const RUN_LENGTH = 600;      // 10 minutes
 const DIFFS = {
-  calm:     { name: 'Serene',   zh: '清修', dmg: 0.7,  spawn: 0.8,  hp: 0.9,  speed: 0.95, elite: 1.3, bossAt: 480, phase2: false, desc: 'Demons hit 30% softer, the Lord never rages.', zhDesc: '妖邪伤害 −30%,劫主没有雷怒。' },
-  standard: { name: 'Cultivate', zh: '修行', dmg: 1.0,  spawn: 1.0,  hp: 1.0,  speed: 1.0,  elite: 1.0, bossAt: 480, phase2: true,  desc: 'The valley as intended. The Lord at eight minutes.', zhDesc: '标准体验,劫主八分钟现身。' },
-  ash:      { name: 'Tribulation', zh: '劫难', dmg: 1.75, spawn: 2.4,  hp: 1.5,  speed: 1.25, elite: 0.55, bossAt: 360, phase2: true,  desc: 'More than twice the demons, faster, 75% harder hits, the Lord at six.', zhDesc: '妖邪 2.4 倍、更快、伤害 +75%,劫主六分钟现身。' },
+  calm:     { name: 'Serene',   zh: '清修', dmg: 0.7,  spawn: 0.8,  hp: 0.9,  speed: 0.95, elite: 1.3, bossAt: 480, phase2: false, desc: 'Demons hit 30% softer, Xingtian never rages.', zhDesc: '妖邪伤害 −30%,刑天没有雷怒。' },
+  standard: { name: 'Cultivate', zh: '修行', dmg: 1.0,  spawn: 1.0,  hp: 1.0,  speed: 1.0,  elite: 1.0, bossAt: 480, phase2: true,  desc: 'The valley as intended. The Lord at eight minutes.', zhDesc: '标准体验,刑天八分钟现身。' },
+  ash:      { name: 'Tribulation', zh: '劫难', dmg: 1.75, spawn: 2.4,  hp: 1.5,  speed: 1.25, elite: 0.55, bossAt: 360, phase2: true,  desc: 'More than twice the demons, faster, 75% harder hits, Xingtian at six.', zhDesc: '妖邪 2.4 倍、更快、伤害 +75%,刑天六分钟现身。' },
 };
 const DIFF = () => DIFFS[SET.difficulty] || DIFFS.standard;
 const BOSS_AT_FN = () => DIFF().bossAt;
@@ -163,6 +163,19 @@ const TALENTS = [
   { key: 'wardenk', name: 'Lantern warden', max: 1, keystone: true, desc: 'Two ash lanterns always orbit you, whatever you wield. Damage −10%.', apply: (p) => { p.keystone = 'wardenk'; p.orbAlways = true; p.dmgTalent *= 0.9; } },
   { key: 'leech', name: 'Ash leech', max: 1, keystone: true, desc: 'Heal 5% of all damage dealt. Regeneration stops; hearts heal half.', apply: (p) => { p.keystone = 'leech'; p.leech = 0.05; p.noRegen = true; } },
 ];
+// 妖录: every creature quotes its own line from the Classic of Mountains and Seas, checked against the wikisource text
+const LORE = [
+  { key: 'wisp', zh: '鬿雀', en: 'Qique', src: '东山经·东次四经 北号之山', srcEn: 'East Mountains IV, Mount Beihao', quote: '其狀如雞而白首,鼠足而虎爪,其名曰鬿雀,亦食人。', quoteEn: 'Shaped like a fowl with a white head, rat feet and tiger claws; it too eats men.' },
+  { key: 'cinder', zh: '山膏', en: 'Shangao', src: '中山经·中次七经 苦山', srcEn: 'Central Mountains VII, Mount Ku', quote: '名曰山膏,其狀如逐,赤若丹火,善詈。', quoteEn: 'Shaped like a pig, red as cinnabar fire, and fond of cursing.' },
+  { key: 'crawler', zh: '鸣蛇', en: 'Mingshe', src: '中山经·中次二经 鲜山', srcEn: 'Central Mountains II, Mount Xian', quote: '其狀如蛇而四翼,其音如磬,見則其邑大旱。', quoteEn: 'A serpent with four wings that sounds like a chime; where it is seen, great drought follows.' },
+  { key: 'spitter', zh: '毕方', en: 'Bifang', src: '西山经·西次三经 章莪之山', srcEn: "West Mountains III, Mount Zhang'e", quote: '其狀如鶴,一足,赤文青質而白喙,見則其邑有譌火。', quoteEn: 'Like a crane with one leg, red markings on green, a white beak; where it is seen, strange fires break out.' },
+  { key: 'brute', zh: '穷奇', en: 'Qiongqi', src: '西山经·西次四经 邽山', srcEn: 'West Mountains IV, Mount Gui', quote: '其狀如牛,蝟毛,名曰窮奇,音如獋狗,是食人。', quoteEn: 'Shaped like an ox with hedgehog bristles, howling like a dog; it eats men.' },
+  { key: 'wolfking', zh: '九尾狐', en: 'Nine-Tailed Fox', src: '南山经 青丘之山', srcEn: 'South Mountains, Mount Qingqiu', quote: '其狀如狐而九尾,其音如嬰兒,能食人;食者不蠱。', quoteEn: 'A fox with nine tails that cries like an infant; it can eat men, and whoever eats it is proof against poison.' },
+  { key: 'sentinel', zh: '狍鸮', en: 'Paoxiao', src: '北山经·北次二经 钩吾之山', srcEn: 'North Mountains II, Mount Gouwu', quote: '羊身人面,其目在腋下,虎齒人爪,其音如嬰兒,是食人。', quoteEn: "A goat's body with a human face, eyes under its arms, tiger teeth and human claws; it eats men." },
+  { key: 'salamander', zh: '蜚', en: 'Fei', src: '东山经·东次四经 太山', srcEn: 'East Mountains IV, Mount Tai', quote: '其狀如牛而白首,一目而蛇尾,行水則竭,行草則死,見則天下大疫。', quoteEn: "An ox with a white head, one eye and a serpent's tail; water dries and grass dies where it walks, and plague follows." },
+  { key: 'maw', zh: '帝江', en: 'Dijiang', src: '西山经·西次三经 天山', srcEn: 'West Mountains III, Mount Tian', quote: '其狀如黃囊,赤如丹火,六足四翼,渾敦無面目,是識歌舞。', quoteEn: 'Like a yellow sack, red as cinnabar fire, six legs, four wings, no face at all; it understands song and dance.' },
+  { key: 'boss', zh: '刑天', en: 'Xingtian', src: '海外西经', srcEn: 'Beyond the Seas: West', quote: '帝斷其首,葬之常羊之山,乃以乳為目,以臍為口,操干戚以舞。', quoteEn: 'The Emperor cut off his head and buried it on Mount Changyang; he made his nipples his eyes, his navel his mouth, and danced with shield and axe.' },
+];
 const REALMS_ZH = ['练气一层', '练气二层', '练气三层', '练气四层', '练气五层', '练气六层', '练气七层', '练气八层', '练气九层', '筑基初期', '筑基中期', '筑基后期', '金丹初期', '金丹中期', '金丹后期', '元婴初期', '元婴中期', '元婴后期', '化神'];
 function realmName(l) { if (SET.lang !== 'zh') return `${tr('Level')} ${pad2(l)}`; const i = Math.min(REALMS_ZH.length - 1, l - 1); return REALMS_ZH[i] + (l > REALMS_ZH.length ? ' ' + (l - REALMS_ZH.length + 1) : ''); }
 const PATHS = [
@@ -235,43 +248,43 @@ const SET = Object.assign({ v: SET_V, quality: 'high', shake: true, numbers: tru
 function saveSettings() { try { localStorage.setItem('emberlight.settings', JSON.stringify(SET)); } catch (e) { window.__emberLog('save', 'settings write failed: ' + e.message); } }
 const ZH = {
   // hud
-  'Auto attack ON': '自动出剑 开', 'Auto attack OFF': '自动出剑 关', 'Level': '境界', 'XP': '灵气', 'forge shards': '灵晶', 'forge shard': '灵晶',
+  'Auto attack ON': '自动出剑 开', 'Auto attack OFF': '自动出剑 关', 'Level': '境界', 'XP': '灵气', 'forge shards': '丹粟', 'forge shard': '丹粟',
   'Edge': '剑锋', 'Mail': '护体', 'Charm': '纳灵', 'Damage': '伤害', 'Armour': '护甲', 'Best': '最佳', 'kills': '斩妖', 'Threat': '煞气', 'enemies': '妖邪',
   'Dash ready': '踏云步就绪', 'Dash': '踏云步', 'Ember nova ready': '灵光爆就绪', 'Ember nova': '灵光爆', 'defeated': '斩妖', 'elites': '精英',
   'Switch weapon': '换法宝', 'Enter forge': '进入炼器坊', 'Sound': '声音', 'Sound off': '声音 关', 'Pause': '暂停',
   'Day': '白昼', 'Dusk': '黄昏', 'Night': '夜', 'Clear': '晴', 'Rain': '雨', 'Storm': '雷雨', 'Snow': '灵雪', 'Auto': '自动', 'Manual': '手动',
-  'THE ASH WARDEN': '劫主', 'THE ASH WARDEN · BURNING': '劫主 · 雷怒', 'Attack': '攻击', 'Heavy': '重击', 'Passive': '被动', 'Orbits': '环绕',
+  'THE ASH WARDEN': '刑天', 'THE ASH WARDEN · BURNING': '刑天 · 猛志', 'Attack': '攻击', 'Heavy': '重击', 'Passive': '被动', 'Orbits': '环绕',
   // weapons
   'EMBER CRESCENT': '飞剑', 'CINDER BOLT': '符箓', 'ASH LANTERNS': '灵珠', 'CRESCENT': '飞剑', 'BOLT': '符箓', 'LANTERNS': '灵珠',
   // districts
-  'THE HEARTH': '山门坊市', 'THE WILDWOOD': '迷雾竹海', 'MOSSFALL RUINS': '剑冢遗迹', 'CINDER BARROW': '焚天火域', 'SILVERMERE SHORE': '云梦泽',
-  'The Hearth': '山门坊市', 'The Wildwood': '迷雾竹海', 'Mossfall Ruins': '剑冢遗迹', 'Cinder Barrow': '焚天火域', 'Silvermere Shore': '云梦泽',
-  'Collect embers. Find the forge. Survive 10 minutes.': '收集灵石。找到炼器坊。守到天劫过去。',
-  'Old oaks and older things. Wisps hunt in packs.': '竹海雾深。磷火成群游荡。',
-  'Stone remembers. Spitters nest in the arches.': '万剑埋骨之地。蟾妖伏在牌坊之下。',
-  'The ground still smoulders. The Ash Warden sleeps here.': '地火未熄。劫主沉睡于此。',
-  'Reeds and mist. Crawlers move beneath the water.': '芦苇与水雾。蛊蜈蚣在水下游走。',
+  'THE HEARTH': '青要密都', 'THE WILDWOOD': '昆仑西山', 'MOSSFALL RUINS': '发鸠北山', 'CINDER BARROW': '汤谷东山', 'SILVERMERE SHORE': '招摇南山',
+  'The Hearth': '青要密都', 'The Wildwood': '昆仑西山', 'Mossfall Ruins': '发鸠北山', 'Cinder Barrow': '汤谷东山', 'Silvermere Shore': '招摇南山',
+  'Collect embers. Find the forge. Survive 10 minutes.': '帝之密都,武罗司之。收集琅玕,找到炼器坊,守到刑天退去。',
+  'Old oaks and older things. Wisps hunt in packs.': '章莪之山无草木,多瑶碧。毕方一足,见则其邑有讹火。',
+  'Stone remembers. Spitters nest in the arches.': '发鸠之山多柘木。狍鸮目在腋下,虎齿人爪,是食人。',
+  'The ground still smoulders. The Ash Warden sleeps here.': '汤谷上有扶桑,十日所浴。蜚行水则竭,行草则死。',
+  'Reeds and mist. Crawlers move beneath the water.': '招摇之山多桂。青丘之狐九尾,其音如婴儿。',
   // banners
-  'AN ASH BRUTE PROWLS NEARBY': '山魈在附近游荡', 'THE ASH WARDEN STIRS': '劫主现身 · 渡劫开始', 'THE SKY DARKENS  ·  The tribulation is near.': '天劫将至  ·  劫云正在聚拢。', 'THE WARDEN CALLS ITS KIN': '劫主召来煞灵',
-  'THE WARDEN BURNS BRIGHTER': '劫主雷怒', 'THE ASH WARDEN FALLS  ·  The valley breathes again.': '劫主伏诛  ·  劫云散去,灵谷重归安宁。',
+  'AN ASH BRUTE PROWLS NEARBY': '穷奇在附近游荡 · 音如嗥狗', 'THE ASH WARDEN STIRS': '刑天至 · 操干戚以舞', 'THE SKY DARKENS  ·  The tribulation is near.': '烛龙瞑目  ·  天地昏冥。', 'THE WARDEN CALLS ITS KIN': '刑天召来山膏',
+  'THE WARDEN BURNS BRIGHTER': '刑天 · 猛志固常在', 'THE ASH WARDEN FALLS  ·  The valley breathes again.': '刑天倒下  ·  常羊之山复静。',
   'ENDLESS  ·  The wildwood does not end. Neither do you.': '问道无尽  ·  灵谷没有尽头,你也没有。',
   // modals
-  'Choose a talent. Your run is paused.': '择一功法。局面已暂停。', 'Forge': '炼器', 'Maxed': '已至圆满', 'shards': '灵晶', 'Next:': '下一阶:',
+  'Choose a talent. Your run is paused.': '择一功法。局面已暂停。', 'Forge': '炼器', 'Maxed': '已至圆满', 'shards': '丹粟', 'Next:': '下一阶:',
   'Weapons — the smith reworks each blade in three stages.': '法宝 —— 炼器师分三阶重炼,金丹境后可进阶为本命法宝。',
   'Dawn breaks over the wildwood.': '劫云散去,道基已成。', 'The light went out.': '灯灭了。',
   'Ten minutes, and the valley is still here. Keep going — it only gets wilder.': '十分钟过去,天劫已渡。继续吧 —— 问道无尽,只会更凶险。',
   'You kept the light for': '你守住灵灯', 'Go endless  →': '问道无尽  →', 'Try again': '再来一局', 'Back to title': '返回',
-  'Time survived': '守灯时长', 'Defeated': '斩妖', 'Elites': '精英', 'Damage dealt': '造成伤害', 'Forge shards': '灵晶',
+  'Time survived': '守灯时长', 'Defeated': '斩妖', 'Elites': '精英', 'Damage dealt': '造成伤害', 'Forge shards': '丹粟',
   'Rested': '调息完毕', 'Unlocked': '机缘', 'Shrines lit': '点亮法阵', ' shrines': ' 座法阵', 'dawns': '次渡劫',
   'Hold the shrine for 45 seconds.': '守住法阵 45 秒。', 'THE SHRINE GUTTERS OUT  ·  You strayed too far.': '法阵黯淡  ·  你走得太远。', 'WARD GAINED': '习得护体功法', 'SHRINE': '灵脉法阵', '· too far!': '· 太远了!',
-  'Wolfsbane': '避雾诀', 'Wisps no longer hunt in packs and hit for half.': '磷火不再成群,伤害减半。', 'Stonewatch': '金钟罩', 'Your attacks shatter spitter bolts; the rest sting 30% less.': '你的攻击能击碎蟾妖毒弹,余下伤害 −30%。',
-  'Ashwalker': '踏火诀', 'Burning ground cannot hurt you; +25% damage to cinders and brutes.': '燃烧地面对你无害;对煞灵与山魈伤害 +25%。', 'Tidewalker': '踏浪步', 'Move 12% faster and dash recovers 25% sooner.': '移速 +12%,踏云步冷却 −25%。',
+  'Wolfsbane': '天狗·御凶', 'Wisps no longer hunt in packs and hit for half.': '鬿雀不再成群,伤害减半。', 'Stonewatch': '猼訑·不畏', 'Your attacks shatter spitter bolts; the rest sting 30% less.': '你的攻击能击碎毕方火弹,余下伤害 −30%。',
+  'Ashwalker': '鸓鸟·御火', 'Burning ground cannot hurt you; +25% damage to cinders and brutes.': '燃烧地面对你无害;对山膏与穷奇伤害 +25%。', 'Tidewalker': '迷榖·不迷', 'Move 12% faster and dash recovers 25% sooner.': '移速 +12%,踏云步冷却 −25%。',
   'Light the shrine': '布下法阵', 'Travel the vein': '循灵脉传送', 'THE VEIN CARRIES YOU  ·  Press F at any lit array to travel.': '灵脉相送  ·  在任意已点亮的法阵按 F 即可传送。', 'Difficulty': '难度', 'Starting weapon': '起手法宝',
-  'THE WOLF KING': '雾狼王', 'THE STONE SENTINEL': '剑冢石傀', 'THE CINDER SALAMANDER': '赤炎火蜥', 'THE SILVERMERE MAW': '泽底巨口', 'wakes': '现身', 'falls': '伏诛', 'FIRST KILL': '首次伏诛', 'Bestiary': '妖录', 'Elites felled': '伏诛精英',
+  'THE WOLF KING': '九尾狐', 'THE STONE SENTINEL': '狍鸮', 'THE CINDER SALAMANDER': '蜚', 'THE SILVERMERE MAW': '帝江', 'wakes': '现身', 'falls': '伏诛', 'FIRST KILL': '首次伏诛', 'Bestiary': '妖录', 'Elites felled': '伏诛精英',
   'ASH LONGBOW': '落雁弓', 'EMBER CHAIN': '缚灵索', 'LONGBOW': '落雁弓', 'CHAIN': '缚灵索',
   'Pierce two more enemies': '多穿透两个妖邪', 'Arrows split into three': '一箭化三', 'Arrows scorch where they land': '落点燃地',
   'Every third hit strikes for 2.5×': '每第三击造成 2.5 倍伤害', 'Reach +40%': '索长 +40%', 'Hits drag enemies toward you': '命中把妖邪拽向你',
-  'DEMON TIDE  ·  They come from one side. Hold.': '妖潮  ·  妖邪从一侧涌来,守住。', 'THE TIDE BREAKS  ·  +6 spirit crystals': '妖潮退去  ·  +6 灵晶',
+  'DEMON TIDE  ·  They come from one side. Hold.': '异兽群现  ·  从一侧涌来,守住。', 'THE TIDE BREAKS  ·  +6 cinnabar grains': '妖潮退去  ·  +6 丹粟',
   'Foundation memory': '筑基印记', 'Reach Foundation Establishment (level 10) in one run': '单局达到筑基(10 级)', 'Every run starts at Qi Refining 3 with two techniques': '每局开局即练气三层,自带两门功法',
   'Demon heart': '魔心', 'Pass the tribulation on Tribulation difficulty': '在劫难档渡过天劫', 'A fourth path at Foundation: the Demon Path': '筑基时多一条道途:魔修',
   'Demon Path': '魔修', 'Damage +40%, max health −25%, heal 3% of all damage dealt.': '伤害 +40%,最大命火 −25%,造成伤害的 3% 转为命火。',
@@ -285,12 +298,12 @@ const ZH = {
   'Evolve: Cloud-Piercing Arrow — arrows pierce everything, crit +25%': '进阶·穿云箭:箭矢无限穿透,会心 +25%',
   'Evolve: Dragon-Binding Lock — every hit stuns and drags hard': '进阶·缚龙锁:命中定身并强力拽拉',
   'Steady hand': '定心诀', 'Critical chance +8%.': '会心率 +8%。', 'Ember shell': '护体灵甲', 'Taking a hit scorches everything within 3 for 10 damage.': '受击时灼烧周围 3 丈内所有妖邪 10 点。',
-  'Kindling': '聚灵术', 'Kills have a 12% chance to drop an extra ember.': '斩妖有 12% 几率额外掉一枚灵石。', 'Long stride': '缩地成寸', 'Dash carries you 30% further.': '踏云步距离 +30%。',
-  'Iron will': '金刚不坏', 'Invulnerability after a hit lasts 0.2 s longer.': '受击后无敌延长 0.2 秒。', 'Scavenger': '采药人', 'Hearts drop twice as often.': '丹药掉率翻倍。',
+  'Kindling': '聚灵术', 'Kills have a 12% chance to drop an extra ember.': '斩妖有 12% 几率额外掉一枚琅玕。', 'Long stride': '缩地成寸', 'Dash carries you 30% further.': '踏云步距离 +30%。',
+  'Iron will': '金刚不坏', 'Invulnerability after a hit lasts 0.2 s longer.': '受击后无敌延长 0.2 秒。', 'Scavenger': '采药人', 'Hearts drop twice as often.': '视肉掉率翻倍。',
   'Overcharge': '蓄势', 'Heavy strike recovers 20% faster.': '重击冷却 −20%。', 'Cinder tongue': '符火术', 'Cinder bolts deal 20% more.': '符箓伤害 +20%。',
-  'Pyre': '烈焰咒', 'Burning ground deals double and lasts 50% longer.': '燃烧地面伤害翻倍、持续 +50%。', 'Ash mask': '辟邪面', 'Brutes and the Warden hurt you 25% less.': '山魈与劫主对你的伤害 −25%。',
+  'Pyre': '烈焰咒', 'Burning ground deals double and lasts 50% longer.': '燃烧地面伤害翻倍、持续 +50%。', 'Ash mask': '辟邪面', 'Brutes and the Warden hurt you 25% less.': '穷奇与刑天对你的伤害 −25%。',
   'Glass cannon': '焚身魔功', 'Damage +60%. Max health −40%.': '伤害 +60%,最大命火 −40%。', 'Lantern warden': '灯灵护主', 'Two ash lanterns always orbit you, whatever you wield. Damage −10%.': '无论持何法宝,两颗灵珠常驻环绕。伤害 −10%。',
-  'Ash leech': '噬煞术', 'Heal 5% of all damage dealt. Regeneration stops; hearts heal half.': '造成伤害的 5% 转为命火。吐纳失效,丹药回复减半。',
+  'Ash leech': '噬煞术', 'Heal 5% of all damage dealt. Regeneration stops; hearts heal half.': '造成伤害的 5% 转为命火。吐纳失效,视肉回复减半。',
   // level names
   'A brighter spark.': '灵光初现。', 'The wick catches.': '灯芯点燃。', 'Warmth returns.': '暖意回归。', 'Steady flame.': '心火稳定。', 'The dark recedes.': '黑暗退去。',
   'Ember heart.': '灵台清明。', 'Wildfire.': '燎原。', 'Beacon.': '明灯高悬。', 'Sunrise in your hands.': '掌中日出。', 'Unquenchable.': '不灭。',
@@ -302,7 +315,7 @@ const ZH = {
   'Ember magnet': '引灵术', 'Pick up embers from 35% further away.': '拾取范围 +35%。', 'Second wind': '吐纳', 'Regenerate 1 health per second.': '每秒回复 1 命火。',
   'Thick hide': '硬功', 'Gain 6% armour.': '护甲 +6%。', 'Twin spark': '双符', 'Cinder bolt fires one more bolt.': '符箓多发一枚。',
   'Nova echo': '灵光回响', 'Ember nova recharges 25% faster.': '灵光爆冷却 −25%。', 'Fleet foot': '疾风步', 'Move 10% faster.': '移速 +10%。',
-  'Lucky spark': '财运', 'Enemies drop 40% more forge shards.': '妖邪多掉 40% 灵晶。', 'Lantern bearer': '灵珠添辉', 'One more orbiting ash lantern.': '多一颗环绕灵珠。',
+  'Lucky spark': '财运', 'Enemies drop 40% more forge shards.': '妖邪多掉 40% 丹粟。', 'Lantern bearer': '灵珠添辉', 'One more orbiting ash lantern.': '多一颗环绕灵珠。',
   'Spite': '怒意', 'Heavy strikes deal 30% more and stun longer.': '重击伤害 +30%,眩晕更久。',
   // forge
   'Damage <b>+20%</b> per rank': '每阶伤害 <b>+20%</b>', 'Armour <b>+8%</b> per rank': '每阶护甲 <b>+8%</b>', 'Pickup radius <b>+25%</b>, XP <b>+10%</b> per rank': '每阶拾取范围 <b>+25%</b>、灵气 <b>+10%</b>',
@@ -312,28 +325,28 @@ const ZH = {
   'One more lantern': '多一颗灵珠', 'Orbit radius +30%': '环绕半径 +30%', 'Lanterns scorch the ground': '灵珠灼烧地面',
   // unlocks / archive
   'Wide horizon': '开阔视野', 'Survive 5 minutes in one run': '单局守过 5 分钟', 'Level-ups offer four talents instead of three': '突破时四选一而非三选一',
-  "Smith's tithe": '炼器师的份例', 'Defeat the Ash Warden': '伏诛劫主', 'Every run starts with 10 forge shards': '每局开局 10 灵晶',
+  "Smith's tithe": '炼器师的份例', 'Defeat the Ash Warden': '伏诛刑天', 'Every run starts with 10 forge shards': '每局开局 10 丹粟',
   'Cinder in the hand': '掌中符火', 'Defeat 3000 creatures in total': '累计斩妖 3000', 'Runs start with the Cinder Bolt, already forged once': '开局持有炼过一次的符箓',
-  'Locked': '未得机缘', 'longest run': '最长守灯', 'creatures defeated': '累计斩妖', 'wardens felled': '伏诛劫主', 'runs': '局数', 'Best runs': '最佳战绩', 'No runs yet.': '还没有记录。',
-  'Dawn': '渡劫', 'Warden slain': '劫主已诛', 'What the valley remembers of you. Kept on this device.': '灵谷对你的记忆。只存在本机。',
+  'Locked': '未得机缘', 'longest run': '最长守灯', 'creatures defeated': '累计斩妖', 'wardens felled': '伏诛刑天', 'runs': '局数', 'Best runs': '最佳战绩', 'No runs yet.': '还没有记录。',
+  'Dawn': '渡劫', 'Warden slain': '刑天已诛', 'What the valley remembers of you. Kept on this device.': '灵谷对你的记忆。只存在本机。',
 };
 // English display layer: keys stay the Emberlight originals (saves, MINIS/bigs, ZH lookups all hang off them)
 const EN = {
   'Ember nova ready': 'Spirit burst ready', 'Ember nova': 'Spirit burst', 'Dash ready': 'Cloud step ready', 'Dash': 'Cloud step',
-  'forge shards': 'spirit crystals', 'forge shard': 'spirit crystal', 'Forge shards': 'Spirit crystals', 'shards': 'crystals', 'XP': 'Qi',
+  'forge shards': 'cinnabar grains', 'forge shard': 'cinnabar grain', 'Forge shards': 'Cinnabar grains', 'shards': 'crystals', 'XP': 'Qi',
   'Enter forge': 'Enter the refinery', 'Forge': 'Refine', 'Switch weapon': 'Swap artefact', 'enemies': 'demons', 'kills': 'slain', 'defeated': 'slain', 'Threat': 'Sha',
-  'THE ASH WARDEN': 'THE TRIBULATION LORD', 'THE ASH WARDEN · BURNING': 'THE TRIBULATION LORD · WRATH',
+  'THE ASH WARDEN': 'XINGTIAN', 'THE ASH WARDEN · BURNING': 'XINGTIAN · FIERCE WILL',
   'EMBER CRESCENT': 'FLYING SWORD', 'CINDER BOLT': 'PAPER TALISMAN', 'ASH LANTERNS': 'SPIRIT PEARLS', 'ASH LONGBOW': 'WILD-GOOSE BOW', 'EMBER CHAIN': 'BINDING CORD',
   'CRESCENT': 'SWORD', 'BOLT': 'TALISMAN', 'LANTERNS': 'PEARLS', 'LONGBOW': 'BOW', 'CHAIN': 'CORD',
-  'THE HEARTH': 'GATE MARKET', 'THE WILDWOOD': 'MIST BAMBOO SEA', 'MOSSFALL RUINS': 'SWORD-TOMB RUINS', 'CINDER BARROW': 'BURNING DOMAIN', 'SILVERMERE SHORE': 'CLOUD-DREAM MARSH',
-  'The Hearth': 'Gate Market', 'The Wildwood': 'Mist Bamboo Sea', 'Mossfall Ruins': 'Sword-Tomb Ruins', 'Cinder Barrow': 'Burning Domain', 'Silvermere Shore': 'Cloud-Dream Marsh',
-  'Collect embers. Find the forge. Survive 10 minutes.': 'Collect spirit stones. Find the refinery. Outlast the tribulation.',
-  'Old oaks and older things. Wisps hunt in packs.': 'Mist in the bamboo. Ghost-fire hunts in packs.',
-  'Stone remembers. Spitters nest in the arches.': 'Ten thousand swords sleep here. Toad demons crouch under the gate.',
-  'The ground still smoulders. The Ash Warden sleeps here.': 'The earth-fire never died. The Tribulation Lord sleeps here.',
-  'Reeds and mist. Crawlers move beneath the water.': 'Reeds and mist. Gu centipedes move beneath the water.',
-  'AN ASH BRUTE PROWLS NEARBY': 'A MOUNTAIN APE PROWLS NEARBY', 'THE ASH WARDEN STIRS': 'THE TRIBULATION LORD DESCENDS', 'THE WARDEN CALLS ITS KIN': 'THE LORD CALLS THE SHADES',
-  'THE WARDEN BURNS BRIGHTER': "THE LORD'S WRATH", 'THE ASH WARDEN FALLS  ·  The valley breathes again.': 'THE TRIBULATION LORD FALLS  ·  The clouds part.',
+  'THE HEARTH': 'QINGYAO, THE SECRET CAPITAL', 'THE WILDWOOD': 'KUNLUN, THE WEST MOUNTAINS', 'MOSSFALL RUINS': 'FAJIU, THE NORTH MOUNTAINS', 'CINDER BARROW': 'TANGGU, THE EAST MOUNTAINS', 'SILVERMERE SHORE': 'ZHAOYAO, THE SOUTH MOUNTAINS',
+  'The Hearth': 'Qingyao', 'The Wildwood': 'Kunlun', 'Mossfall Ruins': 'Fajiu', 'Cinder Barrow': 'Tanggu', 'Silvermere Shore': 'Zhaoyao',
+  'Collect embers. Find the forge. Survive 10 minutes.': 'The Emperor\'s hidden capital, kept by Wuluo. Gather langgan jade, find the refinery, outlast Xingtian.',
+  'Old oaks and older things. Wisps hunt in packs.': 'Mount Zhang\'e bears no grass, only jade. Where the one-legged Bifang is seen, strange fires follow.',
+  'Stone remembers. Spitters nest in the arches.': 'Mount Fajiu is thick with zhe trees. Paoxiao keeps its eyes under its arms and eats men.',
+  'The ground still smoulders. The Ash Warden sleeps here.': 'Above the Hot Valley stands Fusang, where the ten suns bathe. Where Fei walks, water dries and grass dies.',
+  'Reeds and mist. Crawlers move beneath the water.': 'Mount Zhaoyao is thick with cassia. The fox of Qingqiu has nine tails and cries like an infant.',
+  'AN ASH BRUTE PROWLS NEARBY': 'A QIONGQI PROWLS NEARBY  ·  it howls like a dog', 'THE ASH WARDEN STIRS': 'XINGTIAN COMES  ·  dancing with shield and axe', 'THE WARDEN CALLS ITS KIN': 'XINGTIAN CALLS THE SHADES',
+  'THE WARDEN BURNS BRIGHTER': 'XINGTIAN  ·  the fierce will endures', 'THE ASH WARDEN FALLS  ·  The valley breathes again.': 'XINGTIAN FALLS  ·  Mount Changyang is quiet again.',
   'ENDLESS  ·  The wildwood does not end. Neither do you.': 'ENDLESS  ·  The Dao has no end. Neither do you.',
   'Choose a talent. Your run is paused.': 'Choose a technique. Your run is paused.', 'Weapons — the smith reworks each blade in three stages.': 'Artefacts — three refinements each; at Golden Core a fourth stage evolves it.',
   'Dawn breaks over the wildwood.': 'The clouds part. Your foundation holds.', 'The light went out.': 'The lamp went out.',
@@ -341,20 +354,21 @@ const EN = {
   'You kept the light for': 'You kept the lamp for', 'Go endless  →': 'Endless Dao  →', 'Shrines lit': 'Arrays lit', ' shrines': ' arrays', 'dawns': 'tribulations',
   'Hold the shrine for 45 seconds.': 'Hold the array for 45 seconds.', 'THE SHRINE GUTTERS OUT  ·  You strayed too far.': 'THE ARRAY FADES  ·  You strayed too far.', 'WARD GAINED': 'TECHNIQUE LEARNED', 'SHRINE': 'SPIRIT ARRAY',
   'Light the shrine': 'Set the array', 'Starting weapon': 'Starting artefact',
-  'Wolfsbane': 'Mist-Parting Art', 'Wisps no longer hunt in packs and hit for half.': 'Ghost-fire no longer hunts in packs and hits for half.', 'Stonewatch': 'Golden Bell', 'Your attacks shatter spitter bolts; the rest sting 30% less.': 'Your attacks shatter toad venom; the rest stings 30% less.',
-  'Ashwalker': 'Fire-Treading Art', 'Burning ground cannot hurt you; +25% damage to cinders and brutes.': 'Burning ground cannot hurt you; +25% damage to shades and apes.', 'Tidewalker': 'Wave-Treading Step',
-  'THE WOLF KING': 'THE MIST WOLF KING', 'THE STONE SENTINEL': 'THE SWORD-TOMB PUPPET', 'THE CINDER SALAMANDER': 'THE CRIMSON FIRE LIZARD', 'THE SILVERMERE MAW': 'THE MARSH MAW', 'Bestiary': 'Demon record', 'Keystone': 'Core technique',
-  'Still burning': 'Turtle Breath', 'Wildfire soles': 'Fire-Walking Boots', 'Keen edge': 'Sword Intent', 'Ember magnet': 'Qi Draw', 'Pick up embers from 35% further away.': 'Pick up spirit stones from 35% further away.',
+  'Wolfsbane': 'Tiangou: Ward Off Evil', 'Wisps no longer hunt in packs and hit for half.': 'Qique no longer hunts in packs and hits for half.', 'Stonewatch': 'Boyi: Fear Nothing', 'Your attacks shatter spitter bolts; the rest sting 30% less.': 'Your attacks shatter Bifang fire; the rest stings 30% less.',
+  'Ashwalker': 'Lei Bird: Ward Off Fire', 'Burning ground cannot hurt you; +25% damage to cinders and brutes.': 'Burning ground cannot hurt you; +25% damage to Shangao and Qiongqi.', 'Tidewalker': 'Migu: Never Lost',
+  'THE WOLF KING': 'THE NINE-TAILED FOX', 'THE STONE SENTINEL': 'PAOXIAO', 'THE CINDER SALAMANDER': 'FEI', 'THE SILVERMERE MAW': 'DIJIANG', 'Bestiary': 'Demon record', 'Keystone': 'Core technique',
+  'Still burning': 'Turtle Breath', 'Wildfire soles': 'Fire-Walking Boots', 'Keen edge': 'Sword Intent', 'Ember magnet': 'Qi Draw', 'Pick up embers from 35% further away.': 'Pick up langgan jade from 35% further away.',
   'Second wind': 'Breath Cycle', 'Twin spark': 'Twin Talisman', 'Cinder bolt fires one more bolt.': 'Talisman throws one more.', 'Nova echo': 'Burst Echo', 'Ember nova recharges 25% faster.': 'Spirit burst recharges 25% faster.',
-  'Lucky spark': 'Fortune', 'Enemies drop 40% more forge shards.': 'Demons drop 40% more spirit crystals.', 'Lantern bearer': 'Pearl Bearer', 'One more orbiting ash lantern.': 'One more orbiting spirit pearl.',
-  'Cinder tongue': 'Talisman Fire', 'Cinder bolts deal 20% more.': 'Talismans deal 20% more.', 'Ash mask': 'Warding Mask', 'Brutes and the Warden hurt you 25% less.': 'Apes and the Lord hurt you 25% less.',
+  'Lucky spark': 'Fortune', 'Enemies drop 40% more forge shards.': 'Demons drop 40% more cinnabar grains.', 'Lantern bearer': 'Pearl Bearer', 'One more orbiting ash lantern.': 'One more orbiting spirit pearl.',
+  'Cinder tongue': 'Talisman Fire', 'Cinder bolts deal 20% more.': 'Talismans deal 20% more.', 'Ash mask': 'Warding Mask', 'Brutes and the Warden hurt you 25% less.': 'Qiongqi and Xingtian hurt you 25% less.',
   'Glass cannon': 'Body-Burning Art', 'Lantern warden': 'Pearl Guardian', 'Two ash lanterns always orbit you, whatever you wield. Damage −10%.': 'Two spirit pearls always orbit you, whatever you wield. Damage −10%.',
-  'Ash leech': 'Sha Devouring', 'Heal 5% of all damage dealt. Regeneration stops; hearts heal half.': 'Heal 5% of all damage dealt. Regeneration stops; elixirs heal half.',
-  'Ember shell': 'Spirit Armour', 'Kindling': 'Qi Gathering', 'Kills have a 12% chance to drop an extra ember.': 'Kills have a 12% chance to drop an extra spirit stone.', 'Scavenger': 'Herb Gatherer', 'Hearts drop twice as often.': 'Elixirs drop twice as often.',
+  'Ash leech': 'Sha Devouring', 'Heal 5% of all damage dealt. Regeneration stops; hearts heal half.': 'Heal 5% of all damage dealt. Regeneration stops; shirou heal half.',
+  'Ember shell': 'Spirit Armour', 'Kindling': 'Qi Gathering', 'Kills have a 12% chance to drop an extra ember.': 'Kills have a 12% chance to drop an extra langgan jade.', 'Scavenger': 'Herb Gatherer', 'Hearts drop twice as often.': 'Shirou drop twice as often.',
   'One more lantern': 'One more pearl', 'Lanterns scorch the ground': 'Pearls scorch the ground', 'Fire one more bolt': 'Throw one more talisman', 'Bolts burst on impact': 'Talismans burst on impact',
-  "Smith's tithe": "Refiner's tithe", 'Defeat the Ash Warden': 'Defeat the Tribulation Lord', 'Every run starts with 10 forge shards': 'Every run starts with 10 spirit crystals',
+  "Smith's tithe": "Refiner's tithe", 'Defeat the Ash Warden': 'Defeat Xingtian', 'Every run starts with 10 forge shards': 'Every run starts with 10 cinnabar grains',
   'Cinder in the hand': 'Talisman in hand', 'Runs start with the Cinder Bolt, already forged once': 'Runs start with the Paper Talisman, already refined once',
   'wardens felled': 'lords felled', 'Warden slain': 'Lord slain', 'Dawn': 'Passed',
+  'THE SKY DARKENS  ·  The tribulation is near.': 'ZHULONG CLOSES ITS EYES  ·  heaven and earth go dark.',
 };
 const tr = (t) => (SET.lang === 'zh' ? ZH[t] : EN[t]) || t;
 // static HTML swapped as whole blocks
@@ -362,14 +376,14 @@ const HTML_ZH = {
   '#status .brand': '灯下问道', '#hpLbl': '命火', '#compass .n': '北', '#compass .e': '东', '#compass .s': '南', '#compass .w': '西',
   '#title h1': '灯下问道',
   '#title .kicker': '守一盏灯,渡一场劫。',
-  '#title .lead': '云隐灵谷,天劫将至。<br>一盏灵灯,一个人。',
-  '#title .desc': '踏遍五域。收集灵石。<br>炼器修行,直面劫主。<br>守过十分钟 —— 然后问道无尽。',
+  '#title .lead': '云隐灵谷,山海之间。<br>一盏灵灯,一个人。',
+  '#title .desc': '踏遍五山。收集琅玕。<br>炼器修行,直面刑天。<br>守过十分钟 —— 然后问道无尽。',
   '#startBtn': '进入灵谷 &nbsp;→',
   '#title .controls': '<b>WASD</b> 移动 <span class="dot">•</span> <b>鼠标</b> 瞄准 <span class="dot">•</span> <b>自动出剑默认开</b> <span class="dot">•</span> <b>右键 / K</b> 重击<br><b>空格</b> 踏云步 <span class="dot">•</span> <b>E</b> 灵光爆 <span class="dot">•</span> <b>Q</b> 换法宝<br><b>F</b> 炼器坊 <span class="dot">•</span> <b>Tab</b> 自动 / 手动 <span class="dot">•</span> <b>Esc</b> 暂停<br><b>滚轮</b> 缩放 <span class="dot">•</span> <b>F4</b> 隐藏界面',
   '#title .tiny:not(#titleBest)': '守灯 / 突破 / 炼器',
   '#archiveBtn': '道藏', '#aboutBtn': '关于', '#archiveClose': '返回', '#aboutClose': '返回',
   '#archive h2': '道藏', '#archive .modal > .sub': '灵谷对你的记忆。只存在本机。',
-  '#forge h2': '炼器坊', '#forgeClose': '离开 &nbsp;(F / Esc)', '#forgeRest': '在炉边调息 —— 回满命火(5 灵晶)',
+  '#forge h2': '炼器坊', '#forgeClose': '离开 &nbsp;(F / Esc)', '#forgeRest': '在炉边调息 —— 回满命火(5 丹粟)',
   '#pause h2': '已暂停', '#pause .modal > .sub': '灵谷在等你。', '#resumeBtn': '继续 &nbsp;(Esc)', '#quitBtn': '返回', '#diagBtn': '复制诊断信息',
   '#endSecondary': '返回',
   '#weather .label': '活着的灵谷', '#swapBtn': '<b>Q</b> 换法宝', '#forgeHint': '<b>F</b> 进入炼器坊', '#pauseBtn': '暂停',
@@ -426,7 +440,7 @@ function applyQuality() {
 const GUIDE = [
   { key: 'move', text: 'Move with WASD', zh: '用 WASD 移动', touch: 'Drag the left half of the screen to move', touchZh: '拖动屏幕左半边移动', pad: 'Move with the left stick', padZh: '左摇杆移动', done: () => (S.guideMoved || 0) > 4 },
   { key: 'attack', text: 'Your sword flies on its own. Keep demons in front of you.', zh: '飞剑会自己出鞘。把妖邪放在身前。', done: () => S.stats.kills >= 3 },
-  { key: 'ember', text: 'Cyan spirit stones are qi. Walk over them to break through.', zh: '青色灵石是灵气,走过去拾取突破。', done: () => (P.xpTotal || 0) >= 5 },
+  { key: 'ember', text: 'Cyan langgan jade are qi. Walk over them to break through.', zh: '青色琅玕是灵气,走过去拾取突破。', done: () => (P.xpTotal || 0) >= 5 },
   { key: 'forge', text: 'The refinery in the market reworks your artefacts. Press F beside it.', zh: '坊市里的炼器坊能重炼法宝,走到旁边按 F。', touch: 'The forge in the village reworks your weapons. Tap Forge beside it.', touchZh: '坊市里的炼器坊能重炼法宝,走到旁边点“炼器”。', pad: 'The forge in the village reworks your weapons. Press LB beside it.', padZh: '村里的铁匠铺能重锻武器,走到旁边按 LB。', done: () => S.forgeOpened || P.shards >= 8 },
 ];
 function guideText(g) {
@@ -492,7 +506,11 @@ function renderArchive() {
   let h = `<div class="statrow">${stat(fmtTime(META.bestTime), tr('longest run'))}${stat(META.totalKills, tr('creatures defeated'))}${stat(META.bossKills, tr('wardens felled'))}${stat(META.runsPlayed, tr('runs'))}</div>`;
   h += '<div class="achgrid">' + UNLOCKS.map((u) => `<div class="ach ${unlocked(u.key) ? 'on' : ''}"><div class="t">${tr(u.name)}</div><div class="d">${tr(u.how)}</div><div class="g">${unlocked(u.key) ? tr(u.gives) : tr('Locked')}</div></div>`).join('') + '</div>';
   const best = META.bestiary || {};
-  h += `<div class="sub" style="margin:16px 0 6px">${tr('Bestiary')}</div><div class="bestiary">` + Object.keys(MINIS).map((k) => { const d = MINIS[k]; const on = !!best[d.key]; return `<span class="bb ${on ? 'on' : ''}">${on ? tr(d.name) : '???'}</span>`; }).join('') + `<span class="bb ${META.bossKills ? 'on' : ''}">${META.bossKills ? tr('THE ASH WARDEN') : '???'}</span></div>`;
+  const zhL = SET.lang === 'zh';
+  h += `<div class="sub" style="margin:16px 0 6px">${tr('Bestiary')}</div><div class="loregrid">` + LORE.map((L) => {
+    const on = ['wolfking', 'sentinel', 'salamander', 'maw'].includes(L.key) ? !!best[L.key] : L.key === 'boss' ? META.bossKills > 0 : META.totalKills > 0;
+    return `<div class="lore ${on ? 'on' : ''}"><b>${on ? (zhL ? L.zh : L.en) : '???'}</b><i>${zhL ? L.src : L.srcEn}</i>${on ? `<q>${zhL ? L.quote : L.quoteEn}</q>` : ''}</div>`;
+  }).join('') + '</div>';
   h += `<div class="sub" style="margin:16px 0 6px">${tr('Best runs')}</div>`;
   h += META.runs.length ? '<table class="runs">' + META.runs.map((r) => `<tr><td>${fmtTime(r.time)}</td><td>${SET.lang === 'zh' ? DIFFS[r.diff || 'standard'].zh : DIFFS[r.diff || 'standard'].name}</td><td>${r.kills} ${tr('defeated')}</td><td>${tr('Level')} ${r.level}</td><td>${r.won ? tr('Dawn') : (r.boss ? tr('Warden slain') : '—')}${r.shrines ? ` · ${r.shrines}${tr(' shrines')}` : ''}</td><td>${r.date}</td></tr>`).join('') + '</table>' : `<div class="sub">${tr('No runs yet.')}</div>`;
   const bdRows = ['calm', 'standard', 'ash'].map((k) => { const b = (META.byDiff || {})[k]; return b ? `<span class="dbadge"><b>${SET.lang === 'zh' ? DIFFS[k].zh : DIFFS[k].name}</b> ${fmtTime(b.best)} · ${b.wins}/${b.runs} ${tr('dawns')}</span>` : ''; }).join('');
@@ -1216,8 +1234,8 @@ function endRun(won) {
 }
 function goEndless() { S.endless = true; S.phase = 'run'; S.paused = false; S.modal = null; $('#end').classList.remove('show'); showBanner('ENDLESS  ·  The wildwood does not end. Neither do you.', 5); }
 function refreshTitleBest() { const el = $('#titleBest'); if (el) el.textContent = S.best.time > 0 ? (SET.lang === 'zh' ? `最佳战绩 ${fmtTime(S.best.time)} · 击败 ${S.best.kills}` : `Best run ${fmtTime(S.best.time)} · ${S.best.kills} defeated`) : (SET.lang === 'zh' ? '还没有记录。山谷在等你。' : 'No run yet. The valley is waiting.'); }
-const SRC_NAMES = { wisp: 'a ghost-fire', cinder: 'a shade', crawler: 'a gu centipede', spitter: 'a toad demon', spit: "a toad demon's venom", brute: 'a mountain ape', boss: 'the Tribulation Lord', bossSlam: "the Lord's lightning", bossCharge: "the Lord's charge", burn: 'burning ground', mini: 'a district elite', other: 'the dark' };
-const SRC_ZH = { wisp: '磷火', cinder: '煞灵', crawler: '蛊蜈蚣', spitter: '蟾妖', spit: '蟾妖的毒弹', brute: '山魈', boss: '劫主', bossSlam: '劫主的雷击', bossCharge: '劫主的冲锋', burn: '燃烧的地面', mini: '一域精英', other: '黑暗' };
+const SRC_NAMES = { wisp: 'a Qique', cinder: 'a Shangao', crawler: 'a Mingshe', spitter: 'a Bifang', spit: "a Bifang's venom", brute: 'a Qiongqi', boss: 'Xingtian', bossSlam: "Xingtian's axe", bossCharge: "Xingtian's charge", burn: 'burning ground', mini: 'a district elite', other: 'the dark' };
+const SRC_ZH = { wisp: '鬿雀', cinder: '山膏', crawler: '鸣蛇', spitter: '毕方', spit: '毕方的火弹', brute: '穷奇', boss: '刑天', bossSlam: '刑天的干戚', bossCharge: '刑天的冲锋', burn: '燃烧的地面', mini: '一域精英', other: '黑暗' };
 function renderDeathReview(won) {
   const box = $('#deathReview'); box.style.display = won ? 'none' : 'block';
   if (won) return;
@@ -1632,7 +1650,7 @@ function openForge() {
 function closeForge() { $('#forge').classList.remove('show'); S.modal = null; S.paused = false; }
 function renderForge() {
   $('#forgeShards').textContent = `${P.shards} ${tr('shards')}`;
-  $('#forge .modal > .sub').firstChild.textContent = SET.lang === 'zh' ? '用灵晶换永久强化。 ' : 'Spend spirit crystals on permanent upgrades. ';
+  $('#forge .modal > .sub').firstChild.textContent = SET.lang === 'zh' ? '用丹粟换永久强化。 ' : 'Spend cinnabar grains on permanent upgrades. ';
   const box = $('#forgeTracks'); box.innerHTML = '';
   for (const f of FORGE) {
     const rank = P.forge[f.key];
@@ -1726,7 +1744,7 @@ function updateSpawner(dt) {
       let x = P.x + Math.cos(a) * d, z = P.z + Math.sin(a) * d; const rr = Math.hypot(x, z); if (rr > PLAY_R - 3) { x *= (PLAY_R - 3) / rr; z *= (PLAY_R - 3) / rr; }
       const e = spawnEnemy(S.tide.type, x, z); collideStatic(e, world.obstacles, e.r);
     }
-    if (S.tide.t <= 0) { S.tide = null; P.shards += 6; showBanner('THE TIDE BREAKS  ·  +6 spirit crystals', 3); AUDIO.sfx('district'); burstParticles(P.x, 1, P.z, 24, [1, 0.85, 0.4], 4, 0.4, 0.7, -2); }
+    if (S.tide.t <= 0) { S.tide = null; P.shards += 6; showBanner('THE TIDE BREAKS  ·  +6 cinnabar grains', 3); AUDIO.sfx('district'); burstParticles(P.x, 1, P.z, 24, [1, 0.85, 0.4], 4, 0.4, 0.7, -2); }
   }
   S.eliteTimer -= dt;
   if (S.eliteTimer <= 0 && m > 1.8) {
@@ -1734,7 +1752,7 @@ function updateSpawner(dt) {
     const e = spawnAround('brute', { hpMul: 1 });
     if (e) { showBanner('AN ASH BRUTE PROWLS NEARBY', 3); AUDIO.sfx('roar'); }
   }
-  // tribulation: 30 s before the boss the sky closes in, lightning starts, then the Tribulation Lord descends
+  // tribulation: 30 s before the boss the sky closes in, lightning starts, then Xingtian descends
   if (!S.endless && !S.tribWarned && S.t >= BOSS_AT_FN() - 30) { S.tribWarned = true; showBanner('THE SKY DARKENS  ·  The tribulation is near.', 5); AUDIO.sfx('thunder'); W.lightning = 0.6; }
   const tribTarget = ((!S.endless && S.t >= BOSS_AT_FN() - 30 && !S.bossKilled) || S.boss) ? 1 : 0;
   S.tribK = lerp(S.tribK, tribTarget, 1 - Math.pow(0.001, dt / 8));
@@ -2288,7 +2306,7 @@ function updateHUD() {
   const zh = SET.lang === 'zh';
   $('#lvlText').textContent = realmName(P.level);
   $('#xpText').textContent = `${Math.floor(P.xp)} / ${P.xpNext} ${tr('XP')}`;
-  $('#shardText').textContent = zh ? `${P.shards} 灵晶` : `${P.shards} spirit crystal${P.shards === 1 ? '' : 's'}`;
+  $('#shardText').textContent = zh ? `${P.shards} 丹粟` : `${P.shards} cinnabar grain${P.shards === 1 ? '' : 's'}`;
   $('#forgeText').textContent = `${tr('Edge')} ${P.forge.edge} / 3 · ${tr('Mail')} ${P.forge.mail} / 3 · ${tr('Charm')} ${P.forge.charm} / 3`;
   $('#statText').textContent = `${tr('Damage')} ×${dmgMult().toFixed(2)} · ${tr('Armour')} ${Math.round(armour() * 100)}%${P.path ? ' · ' + tr({ sword: 'Sword Path', talisman: 'Talisman Path', body: 'Body Path', demon: 'Demon Path' }[P.path]) : ''}`;
   $('#bestText').textContent = `${tr('Best')} ${fmtTime(S.best.time)} · ${S.best.kills} ${tr('kills')}`;

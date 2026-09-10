@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>灯下问道 · Lantern Dao</title>
-<meta name="description" content="守一盏灯,渡一场劫。仙侠幸存者:Blender + three.js。A xianxia survivors-like built with Blender and three.js.">
+<meta name="description" content="守一盏灯,渡一场劫。山海经里的仙侠幸存者:Blender + three.js。A survivors-like set in the Classic of Mountains and Seas, built with Blender and three.js.">
 <meta name="theme-color" content="#1a1524">
 <meta property="og:title" content="灯下问道 · Lantern Dao">
 <meta property="og:description" content="Keep one lamp, outlast one tribulation. A xianxia survivors-like: five domains, a refinery, a Tribulation Lord at eight minutes.">
@@ -298,6 +298,13 @@
   @media (max-height: 520px) { #status { padding: 6px 8px; } #botr { padding: 5px 8px; } #compass { width: 78px; height: 78px; } #compass span { display: none; } }
   @media (max-width: 520px) { #compass { width: 84px; height: 84px; } #compass span { display: none; } }
   .track .pips i.evo { border-radius: 50%; } .track .pips i.evo.on { background: var(--gilt); box-shadow: 0 0 0 2px rgba(156,123,36,.35); }
+  .loregrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .lore { border: 1px solid var(--lineP); border-radius: 6px; padding: 8px 10px; font-size: 12px; opacity: .6; }
+  .lore.on { opacity: 1; border-color: rgba(156,123,36,.45); background-color: rgba(217,176,74,.08); }
+  .lore b { display: block; color: var(--cinnabar); font-size: 14px; }
+  .lore i { display: block; color: var(--mutedP); font-style: normal; font-size: 11px; letter-spacing: .04em; margin-top: 2px; }
+  .lore q { display: block; margin-top: 5px; color: var(--inkP); quotes: none; font-family: "Noto Serif SC", "STSong", "SimSun", Fraunces, serif; line-height: 1.5; }
+  @media (max-width: 640px) { .loregrid { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
@@ -369,8 +376,8 @@
   <div class="panel">
     <div class="kicker">Keep one lamp. Outlast one tribulation.</div>
     <h1>Lantern Dao.</h1>
-    <div class="lead">A hidden valley. A tribulation coming.<br>One lamp, one cultivator.</div>
-    <div class="desc">Walk five domains. Gather spirit stones.<br>Refine your artefacts. Face the Tribulation Lord.<br>Hold out ten minutes — then walk the endless Dao.</div>
+    <div class="lead">A hidden valley between mountains and seas.<br>One lamp, one cultivator.</div>
+    <div class="desc">Walk the five mountains. Gather langgan jade.<br>Refine your artefacts. Face Xingtian.<br>Hold out ten minutes — then walk the endless Dao.</div>
     <div class="pickrow"><span class="plabel" id="diffLabel">Difficulty</span><div class="picks" id="diffPick"><button class="dp" data-d="calm"><span class="n">Serene</span></button><button class="dp on" data-d="standard"><span class="n">Cultivate</span></button><button class="dp" data-d="ash"><span class="n">Tribulation</span></button></div></div>
     <div class="pdesc" id="diffDesc"></div>
     <div class="pickrow" id="weaponRow"><span class="plabel" id="weaponLabel">Starting weapon</span><div class="picks" id="weaponPick" style="display:none"></div></div>
