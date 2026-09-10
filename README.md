@@ -24,6 +24,10 @@ Lantern Dao is the xianxia re-skin of [Emberlight](https://github.com/LeiGaoRobo
 
 `D:\AI\emberlight` 的仙侠换皮版,按 `PLAN_xianxia.md` 分六个会话推进。**引擎、战斗、验证钩子全部沿用 Emberlight,下面 Emberlight 的说明同样适用**;美术与命名决定见 `THEME.md`。
 
+## 打磨期(2026-09-10,v1.1 / v1.2)
+
+筑基道途(剑修 / 符修 / 体修 / 魔修)、法宝进阶(炼器坊第四阶,需金丹)、妖潮、两项新机缘、六个新地标 Kit、劫主脚下紫纹环、香炉青烟。详见 CHANGELOG v1.1–v1.2。
+
 ## 会话 X5 交付(2026-09-10)· 音频
 
 五声音阶 pad + 古筝 + 箫三层,煞气切羽调加鼓点,劫主加轮指跑句;五件法宝各自音效,突破钟声、落雷、五声提示音。详见 CHANGELOG v0.5。

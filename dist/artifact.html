@@ -1493,6 +1493,7 @@ function realmName(l) { if (SET.lang !== 'zh') return `${tr('Level')} ${pad2(l)}
 const PATHS = [
   { key: 'path_sword', path: true, max: 1, name: 'Sword Path', desc: 'Attack 15% faster, crit +10%, damage +10%.', apply: (p) => { p.path = 'sword'; p.speedTalent *= 1.15; p.critBonus = (p.critBonus || 0) + 0.10; p.dmgTalent *= 1.1; } },
   { key: 'path_talisman', path: true, max: 1, name: 'Talisman Path', desc: 'Spirit burst recharges 30% faster, projectiles pierce one more, burning ground +50%, burst radius +15%.', apply: (p) => { p.path = 'talisman'; p.novaCdMult *= 0.7; p.pathPierce = 1; p.burnMult = (p.burnMult || 1) * 1.5; p.areaMult *= 1.15; } },
+  { key: 'path_demon', path: true, unlock: 'demonpath', max: 1, name: 'Demon Path', desc: 'Damage +40%, max health −25%, heal 3% of all damage dealt.', apply: (p) => { p.path = 'demon'; p.dmgTalent *= 1.4; p.maxHp = Math.max(30, Math.round(p.maxHp * 0.75)); p.hp = Math.min(p.hp, p.maxHp); p.leech = Math.max(p.leech || 0, 0.03); } },
   { key: 'path_body', path: true, max: 1, name: 'Body Path', desc: 'Max health +40 (and heal 40), armour +10%, heavy strike +40%.', apply: (p) => { p.path = 'body'; p.maxHp += 40; p.hp = Math.min(p.maxHp, p.hp + 40); p.armourTalent += 0.10; p.heavyMult *= 1.4; } },
 ];
 const LEVEL_NAMES = ['A brighter spark.', 'The wick catches.', 'Warmth returns.', 'Steady flame.', 'The dark recedes.', 'Ember heart.', 'Wildfire.', 'Beacon.', 'Sunrise in your hands.', 'Unquenchable.'];
@@ -1515,7 +1516,7 @@ const FORGE = [
 const S = {
   phase: 'loading',          // loading | title | run | dead | won
   paused: false, modal: null,
-  t: 0, endless: false, seed: 7, tribK: 0, tribWarned: false,
+  t: 0, endless: false, seed: 7, tribK: 0, tribWarned: false, tide: null,
   keys: {}, mouse: { x: 0, y: 0, down: false, rdown: false }, aim: new THREE.Vector3(),
   enemies: [], pickups: [], projectiles: [], eprojectiles: [], burns: [], slashes: [], timers: [],
   spawnBudget: 0, eliteTimer: 40, hitStop: 0, bossIntro: 0, slowMo: 0, minis: [], miniDone: {}, miniCorpses: [], bossSpawned: false, boss: null,
@@ -1595,6 +1596,10 @@ const ZH = {
   'ASH LONGBOW': '落雁弓', 'EMBER CHAIN': '缚灵索', 'LONGBOW': '落雁弓', 'CHAIN': '缚灵索',
   'Pierce two more enemies': '多穿透两个妖邪', 'Arrows split into three': '一箭化三', 'Arrows scorch where they land': '落点燃地',
   'Every third hit strikes for 2.5×': '每第三击造成 2.5 倍伤害', 'Reach +40%': '索长 +40%', 'Hits drag enemies toward you': '命中把妖邪拽向你',
+  'DEMON TIDE  ·  They come from one side. Hold.': '妖潮  ·  妖邪从一侧涌来,守住。', 'THE TIDE BREAKS  ·  +6 spirit crystals': '妖潮退去  ·  +6 灵晶',
+  'Foundation memory': '筑基印记', 'Reach Foundation Establishment (level 10) in one run': '单局达到筑基(10 级)', 'Every run starts at Qi Refining 3 with two techniques': '每局开局即练气三层,自带两门功法',
+  'Demon heart': '魔心', 'Pass the tribulation on Tribulation difficulty': '在劫难档渡过天劫', 'A fourth path at Foundation: the Demon Path': '筑基时多一条道途:魔修',
+  'Demon Path': '魔修', 'Damage +40%, max health −25%, heal 3% of all damage dealt.': '伤害 +40%,最大命火 −25%,造成伤害的 3% 转为命火。',
   'Keystone': '本命功法', 'Rare': '秘传', 'Path': '道途', 'Needs Golden Core': '需金丹境', 'A path is chosen once. It shapes the rest of the run.': '道途只能择一次,决定此后的修行方向。',
   'Sword Path': '剑修', 'Attack 15% faster, crit +10%, damage +10%.': '攻速 +15%,会心 +10%,伤害 +10%。',
   'Talisman Path': '符修', 'Spirit burst recharges 30% faster, projectiles pierce one more, burning ground +50%, burst radius +15%.': '灵光爆冷却 −30%,飞行法宝多穿透一个,燃烧地面 +50%,范围 +15%。',
@@ -1769,6 +1774,8 @@ const UNLOCKS = [
   { key: 'fourth', name: 'Wide horizon', how: 'Survive 5 minutes in one run', gives: 'Level-ups offer four talents instead of three', test: (m, run) => run && run.time >= 300 },
   { key: 'tithe', name: "Smith's tithe", how: 'Defeat the Ash Warden', gives: 'Every run starts with 10 forge shards', test: (m, run) => m.bossKills > 0 },
   { key: 'boltstart', name: 'Cinder in the hand', how: 'Defeat 3000 creatures in total', gives: 'Runs start with the Cinder Bolt, already forged once', test: (m) => m.totalKills >= 3000 },
+  { key: 'foundation', name: 'Foundation memory', how: 'Reach Foundation Establishment (level 10) in one run', gives: 'Every run starts at Qi Refining 3 with two techniques', test: (m, run) => run && run.level >= 10 },
+  { key: 'demonpath', name: 'Demon heart', how: 'Pass the tribulation on Tribulation difficulty', gives: 'A fourth path at Foundation: the Demon Path', test: (m, run) => run && run.won && run.diff === 'ash' },
 ];
 function loadMeta() {
   const fresh = { v: META_V, totalKills: 0, bossKills: 0, runsPlayed: 0, bestTime: 0, runs: [], unlocks: {}, byDiff: {}, bestiary: {} };
@@ -2041,7 +2048,7 @@ function buildEffects() {
   }
   // fire sparks at the forge & campfires are spawned from the particle system each frame
   FX.emberSources = [];
-  for (const t of (world.placements.Campfire || [])) FX.emberSources.push({ x: t.x, z: t.z, y: 0.5, rate: 6 });
+  for (const t of (world.placements.Campfire || [])) FX.emberSources.push({ x: t.x, z: t.z, y: 1.3, rate: 5, smoke: true });
   FX.emberSources.push({ x: world.forgePos.x - 0.9 * Math.cos(0), z: world.forgePos.z, y: 1.0, rate: 8 });
   // ambient drift: petals (peach), leaves (bamboo), fireflies (marsh reeds, night only)
   FX.ambient = [];
@@ -2473,7 +2480,7 @@ function showBanner(text, secs = 4) { const b = $('#banner'); b.textContent = tr
 // =====================================================================
 function startRun() {
   P = newPlayer();
-  S.phase = 'run'; S.paused = false; S.modal = null; S.t = 0; S.endless = false; S.tribK = 0; S.tribWarned = false;
+  S.phase = 'run'; S.paused = false; S.modal = null; S.t = 0; S.endless = false; S.tribK = 0; S.tribWarned = false; S.tide = null;
   S.recorded = false;
   S.enemies.length = 0; S.pickups.length = 0; S.projectiles.length = 0; S.eprojectiles.length = 0; S.burns.length = 0; S.timers.length = 0;
   for (const m of S.slashes) scene.remove(m); S.slashes.length = 0;
@@ -2491,6 +2498,7 @@ function startRun() {
   S.bossCorpse = null;
   if (unlocked('tithe')) P.shards = 10;
   if (unlocked('boltstart')) { P.weapon = Math.min(WEAPONS.length - 1, SET.startWeapon | 0); P.weaponRank.bolt = 1; }
+  if (unlocked('foundation')) { S.timers.push({ t: 0.6, fn: () => gainXp(P.xpNext) }); S.timers.push({ t: 0.9, fn: () => gainXp(P.xpNext) }); }
   refreshWeatherButtons(); refreshAutoBtn(); refreshWeaponCard();
   $('#title').classList.remove('show'); $('#end').classList.remove('show'); $('#pause').classList.remove('show');
   document.body.classList.remove('title');
@@ -2871,7 +2879,7 @@ function gainXp(n) {
 // =====================================================================
 let luOptions = [];
 function rollTalents() {
-  if (P.level >= 10 && !P.path && !P.pathOffered) { P.pathOffered = true; return PATHS.slice(); }
+  if (P.level >= 10 && !P.path && !P.pathOffered) { P.pathOffered = true; return PATHS.filter((p) => !p.unlock || unlocked(p.unlock)); }
   const avail = TALENTS.filter((t) => (P.talents[t.key] || 0) < t.max
     && !(t.key === 'twin' && P.weapon !== 1 && Math.random() < 0.5)
     && !(t.key === 'tongue' && P.weapon !== 1 && Math.random() < 0.6)
@@ -3016,6 +3024,17 @@ function updateSpawner(dt) {
     const n = type === 'wisp' && !(P.wards && P.wards.wolfsbane) ? 2 + Math.floor(Math.random() * 2) : 1;
     const e = spawnAround(type, { hpMul: S.district.key === 'cinder' ? 1.2 : 1 });
     if (e && n > 1) for (let i = 1; i < n; i++) { const a = Math.random() * 6.28; spawnEnemy(type, e.x + Math.cos(a) * 1.5, e.z + Math.sin(a) * 1.5); }
+  }
+  // demon tide: from 2:00, every 150 s, one demon kind pours in from one side for 20 s
+  if (!S.tide && S.t >= 120 && !S.boss && !S.shrineActive && ((S.t - 120) % 150) < dt) { S.tide = { type: pickType(w), a: Math.random() * Math.PI * 2, t: 20 }; showBanner('DEMON TIDE  ·  They come from one side. Hold.', 4); AUDIO.sfx('roar'); }
+  if (S.tide) {
+    S.tide.t -= dt;
+    if (Math.random() < 3.2 * DIFF().spawn * dt && S.enemies.length < cap + 40) {
+      const d = 24 + Math.random() * 6, a = S.tide.a + (Math.random() - 0.5) * 0.9;
+      let x = P.x + Math.cos(a) * d, z = P.z + Math.sin(a) * d; const rr = Math.hypot(x, z); if (rr > PLAY_R - 3) { x *= (PLAY_R - 3) / rr; z *= (PLAY_R - 3) / rr; }
+      const e = spawnEnemy(S.tide.type, x, z); collideStatic(e, world.obstacles, e.r);
+    }
+    if (S.tide.t <= 0) { S.tide = null; P.shards += 6; showBanner('THE TIDE BREAKS  ·  +6 spirit crystals', 3); AUDIO.sfx('district'); burstParticles(P.x, 1, P.z, 24, [1, 0.85, 0.4], 4, 0.4, 0.7, -2); }
   }
   S.eliteTimer -= dt;
   if (S.eliteTimer <= 0 && m > 1.8) {
@@ -3579,7 +3598,7 @@ function updateHUD() {
   $('#xpText').textContent = `${Math.floor(P.xp)} / ${P.xpNext} ${tr('XP')}`;
   $('#shardText').textContent = zh ? `${P.shards} 灵晶` : `${P.shards} spirit crystal${P.shards === 1 ? '' : 's'}`;
   $('#forgeText').textContent = `${tr('Edge')} ${P.forge.edge} / 3 · ${tr('Mail')} ${P.forge.mail} / 3 · ${tr('Charm')} ${P.forge.charm} / 3`;
-  $('#statText').textContent = `${tr('Damage')} ×${dmgMult().toFixed(2)} · ${tr('Armour')} ${Math.round(armour() * 100)}%${P.path ? ' · ' + tr({ sword: 'Sword Path', talisman: 'Talisman Path', body: 'Body Path' }[P.path]) : ''}`;
+  $('#statText').textContent = `${tr('Damage')} ×${dmgMult().toFixed(2)} · ${tr('Armour')} ${Math.round(armour() * 100)}%${P.path ? ' · ' + tr({ sword: 'Sword Path', talisman: 'Talisman Path', body: 'Body Path', demon: 'Demon Path' }[P.path]) : ''}`;
   $('#bestText').textContent = `${tr('Best')} ${fmtTime(S.best.time)} · ${S.best.kills} ${tr('kills')}`;
   $('#timer').textContent = S.endless ? `${fmtTime(S.t)} / ∞` : `${fmtTime(S.t)} / 10:00`;
   $('#sub').textContent = `${tr(S.district.title)} · ${tr('Threat')} ${pad2(threat())} · ${S.enemies.length + (S.boss ? 1 : 0)} ${tr('enemies')}`;
@@ -3657,7 +3676,7 @@ function tick(dt) {
       else spawnParticle(a.x + ox * 1.5, 0.4 + Math.random() * 1.2, a.z + oz * 1.5, (Math.random() - 0.5) * 0.5, 0.15 + Math.random() * 0.25, (Math.random() - 0.5) * 0.5, 0.55, 1.0, 0.6, 0.11, 3.0 + Math.random() * 2, -0.02);
     }
   }
-  if (running || S.phase === 'title') for (const src of FX.emberSources) { if (Math.hypot(src.x - P.x, src.z - P.z) < 40 && Math.random() < src.rate * dt) spawnParticle(src.x + (Math.random() - 0.5) * 0.4, src.y, src.z + (Math.random() - 0.5) * 0.4, (Math.random() - 0.5) * 0.6, 1.5 + Math.random(), (Math.random() - 0.5) * 0.6, 1, 0.55, 0.15, 0.35, 1.2, 0.4); }
+  if (running || S.phase === 'title') for (const src of FX.emberSources) { if (Math.hypot(src.x - P.x, src.z - P.z) < 40 && Math.random() < src.rate * dt) { if (src.smoke) spawnParticle(src.x + (Math.random() - 0.5) * 0.2, src.y, src.z + (Math.random() - 0.5) * 0.2, (Math.random() - 0.5) * 0.25 + W.cur.wind * 0.4, 0.7 + Math.random() * 0.3, (Math.random() - 0.5) * 0.25, 0.32, 0.32, 0.36, 0.55, 2.4, -0.12); else spawnParticle(src.x + (Math.random() - 0.5) * 0.4, src.y, src.z + (Math.random() - 0.5) * 0.4, (Math.random() - 0.5) * 0.6, 1.5 + Math.random(), (Math.random() - 0.5) * 0.6, 1, 0.55, 0.15, 0.35, 1.2, 0.4); } }
   novaLight.intensity *= Math.pow(0.001, dt);
   renderEnemies();
   renderPickups();
