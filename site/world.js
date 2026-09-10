@@ -519,6 +519,9 @@ export function generateMap(kit, scene, seed = 7) {
   add('Barrel', -10.8, -4.2, 0); add('Barrel', -11.4, -3.6, 0); add('Logpile', -6.2, -9.2, 0.3);
   add('Hay', 15.5, 8.5, 0.3, 1, { r: 0.6 }); add('Crate', -13.5, 14.5, 0.4); add('Barrel', -12.8, 15.1, 0);
   add('Signpost', 7.0, 7.0, rad(30), 1, { r: 0.2 }); add('Signpost', -7.0, -7.4, rad(-140), 1, { r: 0.2 });
+  // market stalls and banners around the plaza
+  add('Stall', 6.2, -1.2, rad(25), 1, { rect: { w: 2.2, d: 1.3 } }); add('Stall', -4.8, 6.4, rad(-115), 1, { rect: { w: 2.2, d: 1.3 } }); add('Stall', 9.8, 2.8, rad(70), 1, { rect: { w: 2.2, d: 1.3 } });
+  for (const [bx, bz] of [[7.6, -7.6], [-7.6, 7.6], [2.2, 9.6], [-2.4, -9.6]]) add('Banner', bx, bz, rad(-Math.atan2(bz, bx) * 180 / Math.PI), 1, { r: 0.2 });
   // fences around the plaza gaps
   for (let i = 0; i < 12; i++) {
     const a = i / 12 * Math.PI * 2 + 0.1;
@@ -533,23 +536,27 @@ export function generateMap(kit, scene, seed = 7) {
   // Wildwood: ring of big oaks + campfire clearing
   { const D = DISTRICTS[1]; shrine(D);
     for (let i = 0; i < 9; i++) { const a = i / 9 * Math.PI * 2; add(i % 3 ? 'Oak' : 'Pine', D.cx + Math.cos(a) * 8, D.cz + Math.sin(a) * 8, rng() * 6, 1.3 + rng() * 0.3, { r: 0.7 }); }
-    add('Campfire', D.cx + 3, D.cz - 2, 0, 1, { r: 0.7 }); add('Logpile', D.cx - 3, D.cz + 2.5, 0.4); add('Stump', D.cx + 4, D.cz + 3, 0.2); }
+    add('Campfire', D.cx + 3, D.cz - 2, 0, 1, { r: 0.7 }); add('Logpile', D.cx - 3, D.cz + 2.5, 0.4); add('Stump', D.cx + 4, D.cz + 3, 0.2);
+    add('BambooGiant', D.cx - 6, D.cz + 5, 0.4, 1, { r: 1.0 }); add('BambooGiant', D.cx + 7, D.cz - 6, 2.1, 0.9, { r: 0.9 }); }
   // Mossfall: arches & columns
   { const D = DISTRICTS[2]; shrine(D);
     add('RuinArch', D.cx - 7, D.cz, rad(20), 1.2, { rect: { w: 3.2, d: 0.8 } });
     add('RuinArch', D.cx + 7, D.cz + 2, rad(-30), 1.1, { rect: { w: 3.2, d: 0.8 } });
     for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; add(i % 2 ? 'Column' : 'BrokenColumn', D.cx + Math.cos(a) * 5.5, D.cz + Math.sin(a) * 5.5, a, 1, { r: 0.6 }); }
-    add('RuinWall', D.cx, D.cz - 9, rad(10), 1.2, { rect: { w: 3.6, d: 0.6 } }); add('RuinWall', D.cx + 4, D.cz + 9, rad(-50), 1, { rect: { w: 3.0, d: 0.5 } }); }
+    add('RuinWall', D.cx, D.cz - 9, rad(10), 1.2, { rect: { w: 3.6, d: 0.6 } }); add('RuinWall', D.cx + 4, D.cz + 9, rad(-50), 1, { rect: { w: 3.0, d: 0.5 } });
+    add('SwordMonument', D.cx - 4, D.cz + 6.5, rad(150), 1.1, { rect: { w: 3.2, d: 2.2 } }); }
   // Cinder Barrow: dead trees + ember rocks, boss lair
   { const D = DISTRICTS[3]; shrine(D);
     for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2; add('DeadTree', D.cx + Math.cos(a) * 9, D.cz + Math.sin(a) * 9, rng() * 6, 1.2 + rng() * 0.5, { r: 0.4 }); }
     for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2 + 0.5; add('EmberRock', D.cx + Math.cos(a) * 4.5, D.cz + Math.sin(a) * 4.5, rng() * 6, 1.3, { r: 0.7 }); }
-    add('Boulder', D.cx - 12, D.cz + 6, 0.4, 1.1, { r: 1.9 }); add('Boulder', D.cx + 11, D.cz - 8, 2.4, 0.9, { r: 1.6 }); }
+    add('Boulder', D.cx - 12, D.cz + 6, 0.4, 1.1, { r: 1.9 }); add('Boulder', D.cx + 11, D.cz - 8, 2.4, 0.9, { r: 1.6 });
+    add('LavaFissure', D.cx + 6, D.cz + 6, 0.4, 1.2, { r: 1.3 }); add('LavaFissure', D.cx - 7, D.cz - 4, 1.9, 1.0, { r: 1.1 }); }
   // Silvermere: reeds, boulders, a broken jetty of fence
   { const D = DISTRICTS[4]; shrine(D);
     for (let i = 0; i < 14; i++) { const a = rng() * Math.PI * 2, r = 4 + rng() * 8; add('Reed', D.cx + Math.cos(a) * r, D.cz + Math.sin(a) * r, rng() * 6, 1 + rng() * 0.4, { solid: false }); }
     add('Boulder', D.cx + 8, D.cz - 5, 1.1, 1.2, { r: 2 }); add('Rock_L', D.cx - 7, D.cz + 6, 0.5, 1.3, { r: 1.2 });
-    for (let i = 0; i < 4; i++) add('Fence', D.cx - 12 + i * 2.3, D.cz + 11, 0, 1, { solid: false }); }
+    for (let i = 0; i < 4; i++) add('Fence', D.cx - 12 + i * 2.3, D.cz + 11, 0, 1, { solid: false });
+    add('LotusPond', D.cx - 2, D.cz - 7, 0.3, 1, { r: 2.9 }); }
 
   // ---- scatter
   const tables = {
@@ -589,7 +596,7 @@ export function generateMap(kit, scene, seed = 7) {
 
   // ---- upload instanced meshes
   const sets = {};
-  const TREES = new Set(['Oak', 'Oak2', 'Pine', 'DeadTree']);
+  const TREES = new Set(['Oak', 'Oak2', 'Pine', 'DeadTree', 'BambooGiant']);
   for (const name of Object.keys(placements)) sets[name] = new InstanceSet(kit, name, placements[name], scene, { tint: true, cast: !['Tuft', 'Reed'].includes(name), material: TREES.has(name) ? MATS.tree : null });
   return { placements, obstacles, landmarks, sets, forgePos, placedCount: placed };
 }

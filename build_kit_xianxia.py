@@ -718,11 +718,91 @@ P = kit("Heart")   # elixir pill
 ball("Fire_Pill", (0, 0, 0.4), 0.2, M["Pill"], P, sub=2)
 box("Fire_PillBand", (0, 0, 0.4), (0.44, 0.44, 0.05), M["Pill"], P, bevel=0.0, rot=(0, 0, 0.5))
 
+# ---------------------------------------------------------------- market & landmarks (polish pass)
+P = kit("Stall")   # market stall with a cinnabar awning
+box("StallTable", (0, 0, 0.7), (1.8, 0.9, 0.08), M["WoodLight"], P)
+box("StallCloth", (0, -0.47, 0.35), (1.8, 0.04, 0.7), M["CloakDark"], P, bevel=0.0)
+for sx in (-1, 1):
+    for sy in (-1, 1):
+        cyl(f"StallLeg{sx}{sy}", (sx * 0.8, sy * 0.38, 0.35), 0.04, 0.7, M["Timber"], P, verts=6)
+        cyl(f"StallPost{sx}{sy}", (sx * 0.95, sy * 0.52, 1.2), 0.04, 2.4, M["Timber"], P, verts=6)
+wedge("StallAwning", (0, 0, 2.3), 2.3, 1.5, 0.4, M["Flag"], P)
+box("StallAwningHem", (0, -0.74, 2.28), (2.3, 0.06, 0.14), M["Wall"], P, bevel=0.0)
+box("StallAwningHem2", (0, 0.74, 2.28), (2.3, 0.06, 0.14), M["Wall"], P, bevel=0.0)
+for i, (gx, gy) in enumerate(((-0.55, 0.1), (-0.2, -0.15))):
+    ball(f"StallJar{i}", (gx, gy, 0.9), 0.15, M["Clay"], P, scale=(1, 1, 1.1), sub=1)
+    cyl(f"StallJarLid{i}", (gx, gy, 1.06), 0.07, 0.04, M["Flag"], P, verts=8)
+for i in range(3):
+    ball(f"StallHerb{i}", (0.3 + i * 0.22, 0.12 - (i % 2) * 0.25, 0.82), 0.11, M["Herb"] if i % 2 else M["HerbDark"], P, scale=(1.2, 1, 0.7), sub=0)
+for i in range(2):
+    cyl(f"StallScroll{i}", (0.55, -0.25 + i * 0.16, 0.8), 0.05, 0.5, M["Wall"], P, rot=(0, math.pi / 2, 0), verts=7)
+hang_lantern(P, -0.95, -0.6, 1.95, "S")
+
+P = kit("Banner")   # tall vertical cloth banner
+cyl("BnPole", (0, 0, 2.0), 0.05, 4.0, M["Timber"], P, verts=6)
+box("BnArm", (0.35, 0, 3.9), (0.8, 0.04, 0.04), M["Timber"], P, bevel=0.0)
+box("BnCloth", (0.45, 0, 2.7), (0.5, 0.03, 2.3), M["Flag"], P, bevel=0.0)
+box("BnStripe", (0.45, -0.03, 2.7), (0.2, 0.01, 1.6), M["Wall"], P, bevel=0.0)
+box("BnTassel", (0.45, 0, 1.45), (0.5, 0.03, 0.2), M["Belt"], P, bevel=0.0)
+cyl("BnBase", (0, 0, 0.1), 0.2, 0.2, M["StoneDark"], P, verts=8)
+cone("BnTop", (0, 0, 4.05), 0.06, 0.15, M["Bronze"], P, verts=6)
+
+P = kit("SwordMonument")   # sword-tomb tablet ringed by planted blades
+box("SMBase", (0, 0, 0.25), (3.0, 2.0, 0.5), M["Stone"], P)
+box("SMTablet", (0, 0.3, 1.9), (1.6, 0.35, 2.8), M["StoneLight"], P, bevel=0.03)
+cyl("SMCap", (0, 0.3, 3.3), 0.8, 0.35, M["StoneLight"], P, rot=(math.pi / 2, 0, 0), verts=12)
+for i in range(3):
+    box(f"SMLine{i}", (-0.4 + i * 0.4, 0.11, 1.7), (0.06, 0.02, 1.6), M["StoneDark"], P, bevel=0.0)
+box("EmberCore_SMRune", (0, 0.11, 2.85), (0.5, 0.02, 0.5), M["EmberCore"], P, bevel=0.0, rot=(0, math.pi / 4, 0))
+for i, (sx, sy, rz) in enumerate(((-1.15, -0.7, 0.3), (1.15, -0.6, -0.4), (-0.5, -1.25, 0.8), (0.7, -1.3, -0.9))):
+    g = empty(f"SMSwordGrp{i}"); g.parent = P; g.location = (sx, sy, 0.5); g.rotation_euler = (0.15 * (i % 2), -0.1, rz)
+    box(f"SMBlade{i}", (0, 0, 0.8), (0.22, 0.06, 1.5), M["Steel"], g, bevel=0.0)
+    box(f"SMGuard{i}", (0, 0, 1.55), (0.5, 0.12, 0.1), M["Bronze"], g, bevel=0.0)
+    cyl(f"SMGrip{i}", (0, 0, 1.78), 0.05, 0.36, M["Rope"], g, verts=6)
+    ball(f"SMPommel{i}", (0, 0, 2.0), 0.07, M["Bronze"], g, sub=0)
+ball("SMMoss", (0.9, 0.6, 0.55), 0.5, M["Moss"], P, scale=(1.3, 1, 0.3), sub=1)
+
+P = kit("LavaFissure")   # cracked slab bleeding earth-fire
+ball("LFSlab", (0, 0, 0.12), 1.6, M["Ash"], P, scale=(1.4, 1.0, 0.18), sub=1)
+for i, (x, y, rz, l) in enumerate(((0, 0, 0.3, 2.4), (-0.6, 0.4, 1.4, 1.2), (0.7, -0.3, -0.9, 1.4), (0.2, 0.8, 0.1, 0.9))):
+    box(f"Fire_LF{i}", (x, y, 0.3), (l, 0.12, 0.06), M["Fire"], P, rot=(0, 0, rz), bevel=0.0)
+cyl("Fire_LFPool", (0.9, 0.7, 0.28), 0.45, 0.04, M["Fire"], P, verts=10)
+for i in range(5):
+    a = i * 1.3
+    ball(f"LFRock{i}", (math.cos(a) * 1.9, math.sin(a) * 1.4, 0.22), 0.3, M["AshLight"], P, scale=(1.2, 1, 0.7), sub=0)
+
+P = kit("LotusPond")   # stone-rimmed pond with lotus and a plank
+cyl("LPWater", (0, 0, 0.06), 2.6, 0.12, M["Water"], P, verts=16)
+for i in range(16):
+    a = i / 16 * math.tau
+    box(f"LPRim{i}", (math.cos(a) * 2.7, math.sin(a) * 2.7, 0.15), (1.1, 0.32, 0.3), M["Stone"], P, rot=(0, 0, a + math.pi / 2), bevel=0.0)
+for i in range(7):
+    a = i * 0.9 + 0.3; r = 0.6 + (i % 3) * 0.6
+    cyl(f"LPPad{i}", (math.cos(a) * r, math.sin(a) * r, 0.14), 0.32 + (i % 2) * 0.1, 0.02, M["MudLight"], P, verts=9)
+for i in range(3):
+    a = i * 2.1 + 1.0; r = 1.1
+    cyl(f"LPStem{i}", (math.cos(a) * r, math.sin(a) * r, 0.4), 0.02, 0.55, M["HerbDark"], P, verts=5)
+    cone(f"LPLotus{i}", (math.cos(a) * r, math.sin(a) * r, 0.75), 0.18, 0.3, M["Blossom"], P, verts=7, r2=0.06, rot=(math.pi, 0, 0))
+    ball(f"LPHeart{i}", (math.cos(a) * r, math.sin(a) * r, 0.82), 0.07, M["Hay"], P, sub=0)
+box("LPPlank", (0, -1.6, 0.34), (0.5, 2.4, 0.08), M["WoodLight"], P)
+
+P = kit("BambooGiant")   # three giant culms
+for i in range(3):
+    a = i / 3 * math.tau; bx, by = math.cos(a) * 0.5, math.sin(a) * 0.5; h = 6.5 + i * 0.6
+    cyl(f"GCulm{i}", (bx, by, h / 2), 0.16, h, M["Bamboo"], P, verts=8)
+    for k in range(5):
+        cyl(f"GNode{i}{k}", (bx, by, 0.9 + k * 1.2), 0.19, 0.08, M["BambooDark"], P, verts=8)
+    for k in range(4):
+        b = a + k * 1.6
+        cone(f"GLeaf{i}{k}", (bx + math.cos(b) * 0.5, by + math.sin(b) * 0.5, h - 0.6 + k * 0.25), 0.25, 1.2, M["BambooLeaf"], P, verts=4, rot=(math.sin(b) * 1.2, -math.cos(b) * 1.2, 0))
+
 # ---------------------------------------------------------------- Player rig: robed cultivator with a spirit lamp and a flying sword
 P = kit("Player")
 body = empty("P_Body"); body.parent = P
 cone("Cloak", (0, 0, 0.55), 0.42, 1.1, M["Cloak"], body, verts=12, r2=0.22)
 cyl("Hem", (0, 0, 0.04), 0.42, 0.07, M["CloakDark"], body, verts=12)
+box("RobePanel", (0, -0.335, 0.5), (0.11, 0.02, 0.9), M["CloakDark"], body, bevel=0.0, rot=(0.18, 0, 0))
+ball("JadePendant", (-0.2, -0.25, 0.66), 0.05, M["Crystal"], body, sub=0)
 cyl("Belt", (0, 0, 0.78), 0.28, 0.1, M["Belt"], body, verts=12)
 box("SashKnot", (0, -0.27, 0.74), (0.12, 0.05, 0.16), M["Belt"], body, bevel=0.0)
 box("SashTail", (0.04, -0.27, 0.55), (0.06, 0.03, 0.3), M["Belt"], body, bevel=0.0)
@@ -751,6 +831,7 @@ cyl("LanHook", (0, 0, -0.06), 0.015, 0.12, M["Bronze"], lan, verts=4)
 cyl("LanRingT", (0, 0, -0.13), 0.1, 0.03, M["Bronze"], lan, verts=8)
 ball("PlayerLamp_Glow", (0, 0, -0.27), 0.13, M["PlayerLamp"], lan, scale=(1, 1, 1.25), sub=1)
 cyl("LanRingB", (0, 0, -0.42), 0.09, 0.03, M["Bronze"], lan, verts=8)
+cyl("LanRingM", (0, 0, -0.27), 0.135, 0.015, M["Bronze"], lan, verts=8)
 box("LanTassel", (0, 0, -0.52), (0.03, 0.03, 0.14), M["Flag"], lan, bevel=0.0)
 arm_r = empty("P_ArmR"); arm_r.parent = body; arm_r.location = (0.36, 0, 1.0)
 cyl("ArmR", (0, -0.05, -0.28), 0.15, 0.55, M["Cloak"], arm_r, verts=8, rot=(-0.2, 0, 0), r2=0.08)

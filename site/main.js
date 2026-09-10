@@ -8,7 +8,7 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
-import { Kit, DynSet, buildGround, generateMap, districtAt, DISTRICTS, ROADS, ISLAND_R, PLAY_R, collideStatic, Grid, setGlow, glowMat, MATS, treeUniforms, mulberry32, vnoise } from './world.js?v=36';
+import { Kit, DynSet, buildGround, generateMap, districtAt, DISTRICTS, ROADS, ISLAND_R, PLAY_R, collideStatic, Grid, setGlow, glowMat, MATS, treeUniforms, mulberry32, vnoise } from './world.js?v=37';
 import * as AUDIO from './audio.js?v=33';
 
 const $ = (s) => document.querySelector(s);
@@ -20,7 +20,7 @@ const RUN_LENGTH = 600;      // 10 minutes
 const DIFFS = {
   calm:     { name: 'Serene',   zh: '清修', dmg: 0.7,  spawn: 0.8,  hp: 0.9,  speed: 0.95, elite: 1.3, bossAt: 480, phase2: false, desc: 'Demons hit 30% softer, the Lord never rages.', zhDesc: '妖邪伤害 −30%,劫主没有雷怒。' },
   standard: { name: 'Cultivate', zh: '修行', dmg: 1.0,  spawn: 1.0,  hp: 1.0,  speed: 1.0,  elite: 1.0, bossAt: 480, phase2: true,  desc: 'The valley as intended. The Lord at eight minutes.', zhDesc: '标准体验,劫主八分钟现身。' },
-  ash:      { name: 'Tribulation', zh: '劫难', dmg: 1.6,  spawn: 2.1,  hp: 1.35, speed: 1.2,  elite: 0.55, bossAt: 360, phase2: true,  desc: 'Twice the demons, faster, 60% harder hits, the Lord at six.', zhDesc: '妖邪翻倍、更快、伤害 +60%,劫主六分钟现身。' },
+  ash:      { name: 'Tribulation', zh: '劫难', dmg: 1.75, spawn: 2.4,  hp: 1.5,  speed: 1.25, elite: 0.55, bossAt: 360, phase2: true,  desc: 'More than twice the demons, faster, 75% harder hits, the Lord at six.', zhDesc: '妖邪 2.4 倍、更快、伤害 +75%,劫主六分钟现身。' },
 };
 const DIFF = () => DIFFS[SET.difficulty] || DIFFS.standard;
 const BOSS_AT_FN = () => DIFF().bossAt;
@@ -165,13 +165,18 @@ const TALENTS = [
 ];
 const REALMS_ZH = ['练气一层', '练气二层', '练气三层', '练气四层', '练气五层', '练气六层', '练气七层', '练气八层', '练气九层', '筑基初期', '筑基中期', '筑基后期', '金丹初期', '金丹中期', '金丹后期', '元婴初期', '元婴中期', '元婴后期', '化神'];
 function realmName(l) { if (SET.lang !== 'zh') return `${tr('Level')} ${pad2(l)}`; const i = Math.min(REALMS_ZH.length - 1, l - 1); return REALMS_ZH[i] + (l > REALMS_ZH.length ? ' ' + (l - REALMS_ZH.length + 1) : ''); }
+const PATHS = [
+  { key: 'path_sword', path: true, max: 1, name: 'Sword Path', desc: 'Attack 15% faster, crit +10%, damage +10%.', apply: (p) => { p.path = 'sword'; p.speedTalent *= 1.15; p.critBonus = (p.critBonus || 0) + 0.10; p.dmgTalent *= 1.1; } },
+  { key: 'path_talisman', path: true, max: 1, name: 'Talisman Path', desc: 'Spirit burst recharges 30% faster, projectiles pierce one more, burning ground +50%, burst radius +15%.', apply: (p) => { p.path = 'talisman'; p.novaCdMult *= 0.7; p.pathPierce = 1; p.burnMult = (p.burnMult || 1) * 1.5; p.areaMult *= 1.15; } },
+  { key: 'path_body', path: true, max: 1, name: 'Body Path', desc: 'Max health +40 (and heal 40), armour +10%, heavy strike +40%.', apply: (p) => { p.path = 'body'; p.maxHp += 40; p.hp = Math.min(p.maxHp, p.hp + 40); p.armourTalent += 0.10; p.heavyMult *= 1.4; } },
+];
 const LEVEL_NAMES = ['A brighter spark.', 'The wick catches.', 'Warmth returns.', 'Steady flame.', 'The dark recedes.', 'Ember heart.', 'Wildfire.', 'Beacon.', 'Sunrise in your hands.', 'Unquenchable.'];
 const WEAPON_UPGRADES = {
-  crescent: { costs: [12, 24, 40], ranks: ['Wider arc (+25%)', 'Return swing: a second, reversed cut', 'Every hit restores 1 health'] },
-  bolt:     { costs: [12, 24, 40], ranks: ['Pierce one more enemy', 'Fire one more bolt', 'Bolts burst on impact'] },
-  lantern:  { costs: [12, 24, 40], ranks: ['One more lantern', 'Orbit radius +30%', 'Lanterns scorch the ground'] },
-  bow:      { costs: [12, 24, 40], ranks: ['Pierce two more enemies', 'Arrows split into three', 'Arrows scorch where they land'] },
-  chain:    { costs: [12, 24, 40], ranks: ['Every third hit strikes for 2.5×', 'Reach +40%', 'Hits drag enemies toward you'] },
+  crescent: { costs: [12, 24, 40, 70], ranks: ['Wider arc (+25%)', 'Return swing: a second, reversed cut', 'Every hit restores 1 health', 'Evolve: Ten Thousand Swords — every fourth swing releases six flying swords'] },
+  bolt:     { costs: [12, 24, 40, 70], ranks: ['Pierce one more enemy', 'Fire one more bolt', 'Bolts burst on impact', 'Evolve: Thunder Talisman — every hit chains lightning to two more demons'] },
+  lantern:  { costs: [12, 24, 40, 70], ranks: ['One more lantern', 'Orbit radius +30%', 'Lanterns scorch the ground', 'Evolve: Heavenly Circuit — two more pearls, and the ring pulses every 3 s'] },
+  bow:      { costs: [12, 24, 40, 70], ranks: ['Pierce two more enemies', 'Arrows split into three', 'Arrows scorch where they land', 'Evolve: Cloud-Piercing Arrow — arrows pierce everything, crit +25%'] },
+  chain:    { costs: [12, 24, 40, 70], ranks: ['Every third hit strikes for 2.5×', 'Reach +40%', 'Hits drag enemies toward you', 'Evolve: Dragon-Binding Lock — every hit stuns and drags hard'] },
 };
 const FORGE = [
   { key: 'edge', name: 'EDGE', desc: 'Damage <b>+20%</b> per rank', costs: [10, 20, 35] },
@@ -251,7 +256,7 @@ const ZH = {
   'ENDLESS  ·  The wildwood does not end. Neither do you.': '问道无尽  ·  灵谷没有尽头,你也没有。',
   // modals
   'Choose a talent. Your run is paused.': '择一功法。局面已暂停。', 'Forge': '炼器', 'Maxed': '已至圆满', 'shards': '灵晶', 'Next:': '下一阶:',
-  'Weapons — the smith reworks each blade in three stages.': '法宝 —— 炼器师分三阶重炼每件法宝。',
+  'Weapons — the smith reworks each blade in three stages.': '法宝 —— 炼器师分三阶重炼,金丹境后可进阶为本命法宝。',
   'Dawn breaks over the wildwood.': '劫云散去,道基已成。', 'The light went out.': '灯灭了。',
   'Ten minutes, and the valley is still here. Keep going — it only gets wilder.': '十分钟过去,天劫已渡。继续吧 —— 问道无尽,只会更凶险。',
   'You kept the light for': '你守住灵灯', 'Go endless  →': '问道无尽  →', 'Try again': '再来一局', 'Back to title': '返回',
@@ -265,7 +270,15 @@ const ZH = {
   'ASH LONGBOW': '落雁弓', 'EMBER CHAIN': '缚灵索', 'LONGBOW': '落雁弓', 'CHAIN': '缚灵索',
   'Pierce two more enemies': '多穿透两个妖邪', 'Arrows split into three': '一箭化三', 'Arrows scorch where they land': '落点燃地',
   'Every third hit strikes for 2.5×': '每第三击造成 2.5 倍伤害', 'Reach +40%': '索长 +40%', 'Hits drag enemies toward you': '命中把妖邪拽向你',
-  'Keystone': '本命功法', 'Rare': '秘传',
+  'Keystone': '本命功法', 'Rare': '秘传', 'Path': '道途', 'Needs Golden Core': '需金丹境', 'A path is chosen once. It shapes the rest of the run.': '道途只能择一次,决定此后的修行方向。',
+  'Sword Path': '剑修', 'Attack 15% faster, crit +10%, damage +10%.': '攻速 +15%,会心 +10%,伤害 +10%。',
+  'Talisman Path': '符修', 'Spirit burst recharges 30% faster, projectiles pierce one more, burning ground +50%, burst radius +15%.': '灵光爆冷却 −30%,飞行法宝多穿透一个,燃烧地面 +50%,范围 +15%。',
+  'Body Path': '体修', 'Max health +40 (and heal 40), armour +10%, heavy strike +40%.': '最大命火 +40(并回复 40),护甲 +10%,重击 +40%。',
+  'Evolve: Ten Thousand Swords — every fourth swing releases six flying swords': '进阶·万剑归宗:每第四剑放出六柄飞剑',
+  'Evolve: Thunder Talisman — every hit chains lightning to two more demons': '进阶·雷符:命中后向两只妖邪连锁落雷',
+  'Evolve: Heavenly Circuit — two more pearls, and the ring pulses every 3 s': '进阶·周天星斗:再加两颗灵珠,每 3 秒灵珠环脉冲一次',
+  'Evolve: Cloud-Piercing Arrow — arrows pierce everything, crit +25%': '进阶·穿云箭:箭矢无限穿透,会心 +25%',
+  'Evolve: Dragon-Binding Lock — every hit stuns and drags hard': '进阶·缚龙锁:命中定身并强力拽拉',
   'Steady hand': '定心诀', 'Critical chance +8%.': '会心率 +8%。', 'Ember shell': '护体灵甲', 'Taking a hit scorches everything within 3 for 10 damage.': '受击时灼烧周围 3 丈内所有妖邪 10 点。',
   'Kindling': '聚灵术', 'Kills have a 12% chance to drop an extra ember.': '斩妖有 12% 几率额外掉一枚灵石。', 'Long stride': '缩地成寸', 'Dash carries you 30% further.': '踏云步距离 +30%。',
   'Iron will': '金刚不坏', 'Invulnerability after a hit lasts 0.2 s longer.': '受击后无敌延长 0.2 秒。', 'Scavenger': '采药人', 'Hearts drop twice as often.': '丹药掉率翻倍。',
@@ -317,7 +330,7 @@ const EN = {
   'AN ASH BRUTE PROWLS NEARBY': 'A MOUNTAIN APE PROWLS NEARBY', 'THE ASH WARDEN STIRS': 'THE TRIBULATION LORD DESCENDS', 'THE WARDEN CALLS ITS KIN': 'THE LORD CALLS THE SHADES',
   'THE WARDEN BURNS BRIGHTER': "THE LORD'S WRATH", 'THE ASH WARDEN FALLS  ·  The valley breathes again.': 'THE TRIBULATION LORD FALLS  ·  The clouds part.',
   'ENDLESS  ·  The wildwood does not end. Neither do you.': 'ENDLESS  ·  The Dao has no end. Neither do you.',
-  'Choose a talent. Your run is paused.': 'Choose a technique. Your run is paused.', 'Weapons — the smith reworks each blade in three stages.': 'Artefacts — the refiner reworks each one in three stages.',
+  'Choose a talent. Your run is paused.': 'Choose a technique. Your run is paused.', 'Weapons — the smith reworks each blade in three stages.': 'Artefacts — three refinements each; at Golden Core a fourth stage evolves it.',
   'Dawn breaks over the wildwood.': 'The clouds part. Your foundation holds.', 'The light went out.': 'The lamp went out.',
   'Ten minutes, and the valley is still here. Keep going — it only gets wilder.': 'Ten minutes, and the tribulation has passed. Keep going — the Dao only gets harder.',
   'You kept the light for': 'You kept the lamp for', 'Go endless  →': 'Endless Dao  →', 'Shrines lit': 'Arrays lit', ' shrines': ' arrays', 'dawns': 'tribulations',
@@ -492,7 +505,7 @@ const threat = () => Math.floor(minute()) + 1;
 const kit = new Kit();
 let world, ground, playerRig, wardenRig, enemySets = {}, pickupSets = {}, boltSet, spitSet;
 const loadBar = $('#loadBar'), loadText = $('#loadText');
-kit.load('./assets/kit.glb?v=9', (e) => { if (e.total) loadBar.style.transform = `scaleX(${(e.loaded / e.total) * 0.6})`; }).then(() => {
+kit.load('./assets/kit.glb?v=10', (e) => { if (e.total) loadBar.style.transform = `scaleX(${(e.loaded / e.total) * 0.6})`; }).then(() => {
   loadText.textContent = 'Planting the wildwood…';
   setTimeout(() => { const t0 = performance.now(); buildWorld(); console.log('world built in', Math.round(performance.now() - t0), 'ms'); }, 30);
 }).catch((err) => { loadText.textContent = 'Failed to load kit: ' + err.message; console.error(err); });
@@ -654,6 +667,12 @@ function buildEffects() {
     }
   }
   FX.bagua.position.y = 0.05; FX.bagua.visible = false; scene.add(FX.bagua);
+  FX.lordRing = new THREE.Group();
+  const lrMat = new THREE.MeshBasicMaterial({ color: 0xb28cff, transparent: true, opacity: 0.35, toneMapped: false, depthWrite: false });
+  FX.lordRing.add(new THREE.Mesh(new THREE.RingGeometry(2.3, 2.5, 8).rotateX(-Math.PI / 2), lrMat));
+  FX.lordRing.add(new THREE.Mesh(new THREE.RingGeometry(3.0, 3.12, 8, 1, Math.PI / 8).rotateX(-Math.PI / 2), lrMat));
+  for (let i = 0; i < 4; i++) { const bar = new THREE.Mesh(new THREE.PlaneGeometry(0.6, 0.1).rotateX(-Math.PI / 2), lrMat); const a = i / 4 * Math.PI * 2; bar.position.set(Math.cos(a) * 2.75, 0, Math.sin(a) * 2.75); bar.rotation.y = -a; FX.lordRing.add(bar); }
+  FX.lordRing.position.y = 0.06; FX.lordRing.visible = false; scene.add(FX.lordRing);
   // rain: line segments
   const RN = 1400;
   const rg = new THREE.BufferGeometry();
@@ -1372,6 +1391,13 @@ function fireWeapon(dt) {
   P.swing = 0.22;
   if (w.type === 'melee') {
     meleeSwing(w, ang, 1, true);
+    if (w.key === 'crescent' && P.weaponRank.crescent >= 4) {
+      P.swordCount = (P.swordCount || 0) + 1;
+      if (P.swordCount % 4 === 0) {
+        for (let k = 0; k < 6; k++) { const a = ang + k * Math.PI / 3; S.projectiles.push({ x: P.x + Math.sin(a) * 0.6, z: P.z + Math.cos(a) * 0.6, y: 0.9, vx: Math.sin(a) * 22, vz: Math.cos(a) * 22, life: 0.45, dmg: w.dmg * dmgMult() * 0.7, pierce: 2, hit: new Set() }); }
+        spawnRing(P.x, P.z, 1.6, 0xdcd0ff, 0.3, 0.15); AUDIO.sfx('sword', 0.05);
+      }
+    }
     if (w.key === 'crescent' && P.weaponRank.crescent >= 2) S.timers.push({ t: 0.16, fn: () => { if (S.phase === 'run') { P.swing = 0.18; meleeSwing(w, ang + Math.PI * 0.35, 0.65, false); } } });
   } else {
     const wr = P.weaponRank[w.key] || 0;
@@ -1379,8 +1405,8 @@ function fireWeapon(dt) {
     for (let i = 0; i < n; i++) {
       const spread = n > 1 ? (i - (n - 1) / 2) * (w.key === 'bow' ? 0.22 : 0.16) : 0;
       const a = ang + spread;
-      const pierce = w.pierce + (w.key === 'bolt' ? (wr >= 1 ? 1 : 0) : (wr >= 1 ? 2 : 0));
-      S.projectiles.push({ x: P.x + Math.sin(a) * 0.6, z: P.z + Math.cos(a) * 0.6, y: 0.9, vx: Math.sin(a) * w.speed, vz: Math.cos(a) * w.speed, life: w.range / w.speed, dmg: w.dmg * dmgMult() * (w.key === 'bolt' ? (P.boltMult || 1) : 1), pierce, burst: w.key === 'bolt' && wr >= 3, scorch: w.key === 'bow' && wr >= 3, heavy: !!w.heavyBolt, hit: new Set() });
+      const pierce = (w.key === 'bow' && wr >= 4) ? 99 : w.pierce + (w.key === 'bolt' ? (wr >= 1 ? 1 : 0) : (wr >= 1 ? 2 : 0)) + (P.pathPierce || 0);
+      S.projectiles.push({ x: P.x + Math.sin(a) * 0.6, z: P.z + Math.cos(a) * 0.6, y: 0.9, vx: Math.sin(a) * w.speed, vz: Math.cos(a) * w.speed, life: w.range / w.speed, dmg: w.dmg * dmgMult() * (w.key === 'bolt' ? (P.boltMult || 1) : 1), pierce, burst: w.key === 'bolt' && wr >= 3, chain: w.key === 'bolt' && wr >= 4, critPlus: (w.key === 'bow' && wr >= 4) ? 0.25 : 0, scorch: w.key === 'bow' && wr >= 3, heavy: !!w.heavyBolt, hit: new Set() });
     }
     AUDIO.sfx(({ crescent: 'sword', bolt: 'talisman', lantern: 'pearl', bow: 'bow', chain: 'cord' })[w.key] || 'swing', 0.05);
     spawnParticle(P.x + Math.sin(ang) * 0.7, 0.9, P.z + Math.cos(ang) * 0.7, 0, 0.5, 0, 1, 0.7, 0.3, 0.6, 0.15, 0);
@@ -1401,7 +1427,7 @@ function meleeSwing(w, ang, dmgScale, primary) {
       let da = Math.atan2(dx, dz) - ang; da = Math.atan2(Math.sin(da), Math.cos(da));
       if (Math.abs(da) > arc / 2 + Math.atan2(e.r, Math.max(d, 0.1))) return;
       const crit = comboHit || Math.random() < 0.12 + (P.critBonus || 0);
-      if (isBoss) hurtBig(e, dmg * (crit ? 1.8 : 1), crit); else { hurtEnemy(e, dmg * (crit ? 1.8 : 1), crit); const pull = w.key === 'chain' && wr >= 3; const k = (pull ? -2.5 : 3.5) / Math.max(0.5, d); e.kx += dx * k / e.t.mass; e.kz += dz * k / e.t.mass; }
+      if (isBoss) hurtBig(e, dmg * (crit ? 1.8 : 1), crit); else { hurtEnemy(e, dmg * (crit ? 1.8 : 1), crit); const pull = w.key === 'chain' && wr >= 3; const k = (pull ? (wr >= 4 ? -4.5 : -2.5) : 3.5) / Math.max(0.5, d); e.kx += dx * k / e.t.mass; e.kz += dz * k / e.t.mass; if (w.key === 'chain' && wr >= 4) e.stun = Math.max(e.stun || 0, 0.5); }
       hits++;
     };
     for (const e of S.enemies) test(e, false);
@@ -1415,10 +1441,19 @@ function meleeSwing(w, ang, dmgScale, primary) {
 function updateOrbs(dt) {
   const w = WEAPONS[2];
   const active = P.weapon === 2;
-  const count = active ? w.count + P.extraOrbs + (P.weaponRank.lantern >= 1 ? 1 : 0) : (P.orbAlways ? 2 : 0);
+  const count = active ? w.count + P.extraOrbs + (P.weaponRank.lantern >= 1 ? 1 : 0) + (P.weaponRank.lantern >= 4 ? 2 : 0) : (P.orbAlways ? 2 : 0);
   P.orbitA += dt * 2.6 * P.speedTalent;
   const R = w.radius * P.areaMult * (P.weaponRank.lantern >= 2 ? 1.3 : 1);
   P.scorchT = (P.scorchT || 0) - dt;
+  if (active && P.weaponRank.lantern >= 4) {
+    P.pulseT = (P.pulseT || 3) - dt;
+    if (P.pulseT <= 0) {
+      P.pulseT = 3; const PR = R + 1.2, pd = w.dmg * dmgMult() * 1.2;
+      spawnRing(P.x, P.z, PR, 0xffd08a, 0.5, 0.15); AUDIO.sfx('pearl', 0.05);
+      for (const e of S.enemies) { if (e.dying) continue; const d = Math.hypot(e.x - P.x, e.z - P.z); if (d < PR + e.r) { hurtEnemy(e, pd, false); const k = 4 / Math.max(0.5, d); e.kx += (e.x - P.x) * k / e.t.mass; e.kz += (e.z - P.z) * k / e.t.mass; } }
+      for (const b of bigs()) { if (Math.hypot(b.x - P.x, b.z - P.z) < PR + b.r) hurtBig(b, pd); }
+    }
+  }
   for (let i = 0; i < FX.orbs.length; i++) {
     const g = FX.orbs[i];
     if (i >= count) { g.visible = false; continue; }
@@ -1456,8 +1491,9 @@ function updateProjectiles(dt) {
         if (p.hit.has(e) || e.dying) continue;
         if ((e.x - p.x) ** 2 + (e.z - p.z) ** 2 < (e.r + 0.35) ** 2) {
           p.hit.add(e);
-          const crit = Math.random() < 0.1 + (P.critBonus || 0);
+          const crit = Math.random() < 0.1 + (P.critBonus || 0) + (p.critPlus || 0);
           hurtEnemy(e, p.dmg * (crit ? 1.8 : 1), crit);
+          if (p.chain) { let n = 0; for (const o of S.enemies) { if (n >= 2) break; if (o === e || p.hit.has(o) || o.dying) continue; if ((o.x - e.x) ** 2 + (o.z - e.z) ** 2 < 25) { p.hit.add(o); hurtEnemy(o, p.dmg * 0.6, false, true); spawnRing(o.x, o.z, 1.1, 0xb28cff, 0.25, 0.2); spawnParticle(o.x, 1.2, o.z, 0, 2, 0, 0.8, 0.7, 1, 0.5, 0.25, 0); n++; } } }
           const k = 2.5; e.kx += p.vx / 24 * k / e.t.mass; e.kz += p.vz / 24 * k / e.t.mass;
           AUDIO.sfx('hit', 0.05);
           if (p.burst) { burstParticles(p.x, p.y, p.z, 10, [1, 0.55, 0.2], 3, 0.35, 0.35); for (const o of S.enemies) { if (o === e || p.hit.has(o)) continue; if ((o.x - p.x) ** 2 + (o.z - p.z) ** 2 < 1.8 * 1.8) hurtEnemy(o, p.dmg * 0.5, false, true); } }
@@ -1510,6 +1546,7 @@ function gainXp(n) {
 // =====================================================================
 let luOptions = [];
 function rollTalents() {
+  if (P.level >= 10 && !P.path && !P.pathOffered) { P.pathOffered = true; return PATHS.slice(); }
   const avail = TALENTS.filter((t) => (P.talents[t.key] || 0) < t.max
     && !(t.key === 'twin' && P.weapon !== 1 && Math.random() < 0.5)
     && !(t.key === 'tongue' && P.weapon !== 1 && Math.random() < 0.6)
@@ -1532,12 +1569,13 @@ function rollTalents() {
 function openLevelUp() {
   S.modal = 'levelup'; S.paused = true;
   luOptions = rollTalents();
-  $('#luSub').textContent = `${tr('Choose a talent. Your run is paused.')}  [ ${luOptions.map((_, i) => i + 1).join(' / ')} ]`;
-  $('#luTitle').textContent = SET.lang === 'zh' ? `境界突破 · ${realmName(P.level)}。${tr(LEVEL_NAMES[Math.min(LEVEL_NAMES.length - 1, P.level - 2)])}` : `${tr('Level')} ${pad2(P.level)}. ${tr(LEVEL_NAMES[Math.min(LEVEL_NAMES.length - 1, P.level - 2)])}`;
+  const isPath = !!(luOptions[0] && luOptions[0].path);
+  $('#luSub').textContent = `${tr(isPath ? 'A path is chosen once. It shapes the rest of the run.' : 'Choose a talent. Your run is paused.')}  [ ${luOptions.map((_, i) => i + 1).join(' / ')} ]`;
+  $('#luTitle').textContent = isPath ? (SET.lang === 'zh' ? '筑基 · 择一道途' : 'Foundation Establishment · choose a path') : SET.lang === 'zh' ? `境界突破 · ${realmName(P.level)}。${tr(LEVEL_NAMES[Math.min(LEVEL_NAMES.length - 1, P.level - 2)])}` : `${tr('Level')} ${pad2(P.level)}. ${tr(LEVEL_NAMES[Math.min(LEVEL_NAMES.length - 1, P.level - 2)])}`;
   const box = $('#luChoices'); box.innerHTML = '';
   luOptions.forEach((t, i) => {
-    const b = document.createElement('button'); b.className = 'choice' + (t.keystone ? ' keystone' : (t.rare ? ' rare' : ''));
-    const tag = t.keystone ? `<em>${tr('Keystone')}</em>` : (t.rare ? `<em>${tr('Rare')}</em>` : '');
+    const b = document.createElement('button'); b.className = 'choice' + (t.keystone || t.path ? ' keystone' : (t.rare ? ' rare' : ''));
+    const tag = t.path ? `<em>${tr('Path')}</em>` : t.keystone ? `<em>${tr('Keystone')}</em>` : (t.rare ? `<em>${tr('Rare')}</em>` : '');
     b.innerHTML = `<div class="t">${i + 1} &nbsp;${tr(t.name)}<small>${(P.talents[t.key] || 0) + 1}/${t.max}</small>${tag}</div><div class="d">${tr(t.desc)}</div>`;
     b.addEventListener('click', () => pickTalent(i));
     box.appendChild(b);
@@ -1588,11 +1626,12 @@ function renderForge() {
     const rank = P.weaponRank[w.key];
     const cost = up.costs[rank];
     const row = document.createElement('div'); row.className = 'track';
-    const pips = [0, 1, 2].map((i) => `<i class="${i < rank ? 'on' : ''}"></i>`).join('');
-    const next = rank < 3 ? `${tr('Next:')} <b>${tr(up.ranks[rank])}</b>` : `<b>${tr(up.ranks[2])}</b>`;
+    const pips = [0, 1, 2, 3].map((i) => `<i class="${i < rank ? 'on' : ''}${i === 3 ? ' evo' : ''}"></i>`).join('');
+    const next = rank < 4 ? `${tr('Next:')} <b>${tr(up.ranks[rank])}</b>` : `<b>${tr(up.ranks[3])}</b>`;
     row.innerHTML = `<div class="k">${tr(w.name.split(' ')[1] || w.name)}<span class="pips">${pips}</span></div><div class="d">${next}</div>`;
     const b = document.createElement('button'); b.className = 'btn';
-    if (rank >= 3) { b.textContent = tr('Maxed'); b.disabled = true; }
+    if (rank >= 4) { b.textContent = tr('Maxed'); b.disabled = true; }
+    else if (rank === 3 && P.level < 13) { b.textContent = tr('Needs Golden Core'); b.disabled = true; }
     else { b.textContent = `${tr('Forge')} · ${cost}`; b.disabled = P.shards < cost; b.addEventListener('click', () => { if (P.shards >= cost) { P.shards -= cost; P.weaponRank[w.key]++; AUDIO.sfx('forge'); renderForge(); refreshWeaponCard(); burstParticles(P.x, 1, P.z, 20, [1, 0.6, 0.2], 3, 0.35, 0.5); } }); }
     row.appendChild(b); box.appendChild(row);
   }
@@ -1778,7 +1817,7 @@ function spawnBoss() {
   const a = Math.random() * Math.PI * 2;
   let x = P.x + Math.cos(a) * 22, z = P.z + Math.sin(a) * 22;
   const r = Math.hypot(x, z); if (r > PLAY_R - 4) { x *= (PLAY_R - 4) / r; z *= (PLAY_R - 4) / r; }
-  const hp = (2600 + minute() * 180) * (S.endless ? 1.5 : 1);
+  const hp = (2800 + minute() * 200) * (S.endless ? 1.5 : 1);
   S.boss = { boss: true, x, z, r: 1.4, hp, maxHp: hp, phase: 'intro', pt: 1.7, phase2: false, secondCharge: false, flash: 0, face: 0, kx: 0, kz: 0, dashDx: 0, dashDz: 0, atkCd: 1, summoned: [false, false], t: { mass: 30, dmg: 24 }, dead: false, bob: 0 };
   wardenRig.visible = true;
   $('#boss').classList.add('show'); $('#boss .name').textContent = tr('THE ASH WARDEN');
@@ -2215,7 +2254,7 @@ function updateHUD() {
   $('#xpText').textContent = `${Math.floor(P.xp)} / ${P.xpNext} ${tr('XP')}`;
   $('#shardText').textContent = zh ? `${P.shards} 灵晶` : `${P.shards} spirit crystal${P.shards === 1 ? '' : 's'}`;
   $('#forgeText').textContent = `${tr('Edge')} ${P.forge.edge} / 3 · ${tr('Mail')} ${P.forge.mail} / 3 · ${tr('Charm')} ${P.forge.charm} / 3`;
-  $('#statText').textContent = `${tr('Damage')} ×${dmgMult().toFixed(2)} · ${tr('Armour')} ${Math.round(armour() * 100)}%`;
+  $('#statText').textContent = `${tr('Damage')} ×${dmgMult().toFixed(2)} · ${tr('Armour')} ${Math.round(armour() * 100)}%${P.path ? ' · ' + tr({ sword: 'Sword Path', talisman: 'Talisman Path', body: 'Body Path' }[P.path]) : ''}`;
   $('#bestText').textContent = `${tr('Best')} ${fmtTime(S.best.time)} · ${S.best.kills} ${tr('kills')}`;
   $('#timer').textContent = S.endless ? `${fmtTime(S.t)} / ∞` : `${fmtTime(S.t)} / 10:00`;
   $('#sub').textContent = `${tr(S.district.title)} · ${tr('Threat')} ${pad2(threat())} · ${S.enemies.length + (S.boss ? 1 : 0)} ${tr('enemies')}`;
@@ -2278,6 +2317,7 @@ function tick(dt) {
   updateSlashes(dt);
   updateNumbers(dt);
   // ambient sparks
+  if (FX.lordRing) { const b = S.boss; if (b && !b.dead && b.phase !== 'intro') { FX.lordRing.visible = true; FX.lordRing.position.set(b.x, 0.06, b.z); FX.lordRing.rotation.y += dt * (b.phase2 ? 1.3 : 0.5); FX.lordRing.children[0].material.opacity = (b.phase2 ? 0.7 : 0.35) * (0.8 + 0.2 * Math.sin(S.t * 5)); } else FX.lordRing.visible = false; }
   if (FX.bolts) for (const b of FX.bolts) if (b.visible) { b.userData.life -= dt; const k = Math.max(0, b.userData.life / 0.32); b.material.opacity = k * k; b.scale.set(0.6 + k * 0.6, 1, 0.6 + k * 0.6); if (k <= 0) b.visible = false; }
   if ((running || S.phase === 'title') && FX.ambient) {
     const near = []; FX.ambientGrid.query(P.x, P.z, 30, near);
