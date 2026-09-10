@@ -531,7 +531,7 @@ const kit = new Kit();
 let world, ground, playerRig, wardenRig, enemySets = {}, pickupSets = {}, boltSet, spitSet;
 let craneSet = null;
 const loadBar = $('#loadBar'), loadText = $('#loadText');
-kit.load('./assets/kit.glb?v=12', (e) => { if (e.total) loadBar.style.transform = `scaleX(${(e.loaded / e.total) * 0.6})`; }).then(() => {
+kit.load('./assets/kit.glb?v=13', (e) => { if (e.total) loadBar.style.transform = `scaleX(${(e.loaded / e.total) * 0.6})`; }).then(() => {
   loadText.textContent = 'Planting the wildwood…';
   setTimeout(() => { const t0 = performance.now(); buildWorld(); console.log('world built in', Math.round(performance.now() - t0), 'ms'); }, 30);
 }).catch((err) => { loadText.textContent = 'Failed to load kit: ' + err.message; console.error(err); });
