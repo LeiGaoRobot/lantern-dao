@@ -5,6 +5,7 @@ Blender 5.2 无头建模 + three.js r184,全部音效 WebAudio 合成,单文件 
 
 - 在线玩:https://leigaorobot.github.io/lantern-dao/
 - 仓库:https://github.com/LeiGaoRobot/lantern-dao
+- Artifact:https://claude.ai/code/artifact/d8e375be-4549-40bf-8cf4-0f288ebf32bf
 - 玩法:WASD 移动、鼠标瞄准(默认自动出剑)、右键 / K 重击、空格踏云步、E 灵光爆、Q 换法宝、F 炼器坊 / 布下法阵、Tab 自动 / 手动、Esc 暂停;五域、五件法宝、27 门功法、四只精英、八分钟天劫劫主、十分钟渡劫后问道无尽;支持触屏与手柄,中 / 英文切换
 
 ## English
@@ -45,7 +46,7 @@ Lantern Dao is the xianxia re-skin of [Emberlight](https://github.com/LeiGaoRobo
 - `build_kit_xianxia.py`:47 个 Kit 全部换成仙侠几何与配色(飞檐民居/重檐楼阁/茶棚/七层石塔/炼器坊/灵泉/石灯笼/竹篱笆/香炉/松桃竹梅/太湖石/剑冢巨剑/残碑/石牌坊/灵脉法阵/道袍修士/磷火·煞灵·蛊蜈蚣·蟾妖·山魈/雾狼王·剑冢石傀·赤炎火蜥·泽底巨口/劫主),
   **Kit 名、骨架节点名、发光材质名、39 条剪辑名与原版逐一相同**,`site/` 零改动加载,控制台无报错
 - 重建:`D:/AI/tools/Blender/blender.exe -b -P build_kit_xianxia.py -- --out D:/AI/lantern_dao`(加 `--big` 出 4000 px 的 `preview_big.png` 供目检,`--no-render` 跳过预览)
-- 网页:`.claude/launch.json` 的 `lantern-dao`(python http.server 8203);截图接收 `python shot_server.py shots`(8201)
+- 网页:`.claude/launch.json` 的 `lantern-dao`(python http.server 8203),离线单文件预览 `lantern-dao-dist`(8204);截图接收 `python shot_server.py shots`(8201)
 - 验收截图在 `shots/`:白天坊市、五种妖邪、夜晚、暴雨劫主、四只精英
 - 三角面:出生点静态实例 516k(Emberlight 353k),渲染统计 2.01M(Emberlight 1.35M),draw call 228(224)。X2 二轮减面后仍高 46%,再压要减植被密度
 - 顺手修了原版 `build_kit.py` 的 bug:P_* 剪辑原本打在 `M4_Body/M4_Head` 上(变量被精英骨架覆盖),本版 `P_idle` 正确指向 `P_Body/P_Head`
@@ -77,7 +78,7 @@ D:/AI/tools/Blender/blender.exe -b -P build_kit_xianxia.py -- --out D:/AI/lanter
   和 `dist/artifact.html`(claude.ai Artifact 用的 body-only 版,three/addons 走 jsDelivr `+esm` 打包避免 import map)。
   单文件版 GLB 不走 fetch,直接 atob 解码后 `GLTFLoader.parseAsync`,所以在禁 fetch 的沙箱里也能加载
 - 本地预览 dist:`.claude/launch.json` 的 `emberlight-dist`(8202)
-- 已发布 Artifact(v2):https://claude.ai/code/artifact/df4d9e48-8d53-43d2-93a9-04e26c6ccd02
+- Emberlight 原版 Artifact:https://claude.ai/code/artifact/df4d9e48-8d53-43d2-93a9-04e26c6ccd02 ;灯下问道 Artifact:https://claude.ai/code/artifact/d8e375be-4549-40bf-8cf4-0f288ebf32bf
 - 触屏:粗指针设备自动显示左半屏虚拟摇杆 + 右侧 Heavy/Dash/Nova/Swap/Forge 圆钮;自动攻击默认开,所以不需要鼠标瞄准
 - 帧率自适应:连续低于 42 fps 时 pixelRatio 逐档降到 0.7,回到 57 fps 以上 12 s 后逐档升回;切到后台自动暂停
 
