@@ -1,5 +1,12 @@
 # Changelog
 
+## 灯下问道 v2.0 · 山海 — 2026-09-10 · 发布(`shanhai` → `master`)
+
+- 场景与异兽按《山海经》重做(S1–S5 见下),仙侠旧版打标签 `xianxia-v1.4`
+- 发布前清单:按 D 屏幕投影 (+,≈0)、按 W (≈0,−);四天气截图 `shots/s6_wx_*.jpg`;炼器坊开着时突破弹窗不叠(关坊后再弹);清档一局无报错;离线单文件本地 8204 加载无报错;Pages 200;低画质档 draw call / 三角面见下
+- 宣传:`promo/04_kunlun.jpg` `05_fajiu.jpg` `06_tanggu.jpg` `07_zhaoyao.jpg` `08_qingyao_market.jpg` `09_xingtian.jpg` + `lantern_dao_shanhai_15s.gif`(45 帧 640×360,招摇南山黄昏自动战斗)
+- Pages / Artifact 同步重发
+
 ## 山海 S5 — 2026-09-10 · 表现与音频(`shanhai` 分支,未发布)
 
 - 关于页中英重写(山海四方、"见则"应验、原文出处声明),中文段落进 `HTML_ZH`(`#about p:nth-of-type(n)`),此前中文界面下关于页仍是英文

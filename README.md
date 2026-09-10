@@ -1,21 +1,31 @@
-# 灯下问道 · Lantern Dao
+# 灯下问道 · 山海 — Lantern Dao · Shanhai
 
-**守一盏灯,渡一场劫。** 一个仙侠幸存者:提着灵灯的低阶修士,在云隐灵谷守住十分钟,直到天劫过去。
-Blender 5.2 无头建模 + three.js r184,全部音效 WebAudio 合成,单文件 3.5 MB 可离线游玩。
+**守一盏灯,过一座山。** 一个把《五藏山经》压成一岛的仙侠幸存者:提着灵灯的低阶修士,在青要密都守住十分钟,直到刑天倒下。
+Blender 5.2 无头建模 + three.js r184,全部音效 WebAudio 合成,单文件约 4.2 MB 可离线游玩。
 
 - 在线玩:https://leigaorobot.github.io/lantern-dao/
-- 仓库:https://github.com/LeiGaoRobot/lantern-dao
+- 仓库:https://github.com/LeiGaoRobot/lantern-dao (仙侠旧版在标签 `xianxia-v1.4`)
 - Artifact:https://claude.ai/code/artifact/d8e375be-4549-40bf-8cf4-0f288ebf32bf
-- 玩法:WASD 移动、鼠标瞄准(默认自动出剑)、右键 / K 重击、空格踏云步、E 灵光爆、Q 换法宝、F 炼器坊 / 布下法阵、Tab 自动 / 手动、Esc 暂停;五域、五件法宝、27 门功法、四只精英、八分钟天劫劫主、十分钟渡劫后问道无尽;支持触屏与手柄,中 / 英文切换
+- 玩法:WASD 移动、鼠标瞄准(默认自动出剑)、右键 / K 重击、空格踏云步、E 灵光爆、Q 换法宝、F 炼器坊 / 布下法阵、Tab 自动 / 手动、Esc 暂停;五山、五件法宝、27 门功法、四只精英、八分钟刑天、十分钟过山后问道无尽;支持触屏与手柄,中 / 英文切换
+
+## 山海版(v2.0)
+
+四方各一座山:西北**昆仑**(琅玕树、弱水、九门开明兽)、东北**发鸠**(柘木、精卫衔石)、东南**汤谷**(扶桑十日)、西南**招摇**(桂树、迷榖、丹穴凤皇);坊市是青要密都。五妖 鬿雀 / 山膏 / 鸣蛇 / 毕方 / 穷奇,四精英 九尾狐 / 狍鸮 / 蜚 / 帝江,劫主刑天(无首,乳目脐口,操干戚以舞),天劫压暗是"烛龙瞑目"。
+
+书里凡说"**见则**"的在这里都会应验:鸣蛇见则大旱(放晴、回复减半),毕方见则讹火(身边落火),蜚见则大疫(天色病绿、回复减半),当康鸣则大穰(掉落翻倍),凤皇见则天下安宁(刷怪减半、妖潮不起)。妖录十四条,每条给出卷名与原文摘句。
+
+**出处说明**:所有名物与引文以《山海经》通行本为准,繁体照录,逐条核对表见 `SHANHAI_RESEARCH.md`;郭璞注、后世衍生形象(旱魃、饕餮、共工触山等)一律不用。多卷形貌不一的取一卷并在妖录注明。设计决定见 `THEME.md`,数值与征兆表见 `DESIGN.md`,分会话记录见 `PLAN_shanhai.md` 与 `CHANGELOG.md`。
 
 ## English
 
-**Keep one lamp. Outlast one tribulation.** A xianxia survivors-like: a low-rank cultivator with a spirit lamp holds out ten minutes in a hidden valley until the tribulation passes.
-Every building, tree and demon is modelled headlessly in Blender 5.2 from primitives; the valley, the crowds, the weather and the tribulation run in three.js r184; every sound is synthesised in WebAudio. The single 3.5 MB file plays offline.
+**Keep one lamp. Cross one mountain.** A xianxia survivors-like that folds the *Classic of Mountains and Seas* into one island: a low-rank cultivator with a spirit lamp holds the Qingyao market for ten minutes until Xingtian falls.
+Every building, tree and beast is modelled headlessly in Blender 5.2 from primitives; the valley, the crowds, the weather and the tribulation run in three.js r184; every sound is synthesised in WebAudio. The single ~4.2 MB file plays offline.
 
-Play: https://leigaorobot.github.io/lantern-dao/ · WASD move, mouse aim (auto-attack on by default), RMB / K heavy, Space cloud step, E spirit burst, Q swap artefact, F refinery / spirit array, Tab auto / manual, Esc pause. Five domains, five artefacts, 27 techniques, four elites, the Tribulation Lord at eight minutes, endless Dao after ten. Touch and gamepad supported; Chinese (default) / English.
+Play: https://leigaorobot.github.io/lantern-dao/ · WASD move, mouse aim (auto-attack on by default), RMB / K heavy, Space cloud step, E spirit burst, Q swap artefact, F forge / spirit array, Tab auto / manual, Esc pause. Five mountains, five artefacts, 27 techniques, four elites, Xingtian at eight minutes, endless Dao after ten. Touch and gamepad supported; Chinese (default) / English.
 
-Lantern Dao is the xianxia re-skin of [Emberlight](https://github.com/LeiGaoRobot/emberlight) (itself inspired by 歸藏's GPT-6 Astra + Blender + Godot original). Engine, combat and debug hooks are shared; assets, world, rules, UI and audio were rebuilt in six sessions (X1–X6, see `PLAN_xianxia.md`, `THEME.md`, `CHANGELOG.md`).
+**Shanhai (v2.0).** Kunlun to the north-west, Fajiu to the north-east, Tanggu to the south-east, Zhaoyao to the south-west. Demons Qique / Shangao / Mingshe / Bifang / Qiongqi, elites the Nine-Tailed Fox / Paoxiao / Fei / Dijiang, and Xingtian for a lord. Whatever the book says happens *when a creature is seen* happens in the game: Mingshe brings drought, Bifang strange fire, Fei the plague, Dangkang a harvest, Fenghuang peace. The bestiary quotes the received text (traditional characters) with chapter and mountain; later commentaries and derived images are not used (see `SHANHAI_RESEARCH.md`). The previous xianxia version is tagged `xianxia-v1.4`.
+
+Lantern Dao is the re-skin of [Emberlight](https://github.com/LeiGaoRobot/emberlight) (itself inspired by 歸藏's GPT-6 Astra + Blender + Godot original). Engine, combat and debug hooks are shared; assets, world, rules, UI and audio were rebuilt in six xianxia sessions (X1–X6) and six Shanhai sessions (S1–S6, see `PLAN_shanhai.md`, `THEME.md`, `CHANGELOG.md`).
 
 ---
 
