@@ -20,6 +20,7 @@ export function ensureAudio() {
   musicBus = ctx.createGain(); musicBus.gain.value = 0.28; musicBus.connect(master);
   ambBus = ctx.createGain(); ambBus.gain.value = 0.5; ambBus.connect(master);
   startAmbience();
+  startDistrictAmbience(); setDistrict(distKey);
   startMusic();
 }
 export function resume() { if (ctx && ctx.state === 'suspended') ctx.resume(); }
@@ -160,6 +161,37 @@ function startAmbience() {
   const lfo = ctx.createOscillator(); lfo.frequency.value = 0.11; const lg = ctx.createGain(); lg.gain.value = 120;
   lfo.connect(lg); lg.connect(wf.frequency); lfo.start();
 }
+// ---------------------------------------------------------------- district soundscapes: one loop per mountain + sparse one-shots
+let distGains = {}, distKey = 'hearth', distLevel = { wildwood: 0.16, mossfall: 0.0, cinder: 0.2, silvermere: 0.22 };
+function noiseLoop(type, freq, q, seconds = 3) {
+  const s = ctx.createBufferSource(); s.buffer = noiseBuffer(seconds); s.loop = true;
+  const f = ctx.createBiquadFilter(); f.type = type; f.frequency.value = freq; f.Q.value = q;
+  const g = ctx.createGain(); g.gain.value = 0;
+  s.connect(f); f.connect(g); g.connect(ambBus); s.start();
+  return { f, g };
+}
+function lfoTo(param, hz, depth) { const o = ctx.createOscillator(); o.frequency.value = hz; const g = ctx.createGain(); g.gain.value = depth; o.connect(g); g.connect(param); o.start(); return o; }
+function startDistrictAmbience() {
+  // 昆仑: thin high wind over jade, slowly wandering in pitch
+  const kw = noiseLoop('bandpass', 1100, 4); lfoTo(kw.f.frequency, 0.17, 500); distGains.wildwood = kw.g;
+  // 汤谷: a hot spring bubbling - low noise with a fast amplitude wobble in front of the district gain
+  const tg = noiseLoop('lowpass', 480, 1.4); const mod = ctx.createGain(); mod.gain.value = 0.6; lfoTo(mod.gain, 4.3, 0.4); tg.f.disconnect(); tg.f.connect(mod); mod.connect(tg.g); distGains.cinder = tg.g;
+  // 招摇: 临于西海之上 - surf rolling in and out
+  const sf = noiseLoop('lowpass', 300, 0.6, 4); const smod = ctx.createGain(); smod.gain.value = 0.55; lfoTo(smod.gain, 0.09, 0.45); sf.f.disconnect(); sf.f.connect(smod); smod.connect(sf.g); distGains.silvermere = sf.g;
+  // 发鸠: no loop, only crows in the zhe trees (one-shots below)
+  setInterval(() => {
+    if (!ctx || !enabled) return;
+    if (distKey === 'mossfall' && Math.random() < 0.35) { const caw = () => { tone('sawtooth', 640, 390, 0.26, 0.045, ambBus, 0.02); burst(0.2, 0.05, 'bandpass', 1400, 700, 2, ambBus); }; caw(); if (Math.random() < 0.6) setTimeout(caw, 190 + Math.random() * 120); }
+    else if (distKey === 'silvermere' && Math.random() < 0.3) { for (let i = 0; i < 3; i++) setTimeout(() => tone('sine', 2300 + Math.random() * 900, 2900 + Math.random() * 600, 0.08, 0.035, ambBus, 0.01), i * 110); }
+    else if (distKey === 'cinder' && Math.random() < 0.45) tone('sine', 420 + Math.random() * 200, 160, 0.13, 0.05, ambBus, 0.01);
+  }, 1500);
+}
+export function setDistrict(key) {
+  distKey = key;
+  if (!ctx || !distGains.wildwood) return;
+  for (const k in distGains) distGains[k].gain.setTargetAtTime(k === key ? distLevel[k] : 0, ctx.currentTime, 1.6);
+}
+export function districtAmbience() { return { key: distKey, gains: Object.fromEntries(Object.entries(distGains).map(([k, g]) => [k, +g.gain.value.toFixed(3)])) }; }
 export function setAmbience(rain, wind) {
   if (!rainGain) return;
   const t = ctx.currentTime;

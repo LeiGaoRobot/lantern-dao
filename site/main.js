@@ -9,7 +9,7 @@ import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
 import { Kit, DynSet, buildGround, generateMap, districtAt, DISTRICTS, ROADS, ISLAND_R, PLAY_R, collideStatic, Grid, setGlow, glowMat, MATS, treeUniforms, mulberry32, vnoise } from './world.js?v=39';
-import * as AUDIO from './audio.js?v=35';
+import * as AUDIO from './audio.js?v=36';
 
 const $ = (s) => document.querySelector(s);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -1243,7 +1243,7 @@ function startRun() {
   $('#title').classList.remove('show'); $('#end').classList.remove('show'); $('#pause').classList.remove('show');
   document.body.classList.remove('title');
   $('#boss').classList.remove('show');
-  AUDIO.setTension(0); AUDIO.setDance(false); AUDIO.musicVolume(SET.music); AUDIO.sfxVolume(SET.sfx);
+  AUDIO.setTension(0); AUDIO.setDance(false); AUDIO.setDistrict('hearth'); AUDIO.musicVolume(SET.music); AUDIO.sfxVolume(SET.sfx);
   showBanner(`${tr('THE HEARTH')}  ·  ${tr('Collect embers. Find the forge. Survive 10 minutes.')}`, 6);
   S.discovered.add('hearth');
 }
@@ -2309,7 +2309,7 @@ function updatePlayer(dt) {
   // district discovery
   const D = districtAt(P.x, P.z);
   if (D !== S.district) {
-    S.district = D;
+    S.district = D; AUDIO.setDistrict(D.key);
     if (!S.discovered.has(D.key)) { S.discovered.add(D.key); showBanner(`${tr(D.name)}  ·  ${tr(D.intro)}`, 5); AUDIO.sfx('district'); }
   }
   // rig pose
