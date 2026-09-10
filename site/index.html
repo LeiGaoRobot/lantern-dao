@@ -183,6 +183,11 @@
   .statrow .stat { background: rgba(255,255,255,.04); border-radius: 12px; padding: 10px 12px; }
   .statrow .stat b { display: block; font-size: 22px; color: var(--peach); font-variant-numeric: tabular-nums; }
   .statrow .stat span { font-size: 11px; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+  .atlas { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .atlas .pl { border: 1px solid var(--line); border-radius: 10px; padding: 7px 8px; font-size: 12px; text-align: center; opacity: .5; }
+  .atlas .pl.on { opacity: 1; color: var(--cinnabar, #b8452e); border-color: rgba(184,69,46,.4); background: rgba(184,69,46,.06); }
+  body.zh .atlas .pl { font-family: "Noto Serif SC", "STSong", "SimSun", serif; letter-spacing: .08em; }
+  @media (max-width: 640px) { .atlas { grid-template-columns: repeat(3, 1fr); } }
   .achgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
   .ach { border: 1px solid var(--line); border-radius: 12px; padding: 12px; opacity: .55; }
   .ach.on { opacity: 1; border-color: rgba(111,214,197,.5); background: rgba(111,214,197,.06); }

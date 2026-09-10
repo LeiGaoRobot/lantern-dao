@@ -520,7 +520,7 @@ export function generateMap(kit, scene, seed = 7) {
   add('Hay', 15.5, 8.5, 0.3, 1, { r: 0.6 }); add('Crate', -13.5, 14.5, 0.4); add('Barrel', -12.8, 15.1, 0);
   add('Signpost', 7.0, 7.0, rad(30), 1, { r: 0.2 }); add('Signpost', -7.0, -7.4, rad(-140), 1, { r: 0.2 });
   add('WuluoStatue', -2.6, 2.4, faceToward(-2.6, 2.4, 0, 0), 1, { r: 0.7, mark: 'statue' });
-  add('DitaiStone', -5.6, -3.4, 0, 1, { r: 0.8 });
+  add('DitaiStone', -5.6, -3.4, 0, 1, { r: 0.8, mark: 'ditai' });
   // market stalls and banners around the plaza
   add('Stall', 6.2, -1.2, rad(25), 1, { rect: { w: 2.2, d: 1.3 } }); add('Stall', -4.8, 6.4, rad(-115), 1, { rect: { w: 2.2, d: 1.3 } }); add('Stall', 9.8, 2.8, rad(70), 1, { rect: { w: 2.2, d: 1.3 } });
   for (const [bx, bz] of [[7.6, -7.6], [-7.6, 7.6], [2.2, 9.6], [-2.4, -9.6]]) add('Banner', bx, bz, rad(-Math.atan2(bz, bx) * 180 / Math.PI), 1, { r: 0.2 });
@@ -538,9 +538,9 @@ export function generateMap(kit, scene, seed = 7) {
   // West mountains (Kunlun / Huaijiang / Zhang'e): jade trees around the array, the nine-faced gate, the black Ruoshui pool, burning cliffs toward the edge
   { const D = DISTRICTS[1]; shrine(D);
     for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; add('LanggTree', D.cx + Math.cos(a) * 8, D.cz + Math.sin(a) * 8, rng() * 6, 1.2 + rng() * 0.3, { r: 0.6 }); }
-    add('KunlunGate', D.cx + 12, D.cz + 2, rad(-35), 1.1, { rect: { w: 4.4, d: 1.0 } });
-    add('Ruoshui', D.cx - 9, D.cz + 8, 0.2, 1, { r: 2.7 });
-    add('YanhuoCliff', D.cx - 18, D.cz - 14, rad(40), 1.2, { rect: { w: 4.5, d: 1.4 } }); add('YanhuoCliff', D.cx - 24, D.cz - 6, rad(75), 1.0, { rect: { w: 4.5, d: 1.4 } });
+    add('KunlunGate', D.cx + 12, D.cz + 2, rad(-35), 1.1, { rect: { w: 4.4, d: 1.0 }, mark: 'kunlungate' });
+    add('Ruoshui', D.cx - 9, D.cz + 8, 0.2, 1, { r: 2.7, mark: 'ruoshui' });
+    add('YanhuoCliff', D.cx - 18, D.cz - 14, rad(40), 1.2, { rect: { w: 4.5, d: 1.4 }, mark: 'yanhuo' }); add('YanhuoCliff', D.cx - 24, D.cz - 6, rad(75), 1.0, { rect: { w: 4.5, d: 1.4 } });
     add('Shatang', D.cx + 4, D.cz - 9, 0.7, 1.1, { r: 0.6 }); add('Shatang', D.cx - 5, D.cz - 6, 2.2, 1.0, { r: 0.6 }); }
   // North mountains (Fajiu / Gouwu / Youdu): zhe woods, black foxes, Jingwei's heap of twigs at the eastern shore
   { const D = DISTRICTS[2]; shrine(D);
@@ -551,14 +551,14 @@ export function generateMap(kit, scene, seed = 7) {
   // East mountains (Tai / Tanggu): the Fusang tree with its ten suns above the hot valley, privet woods
   { const D = DISTRICTS[3]; shrine(D);
     add('FusangTree', D.cx + 8, D.cz + 7, 0.3, 1.1, { r: 1.6, mark: 'fusang' });
-    add('Tanggu', D.cx + 3, D.cz + 12, 0.5, 1, { r: 2.3 });
+    add('Tanggu', D.cx + 3, D.cz + 12, 0.5, 1, { r: 2.3, mark: 'tanggu' });
     for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2 + 0.4; add('ZhenTree', D.cx + Math.cos(a) * 9, D.cz + Math.sin(a) * 9, rng() * 6, 1.1 + rng() * 0.4, { r: 0.5 }); }
     add('Boulder', D.cx - 12, D.cz + 6, 0.4, 1.1, { r: 1.9 }); add('Rock_L', D.cx + 11, D.cz - 8, 2.4, 1.2, { r: 1.2 }); }
   // South mountains (Zhaoyao / Qingqiu / Danxue): cassia woods, the phoenix cliff, the fox mound
   { const D = DISTRICTS[4]; shrine(D);
     for (let i = 0; i < 9; i++) { const a = i / 9 * Math.PI * 2; add(i % 3 === 2 ? 'Migu' : 'Cassia', D.cx + Math.cos(a) * 8, D.cz + Math.sin(a) * 8, rng() * 6, 1.2 + rng() * 0.3, { r: 0.6 }); }
     add('Danxue', D.cx + 10, D.cz - 6, rad(-20), 1.2, { r: 1.6, mark: 'danxue' });
-    add('QingqiuMound', D.cx - 9, D.cz + 6, 0.6, 1.1, { r: 1.8 });
+    add('QingqiuMound', D.cx - 9, D.cz + 6, 0.6, 1.1, { r: 1.8, mark: 'qingqiu' });
     add('LotusPond', D.cx - 2, D.cz - 9, 0.3, 1, { r: 2.9 });
     for (let i = 0; i < 10; i++) { const a = rng() * Math.PI * 2, r = 4 + rng() * 7; add('Zhuyu', D.cx + Math.cos(a) * r, D.cz + Math.sin(a) * r, rng() * 6, 1 + rng() * 0.3, { solid: false }); } }
 

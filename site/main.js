@@ -8,7 +8,7 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
-import { Kit, DynSet, buildGround, generateMap, districtAt, DISTRICTS, ROADS, ISLAND_R, PLAY_R, collideStatic, Grid, setGlow, glowMat, MATS, treeUniforms, mulberry32, vnoise } from './world.js?v=39';
+import { Kit, DynSet, buildGround, generateMap, districtAt, DISTRICTS, ROADS, ISLAND_R, PLAY_R, collideStatic, Grid, setGlow, glowMat, MATS, treeUniforms, mulberry32, vnoise } from './world.js?v=40';
 import * as AUDIO from './audio.js?v=36';
 
 const $ = (s) => document.querySelector(s);
@@ -180,6 +180,21 @@ const LORE = [
   { key: 'zhulong', omen: 'dark', zh: '烛龙', en: 'Zhulong', src: '海外北经 钟山 · 大荒北经 章尾山', srcEn: 'Beyond the Seas: North, Mount Zhong', quote: '視為晝,瞑為夜,吹為冬,呼為夏…人面蛇身而赤,是謂燭龍。', quoteEn: 'Its open eyes are day, its closed eyes night; its breath is winter, its sigh summer; a red serpent with a human face: Zhulong.' },
   { key: 'jingwei', seen: 'jingwei', zh: '精卫', en: 'Jingwei', src: '北山经·北次三经 发鸠之山', srcEn: 'North Mountains III, Mount Fajiu', quote: '其狀如烏,文首、白喙、赤足,名曰精衛…常銜西山之木石,以堙于東海。', quoteEn: 'Like a crow with a patterned head, white beak and red feet; it forever carries twigs and stones from the western hills to fill the Eastern Sea.' },
 ];
+// 山海图: eleven places on the island, each with its line from the book; first visit in a run shows the line, META.places remembers it
+const PLACES = [
+  { key: 'well', mark: 'well', r: 6, zh: '青要密都', en: 'Qingyao, the secret capital', quote: '青要之山,實惟帝之密都。', quoteEn: 'Mount Qingyao: truly the secret capital of the Emperor.' },
+  { key: 'statue', mark: 'statue', r: 4, zh: '武罗', en: 'Wuluo', quote: '神武羅司之,其狀人面而豹文,小要而白齒。', quoteEn: 'The god Wuluo keeps it: a human face with leopard markings, a slender waist and white teeth.' },
+  { key: 'ditai', mark: 'ditai', r: 4, zh: '帝台之棋', en: 'The Ditai stones', quote: '帝台之棋,五色而文,其狀如鶉卵。', quoteEn: 'The stones of Ditai: five-coloured and patterned, shaped like quail eggs.' },
+  { key: 'kunlungate', mark: 'kunlungate', r: 7, zh: '昆仑之丘', en: 'Kunlun', quote: '面有九門,門有開明獸守之。', quoteEn: 'Nine gates on each face, and the Kaiming beast guards them.' },
+  { key: 'ruoshui', mark: 'ruoshui', r: 7, zh: '弱水', en: 'The Weak Water', quote: '其下有弱水之淵環之。', quoteEn: 'Below it the abyss of the Weak Water circles round.' },
+  { key: 'yanhuo', mark: 'yanhuo', r: 8, zh: '炎火之山', en: 'The Burning Mountain', quote: '其外有炎火之山,投物輒然。', quoteEn: 'Beyond lies the mountain of flames; whatever is thrown in burns at once.' },
+  { key: 'jingwei', mark: 'jingwei', r: 7, zh: '发鸠之山', en: 'Mount Fajiu', quote: '發鳩之山,其上多柘木。有鳥焉,名曰精衛。', quoteEn: 'Mount Fajiu, thick with zhe trees; there lives the bird called Jingwei.' },
+  { key: 'fusang', mark: 'fusang', r: 8, zh: '扶桑', en: 'Fusang', quote: '湯谷上有扶桑,十日所浴。', quoteEn: 'Above Tanggu stands the Fusang tree, where the ten suns bathe.' },
+  { key: 'tanggu', mark: 'tanggu', r: 7, zh: '汤谷', en: 'Tanggu', quote: '九日居下枝,一日居上枝。', quoteEn: 'Nine suns rest on the lower branches, one on the upper.' },
+  { key: 'danxue', mark: 'danxue', r: 7, zh: '丹穴之山', en: 'Mount Danxue', quote: '丹穴之山,其上多金玉。有鳥焉,名曰鳳皇。', quoteEn: 'Mount Danxue, rich in gold and jade; there lives the bird called Fenghuang.' },
+  { key: 'qingqiu', mark: 'qingqiu', r: 7, zh: '青丘之山', en: 'Mount Qingqiu', quote: '青丘之山,有獸焉,其狀如狐而九尾。', quoteEn: 'Mount Qingqiu, where a beast lives shaped like a fox with nine tails.' },
+];
+const PLACE_BY_MARK = Object.fromEntries(PLACES.map((p) => [p.mark, p]));
 // 见则… omens: each is a timer on S.omens with a banner, a weather tint (weatherTarget) and a rule hook
 const OMENS = {
   drought: { zh: '鸣蛇见 · 其邑大旱', en: 'MINGSHE SEEN  ·  drought comes to the land', short: '大旱', shortEn: 'Drought', dur: 30, cd: 150, sfx: 'roar' },
@@ -346,6 +361,7 @@ const ZH = {
   'One more lantern': '多一颗灵珠', 'Orbit radius +30%': '环绕半径 +30%', 'Lanterns scorch the ground': '灵珠灼烧地面',
   // unlocks / archive
   'Wide horizon': '开阔视野', 'Survive 5 minutes in one run': '单局守过 5 分钟', 'Level-ups offer four talents instead of three': '突破时四选一而非三选一',
+  'Shanhai atlas': '山海图', 'Stand at all eleven places of the mountains and seas': '踏遍山海十一处', 'Every run starts with Migu: Never Lost': '每局开局自带 迷榖·不迷', 'Atlas': '山海图', 'places': '处',
   "Smith's tithe": '炼器师的份例', 'Defeat the Ash Warden': '伏诛刑天', 'Every run starts with 10 forge shards': '每局开局 10 丹粟',
   'Cinder in the hand': '掌中符火', 'Defeat 3000 creatures in total': '累计斩妖 3000', 'Runs start with the Cinder Bolt, already forged once': '开局持有炼过一次的符箓',
   'Locked': '未得机缘', 'longest run': '最长守灯', 'creatures defeated': '累计斩妖', 'wardens felled': '伏诛刑天', 'runs': '局数', 'Best runs': '最佳战绩', 'No runs yet.': '还没有记录。',
@@ -491,10 +507,11 @@ const UNLOCKS = [
   { key: 'tithe', name: "Smith's tithe", how: 'Defeat the Ash Warden', gives: 'Every run starts with 10 forge shards', test: (m, run) => m.bossKills > 0 },
   { key: 'boltstart', name: 'Cinder in the hand', how: 'Defeat 3000 creatures in total', gives: 'Runs start with the Cinder Bolt, already forged once', test: (m) => m.totalKills >= 3000 },
   { key: 'foundation', name: 'Foundation memory', how: 'Reach Foundation Establishment (level 10) in one run', gives: 'Every run starts at Qi Refining 3 with two techniques', test: (m, run) => run && run.level >= 10 },
+  { key: 'atlas', name: 'Shanhai atlas', how: 'Stand at all eleven places of the mountains and seas', gives: 'Every run starts with Migu: Never Lost', test: (m) => PLACES.every((p) => m.places && m.places[p.key]) },
   { key: 'demonpath', name: 'Demon heart', how: 'Pass the tribulation on Tribulation difficulty', gives: 'A fourth path at Foundation: the Demon Path', test: (m, run) => run && run.won && run.diff === 'ash' },
 ];
 function loadMeta() {
-  const fresh = { v: META_V, totalKills: 0, bossKills: 0, runsPlayed: 0, bestTime: 0, runs: [], unlocks: {}, byDiff: {}, bestiary: {}, omens: {}, seen: {}, dangkangCaught: 0, jingweiStones: 0 };
+  const fresh = { v: META_V, totalKills: 0, bossKills: 0, runsPlayed: 0, bestTime: 0, runs: [], unlocks: {}, byDiff: {}, bestiary: {}, omens: {}, seen: {}, dangkangCaught: 0, jingweiStones: 0, places: {} };
   try {
     const m = JSON.parse(localStorage.getItem('emberlight.meta') || 'null');
     if (!m || typeof m !== 'object') return fresh;
@@ -508,6 +525,7 @@ function loadMeta() {
     for (const k of ['dangkangCaught', 'jingweiStones']) out[k] = Number.isFinite(m[k]) ? Math.max(0, Math.floor(m[k])) : 0;
     out.omens = {}; if (m.omens && typeof m.omens === 'object') for (const k in OMENS) if (m.omens[k]) out.omens[k] = 1;
     out.seen = {}; if (m.seen && typeof m.seen === 'object') for (const k of ['jingwei']) if (m.seen[k]) out.seen[k] = 1;
+    out.places = {}; if (m.places && typeof m.places === 'object') for (const p of PLACES) if (m.places[p.key]) out.places[p.key] = 1;
     out.unlocks = {};
     if (m.unlocks && typeof m.unlocks === 'object') for (const u of UNLOCKS) if (m.unlocks[u.key]) out.unlocks[u.key] = m.unlocks[u.key];
     out.v = META_V;
@@ -537,6 +555,8 @@ function renderArchive() {
   h += '<div class="achgrid">' + UNLOCKS.map((u) => `<div class="ach ${unlocked(u.key) ? 'on' : ''}"><div class="t">${tr(u.name)}</div><div class="d">${tr(u.how)}</div><div class="g">${unlocked(u.key) ? tr(u.gives) : tr('Locked')}</div></div>`).join('') + '</div>';
   const best = META.bestiary || {};
   const zhL = SET.lang === 'zh';
+  { const zhA = SET.lang === 'zh'; const got = PLACES.filter((p) => META.places && META.places[p.key]).length;
+    h += `<div class="sub" style="margin:16px 0 6px">${tr('Atlas')} · ${got} / ${PLACES.length}${zhA ? ' 处' : ''}</div><div class="atlas">` + PLACES.map((p) => { const on = META.places && META.places[p.key]; return `<div class="pl ${on ? 'on' : ''}" title="${on ? (zhA ? p.quote : p.quoteEn) : ''}">${on ? (zhA ? p.zh : p.en) : '???'}</div>`; }).join('') + '</div>'; }
   h += `<div class="sub" style="margin:16px 0 6px">${tr('Bestiary')}</div><div class="loregrid">` + LORE.map((L) => {
     const on = ['wolfking', 'sentinel', 'salamander', 'maw'].includes(L.key) ? !!best[L.key] : L.key === 'boss' ? META.bossKills > 0 : L.omen ? !!(META.omens && META.omens[L.omen]) : L.seen ? !!(META.seen && META.seen[L.seen]) : META.totalKills > 0;
     const vol = zhL ? L.src.split(' ')[0].split('·').pop() : ''; return `<div class="lore ${on ? 'on' : ''}">${vol ? `<s>${vol}</s>` : ''}<b>${on ? (zhL ? L.zh : L.en) : '???'}</b><i>${zhL ? L.src : L.srcEn}</i>${on ? `<q>${zhL ? L.quote : L.quoteEn}</q>` : ''}</div>`;
@@ -1220,7 +1240,7 @@ function showBanner(text, secs = 4) { const b = $('#banner'); b.textContent = tr
 // =====================================================================
 function startRun() {
   P = newPlayer();
-  S.phase = 'run'; S.paused = false; S.modal = null; S.t = 0; S.endless = false; S.tribK = 0; S.tribWarned = false; S.tide = null; S.omens = {}; S.omenK = {}; S.omenCd = {}; S.omenClock = 0; S.omenTick = 0; S.dangkang = null; S.fusangLm = null; S.fusangSeen = false; S.fusangT = 0; S.jwQuest = null; S.jwDone = 0; S.danceOn = false; S.tenSuns = false; S.devourSeen = false; S.qiCd = 0; S.cursedT = 0; S.curseSeen = false; S.wuluoCd = 0;
+  S.phase = 'run'; S.paused = false; S.modal = null; S.t = 0; S.endless = false; S.tribK = 0; S.tribWarned = false; S.tide = null; S.omens = {}; S.omenK = {}; S.omenCd = {}; S.omenClock = 0; S.omenTick = 0; S.dangkang = null; S.fusangLm = null; S.fusangSeen = false; S.fusangT = 0; S.jwQuest = null; S.jwDone = 0; S.danceOn = false; S.tenSuns = false; S.devourSeen = false; S.qiCd = 0; S.cursedT = 0; S.curseSeen = false; S.wuluoCd = 0; S.placesSeen = {};
   S.recorded = false;
   S.enemies.length = 0; S.pickups.length = 0; S.projectiles.length = 0; S.eprojectiles.length = 0; S.burns.length = 0; S.timers.length = 0;
   for (const m of S.slashes) scene.remove(m); S.slashes.length = 0;
@@ -1237,6 +1257,7 @@ function startRun() {
   if (ANIM.w) { for (const k in ANIM.w.actions) if (!['idle', 'walk', 'charge'].includes(k)) ANIM.w.actions[k].stop(); }
   S.bossCorpse = null;
   if (unlocked('tithe')) P.shards = 10;
+  if (unlocked('atlas')) { P.wards = P.wards || {}; if (!P.wards.tidewalker) { P.wards.tidewalker = true; applyWard('tidewalker'); } }
   if (unlocked('boltstart')) { P.weapon = Math.min(WEAPONS.length - 1, SET.startWeapon | 0); P.weaponRank.bolt = 1; }
   if (unlocked('foundation')) { S.timers.push({ t: 0.6, fn: () => gainXp(P.xpNext) }); S.timers.push({ t: 0.9, fn: () => gainXp(P.xpNext) }); }
   refreshWeatherButtons(); refreshAutoBtn(); refreshWeaponCard();
@@ -1803,6 +1824,13 @@ function mixFor() {
   return w;
 }
 const omenSeverity = () => SET.difficulty === 'calm' ? 0.6 : SET.difficulty === 'ash' ? 1.3 : 1;   // ill omens bite softer on 清修, harder on 劫难
+function visitPlace(pl) {
+  S.placesSeen[pl.key] = 1; S.stats.places = (S.stats.places || 0) + 1;
+  const zh = SET.lang === 'zh'; const first = !(META.places && META.places[pl.key]);
+  showBanner((zh ? pl.zh : pl.en) + '  ·  ' + (zh ? pl.quote : pl.quoteEn), first ? 5 : 3.5); if (first) AUDIO.sfx('district');
+  META.places = META.places || {}; if (first) { META.places[pl.key] = 1; saveMeta(); }
+  if (first && !META.unlocks.atlas && PLACES.every((p) => META.places[p.key])) { META.unlocks.atlas = new Date().toISOString().slice(0, 10); saveMeta(); S.timers.push({ t: 5.2, fn: () => showBanner(zh ? '山海图已全 · 下局起自带 迷榖·不迷' : 'THE ATLAS IS COMPLETE  ·  from the next run you carry Migu: Never Lost', 5) }); AUDIO.sfx('win', 0.2); }
+}
 function healMul() { if (!(S.omens && (S.omens.drought || S.omens.plague))) return 1; const pen = 0.5 * omenSeverity() * (P.wards && P.wards.tidewalker ? 0.5 : 1); return clamp(1 - pen, 0.25, 1); }
 function triggerOmen(key) {
   const o = OMENS[key]; if (!o || !S.omens || S.phase !== 'run') return false;
@@ -1836,6 +1864,7 @@ function updateOmens(dt) {
     S.omenClock = (S.omenClock || 0) + 1;
     if (S.omenClock >= 75 && S.t > 80 && !S.boss && !S.tide && !S.shrineActive) { S.omenClock = 0; const r = Math.random(); if (r < 0.4) triggerOmen('bounty'); else if (r < 0.7 && S.t > 170) triggerOmen('calm'); }
     if (S.endless && !S.tenSuns && S.t >= BOSS_AT_FN() + 240) { S.tenSuns = true; S.omenCd.drought = 0; delete S.omens.drought; if (triggerOmen('drought')) { S.omens.drought = 120; showBanner(SET.lang === 'zh' ? '十日并出 · 焦禾稼,杀草木' : 'TEN SUNS RISE TOGETHER  ·  crops scorch, trees die', 5); } }
+    if (world.landmarks) for (const l of world.landmarks) { const pl = PLACE_BY_MARK[l.kind]; if (pl && !S.placesSeen[pl.key] && Math.hypot(P.x - l.x, P.z - l.z) < pl.r) visitPlace(pl); }
     // Jingwei is 'seen' once you have stood by her pile of twigs on Mount Fajiu
     if (!(META.seen && META.seen.jingwei) && world.landmarks) for (const l of world.landmarks) if (l.kind === 'jingwei' && Math.hypot(P.x - l.x, P.z - l.z) < 10) { META.seen = META.seen || {}; META.seen.jingwei = 1; saveMeta(); showBanner(SET.lang === 'zh' ? '精卫 · 常衔西山之木石,以堙于东海' : 'JINGWEI  ·  carrying twigs and stones to fill the Eastern Sea', 4); break; }
   }
@@ -2061,6 +2090,15 @@ function hurtBoss(dmg, crit = false) {
   if (dmg >= 60 && !b.animOnce && S.t - (b.hurtAt || -9) > 1.6 && b.phase !== 'intro') { b.animOnce = 'hurt'; b.hurtAt = S.t; }
   showNumber(b.x, 3.6, b.z, String(Math.round(dmg)), crit ? 'crit' : '');
   burstParticles(b.x, 1.6, b.z, 5, [1, 0.5, 0.2], 3, 0.35, 0.4);
+  if (b.hp <= 0 && !b.revived && DIFF().phase2) {
+    // 猛志固常在: headless, it rises once more with a fifth of its fire and dances faster
+    b.revived = true; b.hp = Math.round(b.maxHp * 0.2); b.flash = 1; b.phase = 'chase'; b.pt = 0; b.atkCd = 1.2; b.animOnce = 'special'; b.summoned = [true, true]; b.phase2 = true;   /* it rises alone, already raging: no more kin called, no second rage banner */
+    spawnRing(b.x, b.z, 7, 0x8a4aa0, 1.4, 0.4); W.lightning = 1; strikeBolt(b.x, b.z); burstParticles(b.x, 1.5, b.z, 120, [0.7, 0.35, 0.9], 8, 0.6, 1.2); camShake.amp = 0.8; camShake.t = 0.6;
+    showBanner(SET.lang === 'zh' ? '刑天复起 · 无首犹舞,猛志固常在' : 'XINGTIAN RISES  ·  headless, still dancing; the fierce will endures', 5); AUDIO.sfx('axe'); AUDIO.sfx('roar');
+    for (const e of S.enemies) if (!e.dying && Math.hypot(e.x - b.x, e.z - b.z) < 7) { const d = Math.hypot(e.x - b.x, e.z - b.z) || 1; e.kx += (e.x - b.x) / d * 10; e.kz += (e.z - b.z) / d * 10; }
+    if (Math.hypot(P.x - b.x, P.z - b.z) < 7) { const d = Math.hypot(P.x - b.x, P.z - b.z) || 1; P.x += (P.x - b.x) / d * 3; P.z += (P.z - b.z) / d * 3; P.invuln = Math.max(P.invuln, 1.0); }
+    return;
+  }
   if (b.hp <= 0) {
     b.dead = true; S.boss = null; S.stats.elites++; S.stats.kills++; S.bossKilled = true;
     S.bossCorpse = { t: 3.2 }; if (ANIM.w) { setBase(ANIM.w, 0); ANIM.w.actions.charge.setEffectiveWeight(0); playOnce(ANIM.w, 'death', 1); }
@@ -2210,7 +2248,7 @@ function updateBoss(dt) {
       break;
     }
     case 'chase': {
-      const sp = (3.4 + minute() * 0.08) * (b.phase2 ? 1.3 : 1);
+      const sp = (3.4 + minute() * 0.08) * (b.phase2 ? 1.3 : 1) * (b.revived ? 1.2 : 1);
       b.x += nx * sp * dt; b.z += nz * sp * dt; b.face = Math.atan2(nx, nz);
       if (d < b.r + P.r + 0.3 && b.atkCd <= 0) { b.atkCd = 1.2; hurtPlayer(b.t.dmg, 'boss'); }
       b.atkCd -= dt;
@@ -2704,7 +2742,7 @@ function autopilot(dt) {
 // debug / capture hooks (used by the verification script)
 // =====================================================================
 window.__emberlight = {
-  S, P: () => P, W, world: () => world, startRun, endRun, spawnBoss, triggerOmen, omens: () => S.omens, playDitai, nearDitai, DITAI, prayWuluo, nearWuluo, WULUO, dangkang: () => S.dangkang, startJingweiErrand, jwQuest: () => S.jwQuest, spawnEnemy, spawnAround, setWeather: (tod, wx) => { W.tod = tod; W.wx = wx; W.auto = false; refreshWeatherButtons(); },
+  S, P: () => P, W, world: () => world, startRun, endRun, spawnBoss, triggerOmen, omens: () => S.omens, playDitai, nearDitai, DITAI, prayWuluo, nearWuluo, WULUO, PLACES, visitPlace, hurtBig, dangkang: () => S.dangkang, startJingweiErrand, jwQuest: () => S.jwQuest, spawnEnemy, spawnAround, setWeather: (tod, wx) => { W.tod = tod; W.wx = wx; W.auto = false; refreshWeatherButtons(); },
   cheat: (o) => Object.assign(P, o), META, recordRun, SET, applyLang, applyQuality, applyCues, gainXp, AUDIO, camDist: (v) => { camDist = v; }, PAD, pollGamepad, lightShrine, nearShrine, shrines: () => S.shrines, DIFFS, rollTalents, TALENTS, WEAPONS, spawnMini, MINIS, minis: () => S.minis, hurtMini, killMini, GUIDE, ANIM, clips: () => kit.clips.map((c) => c.name + ':' + c.duration.toFixed(2)), post: () => ({ ao: gtaoPass && gtaoPass.enabled, bloom: bloomPass && bloomPass.enabled, passes: composer && composer.passes.length }),
   project: (x, y, z) => { const v = new THREE.Vector3(x, y, z).project(camera); return { sx: (v.x * 0.5 + 0.5) * window.innerWidth, sy: (-v.y * 0.5 + 0.5) * window.innerHeight }; },
   slashes: () => S.slashes.map((m) => ({ ry: m.rotation.y, arc: m.userData.arc })), giveShards: (n) => { P.shards += n; }, teleport: (x, z) => { P.x = x; P.z = z; }, cranes: () => craneSet ? { count: craneSet.count, body: !!craneSet.body, tris: craneSet.body ? craneSet.body.geometry.attributes.position.count / 3 : 0 } : null,
