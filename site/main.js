@@ -8,7 +8,7 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
-import { Kit, DynSet, buildGround, generateMap, districtAt, DISTRICTS, ROADS, ISLAND_R, PLAY_R, collideStatic, Grid, setGlow, glowMat, MATS, treeUniforms, mulberry32, vnoise } from './world.js?v=38';
+import { Kit, DynSet, buildGround, generateMap, districtAt, DISTRICTS, ROADS, ISLAND_R, PLAY_R, collideStatic, Grid, setGlow, glowMat, MATS, treeUniforms, mulberry32, vnoise } from './world.js?v=39';
 import * as AUDIO from './audio.js?v=33';
 
 const $ = (s) => document.querySelector(s);
@@ -417,7 +417,7 @@ function renderSettings() {
 function applyCues() {
   const on = !!SET.cues;
   const set = (name, hex) => { const m = glowMat(name); m.vertexColors = !on; if (on) m.color.setHex(hex); else m.color.setScalar(1); m.needsUpdate = true; };
-  set('Crystal', 0xffffff); set('ShardCrystal', 0xffe066); set('HeartGlow', 0xff5ad6); set('EnemyGlow', 0xffffff);
+  set('Crystal', 0xffffff); set('ShardCrystal', 0xffa040); set('HeartGlow', 0xff7a80); set('EnemyGlow', 0xffffff);
   if (!on) { setGlow('Crystal', 1.4); setGlow('ShardCrystal', 1.5); setGlow('HeartGlow', 1.5); setGlow('EnemyGlow', 2.2); }
   S.cues = on;
 }
@@ -529,9 +529,9 @@ const threat = () => Math.floor(minute()) + 1;
 // =====================================================================
 const kit = new Kit();
 let world, ground, playerRig, wardenRig, enemySets = {}, pickupSets = {}, boltSet, spitSet;
-let craneSet = null;
+let craneSet = null, jingweiSet = null;
 const loadBar = $('#loadBar'), loadText = $('#loadText');
-kit.load('./assets/kit.glb?v=13', (e) => { if (e.total) loadBar.style.transform = `scaleX(${(e.loaded / e.total) * 0.6})`; }).then(() => {
+kit.load('./assets/kit.glb?v=16', (e) => { if (e.total) loadBar.style.transform = `scaleX(${(e.loaded / e.total) * 0.6})`; }).then(() => {
   loadText.textContent = 'Planting the wildwood…';
   setTimeout(() => { const t0 = performance.now(); buildWorld(); console.log('world built in', Math.round(performance.now() - t0), 'ms'); }, 30);
 }).catch((err) => { loadText.textContent = 'Failed to load kit: ' + err.message; console.error(err); });
@@ -557,6 +557,8 @@ function buildWorld() {
   pickupSets.shard = new DynSet(kit, 'Shard', 200, scene, { cast: false, glowKey: 'ShardCrystal' });
   pickupSets.heart = new DynSet(kit, 'Heart', 40, scene, { cast: false, glowKey: 'HeartGlow' });
   craneSet = new DynSet(kit, 'Crane', 8, scene, { cast: false, outline: 0 });
+  jingweiSet = new DynSet(kit, 'Jingwei', 4, scene, { cast: false, outline: 0 });
+  FX.jingwei = []; { const jw = (world.landmarks || []).find((l) => l.kind === 'jingwei'); const D = DISTRICTS[2]; const from = { x: D.cx, z: D.cz }, to = jw ? { x: jw.x, z: jw.z } : { x: D.cx + 18, z: D.cz - 18 }; for (let i = 0; i < 3; i++) FX.jingwei.push({ from, to, t: i / 3, dir: 1, h: 6 + i * 0.8, ph: i * 2.1 }); }
   FX.cranes = []; for (let i = 0; i < 6; i++) FX.cranes.push({ a: i / 6 * Math.PI * 2, r: 10 + (i % 3) * 4, h: 7 + (i % 2) * 1.5, spd: 0.12 + (i % 3) * 0.02, ph: i * 1.3 }); FX.craneC = { x: 0, z: 0 };
   boltSet = new DynSet(kit, 'Ember', 200, scene, { cast: false, glowKey: 'Bolt', glowMat: new THREE.MeshBasicMaterial({ color: 0xffb060, toneMapped: false }) });
   spitSet = new DynSet(kit, 'Ember', 120, scene, { cast: false, glowKey: 'Spit', glowMat: new THREE.MeshBasicMaterial({ color: 0xff5a2a, toneMapped: false }) });
@@ -748,9 +750,10 @@ function buildEffects() {
   FX.emberSources.push({ x: world.forgePos.x - 0.9 * Math.cos(0), z: world.forgePos.z, y: 1.0, rate: 8 });
   // ambient drift: petals (peach), leaves (bamboo), fireflies (marsh reeds, night only)
   FX.ambient = [];
-  for (const t of (world.placements.Oak2 || [])) FX.ambient.push({ x: t.x, z: t.z, kind: 0 });
-  for (const t of (world.placements.Pine || [])) if (Math.random() < 0.5) FX.ambient.push({ x: t.x, z: t.z, kind: 1 });
-  for (const t of (world.placements.Reed || [])) if (Math.random() < 0.35) FX.ambient.push({ x: t.x, z: t.z, kind: 2 });
+  for (const t of [...(world.placements.Oak2 || []), ...(world.placements.Cassia || []), ...(world.placements.Migu || [])]) FX.ambient.push({ x: t.x, z: t.z, kind: 0 });
+  for (const t of [...(world.placements.Pine || []), ...(world.placements.ZheTree || [])]) if (Math.random() < 0.5) FX.ambient.push({ x: t.x, z: t.z, kind: 1 });
+  for (const t of [...(world.placements.Reed || []), ...(world.placements.Zhuyu || [])]) if (Math.random() < 0.35) FX.ambient.push({ x: t.x, z: t.z, kind: 2 });
+  for (const t of (world.placements.Tanggu || [])) FX.emberSources.push({ x: t.x, z: t.z, y: 0.4, rate: 9, smoke: true });
   FX.ambientGrid = new Grid(12); for (const a of FX.ambient) FX.ambientGrid.insert(a);
 }
 function spawnParticle(x, y, z, vx, vy, vz, r, g, b, size, life, grav = 0) {
@@ -2383,6 +2386,17 @@ function tick(dt) {
       craneSet.push(_m.compose(_p, _q, _s));
     }
     craneSet.end();
+    if (jingweiSet && FX.jingwei) {
+      jingweiSet.begin();
+      for (const j of FX.jingwei) {
+        j.t += j.dir * dt * 0.035; if (j.t > 1) { j.t = 1; j.dir = -1; } else if (j.t < 0) { j.t = 0; j.dir = 1; }
+        const x = lerp(j.from.x, j.to.x, j.t), z = lerp(j.from.z, j.to.z, j.t), y = j.h + Math.sin(S.wall * 0.9 + j.ph) * 0.4;
+        const yaw = Math.atan2((j.to.x - j.from.x) * j.dir, (j.to.z - j.from.z) * j.dir);
+        _e.set(0, yaw, Math.sin(S.wall * 7 + j.ph) * 0.3); _q.setFromEuler(_e); _p.set(x, y, z);
+        jingweiSet.push(_m.compose(_p, _q, _s));
+      }
+      jingweiSet.end();
+    }
   }
   if (FX.lordRing) { const b = S.boss; if (b && !b.dead && b.phase !== 'intro') { FX.lordRing.visible = true; FX.lordRing.position.set(b.x, 0.06, b.z); FX.lordRing.rotation.y += dt * (b.phase2 ? 1.3 : 0.5); FX.lordRing.children[0].material.opacity = (b.phase2 ? 0.7 : 0.35) * (0.8 + 0.2 * Math.sin(S.t * 5)); } else FX.lordRing.visible = false; }
   if (FX.bolts) for (const b of FX.bolts) if (b.visible) { b.userData.life -= dt; const k = Math.max(0, b.userData.life / 0.32); b.material.opacity = k * k; b.scale.set(0.6 + k * 0.6, 1, 0.6 + k * 0.6); if (k <= 0) b.visible = false; }
@@ -2394,7 +2408,7 @@ function tick(dt) {
       const rate = a.kind === 0 ? 1.4 : a.kind === 1 ? 0.9 : 0.6 * nk;
       if (Math.random() > rate * dt) continue;
       const ox = (Math.random() - 0.5) * 2.4, oz = (Math.random() - 0.5) * 2.4;
-      if (a.kind === 0) spawnParticle(a.x + ox, 2.0 + Math.random() * 0.8, a.z + oz, 0.5 + w * 1.5 + (Math.random() - 0.5) * 0.6, -0.25 - Math.random() * 0.2, 0.2 + (Math.random() - 0.5) * 0.6, 0.95, 0.55, 0.68, 0.16, 4.5, 0.02);
+      if (a.kind === 0) spawnParticle(a.x + ox, 2.0 + Math.random() * 0.8, a.z + oz, 0.5 + w * 1.5 + (Math.random() - 0.5) * 0.6, -0.25 - Math.random() * 0.2, 0.2 + (Math.random() - 0.5) * 0.6, 0.95, 0.75, 0.35, 0.16, 4.5, 0.02);
       else if (a.kind === 1) spawnParticle(a.x + ox, 2.6 + Math.random() * 0.8, a.z + oz, 0.6 + w * 1.8 + (Math.random() - 0.5) * 0.8, -0.35 - Math.random() * 0.25, (Math.random() - 0.5) * 0.8, 0.55, 0.75, 0.32, 0.13, 4.0, 0.03);
       else spawnParticle(a.x + ox * 1.5, 0.4 + Math.random() * 1.2, a.z + oz * 1.5, (Math.random() - 0.5) * 0.5, 0.15 + Math.random() * 0.25, (Math.random() - 0.5) * 0.5, 0.55, 1.0, 0.6, 0.11, 3.0 + Math.random() * 2, -0.02);
     }

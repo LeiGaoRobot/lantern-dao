@@ -38,13 +38,13 @@ export const DISTRICTS = [
   { key: 'hearth', name: 'THE HEARTH', title: 'The Hearth', cx: 0, cz: 0,
     intro: 'Collect embers. Find the forge. Survive 10 minutes.', ground: [0x86a860, 0x9fb27a], snowTint: 1 },
   { key: 'wildwood', name: 'THE WILDWOOD', title: 'The Wildwood', cx: -50, cz: -50,
-    intro: 'Old oaks and older things. Wisps hunt in packs.', ground: [0x4f9a68, 0x3b8558] },
+    intro: 'Old oaks and older things. Wisps hunt in packs.', ground: [0xb3bfb4, 0xcdd4ca] },
   { key: 'mossfall', name: 'MOSSFALL RUINS', title: 'Mossfall Ruins', cx: 50, cz: -50,
-    intro: 'Stone remembers. Spitters nest in the arches.', ground: [0x8b968c, 0xa6ab9e] },
+    intro: 'Stone remembers. Spitters nest in the arches.', ground: [0x4f4a3e, 0x6a6350] },
   { key: 'cinder', name: 'CINDER BARROW', title: 'Cinder Barrow', cx: 50, cz: 50,
-    intro: 'The ground still smoulders. The Ash Warden sleeps here.', ground: [0x4e2f2a, 0x2c1f1e] },
+    intro: 'The ground still smoulders. The Ash Warden sleeps here.', ground: [0x9aa66a, 0xb9b57c] },
   { key: 'silvermere', name: 'SILVERMERE SHORE', title: 'Silvermere Shore', cx: -50, cz: 50,
-    intro: 'Reeds and mist. Crawlers move beneath the water.', ground: [0x6f9c8c, 0x93b3a4] },
+    intro: 'Reeds and mist. Crawlers move beneath the water.', ground: [0x5f9a5a, 0x7fb06a] },
 ];
 export function districtAt(x, z) {
   if (x * x + z * z < 24 * 24) return DISTRICTS[0];
@@ -519,6 +519,8 @@ export function generateMap(kit, scene, seed = 7) {
   add('Barrel', -10.8, -4.2, 0); add('Barrel', -11.4, -3.6, 0); add('Logpile', -6.2, -9.2, 0.3);
   add('Hay', 15.5, 8.5, 0.3, 1, { r: 0.6 }); add('Crate', -13.5, 14.5, 0.4); add('Barrel', -12.8, 15.1, 0);
   add('Signpost', 7.0, 7.0, rad(30), 1, { r: 0.2 }); add('Signpost', -7.0, -7.4, rad(-140), 1, { r: 0.2 });
+  add('WuluoStatue', -2.6, 2.4, faceToward(-2.6, 2.4, 0, 0), 1, { r: 0.7, mark: 'statue' });
+  add('DitaiStone', -5.6, -3.4, 0, 1, { r: 0.8 });
   // market stalls and banners around the plaza
   add('Stall', 6.2, -1.2, rad(25), 1, { rect: { w: 2.2, d: 1.3 } }); add('Stall', -4.8, 6.4, rad(-115), 1, { rect: { w: 2.2, d: 1.3 } }); add('Stall', 9.8, 2.8, rad(70), 1, { rect: { w: 2.2, d: 1.3 } });
   for (const [bx, bz] of [[7.6, -7.6], [-7.6, 7.6], [2.2, 9.6], [-2.4, -9.6]]) add('Banner', bx, bz, rad(-Math.atan2(bz, bx) * 180 / Math.PI), 1, { r: 0.2 });
@@ -533,41 +535,43 @@ export function generateMap(kit, scene, seed = 7) {
 
   // ---- district landmarks
   const shrine = (D) => { add('Shrine', D.cx, D.cz, 0, 1, { r: 1.2, mark: 'shrine' }); };
-  // Wildwood: ring of big oaks + campfire clearing
+  // West mountains (Kunlun / Huaijiang / Zhang'e): jade trees around the array, the nine-faced gate, the black Ruoshui pool, burning cliffs toward the edge
   { const D = DISTRICTS[1]; shrine(D);
-    for (let i = 0; i < 9; i++) { const a = i / 9 * Math.PI * 2; add(i % 3 ? 'Oak' : 'Pine', D.cx + Math.cos(a) * 8, D.cz + Math.sin(a) * 8, rng() * 6, 1.3 + rng() * 0.3, { r: 0.7 }); }
-    add('Campfire', D.cx + 3, D.cz - 2, 0, 1, { r: 0.7 }); add('Logpile', D.cx - 3, D.cz + 2.5, 0.4); add('Stump', D.cx + 4, D.cz + 3, 0.2);
-    add('BambooGiant', D.cx - 6, D.cz + 5, 0.4, 1, { r: 1.0 }); add('BambooGiant', D.cx + 7, D.cz - 6, 2.1, 0.9, { r: 0.9 }); }
-  // Mossfall: arches & columns
+    for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; add('LanggTree', D.cx + Math.cos(a) * 8, D.cz + Math.sin(a) * 8, rng() * 6, 1.2 + rng() * 0.3, { r: 0.6 }); }
+    add('KunlunGate', D.cx + 12, D.cz + 2, rad(-35), 1.1, { rect: { w: 4.4, d: 1.0 } });
+    add('Ruoshui', D.cx - 9, D.cz + 8, 0.2, 1, { r: 2.7 });
+    add('YanhuoCliff', D.cx - 18, D.cz - 14, rad(40), 1.2, { rect: { w: 4.5, d: 1.4 } }); add('YanhuoCliff', D.cx - 24, D.cz - 6, rad(75), 1.0, { rect: { w: 4.5, d: 1.4 } });
+    add('Shatang', D.cx + 4, D.cz - 9, 0.7, 1.1, { r: 0.6 }); add('Shatang', D.cx - 5, D.cz - 6, 2.2, 1.0, { r: 0.6 }); }
+  // North mountains (Fajiu / Gouwu / Youdu): zhe woods, black foxes, Jingwei's heap of twigs at the eastern shore
   { const D = DISTRICTS[2]; shrine(D);
-    add('RuinArch', D.cx - 7, D.cz, rad(20), 1.2, { rect: { w: 3.2, d: 0.8 } });
-    add('RuinArch', D.cx + 7, D.cz + 2, rad(-30), 1.1, { rect: { w: 3.2, d: 0.8 } });
-    for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; add(i % 2 ? 'Column' : 'BrokenColumn', D.cx + Math.cos(a) * 5.5, D.cz + Math.sin(a) * 5.5, a, 1, { r: 0.6 }); }
-    add('RuinWall', D.cx, D.cz - 9, rad(10), 1.2, { rect: { w: 3.6, d: 0.6 } }); add('RuinWall', D.cx + 4, D.cz + 9, rad(-50), 1, { rect: { w: 3.0, d: 0.5 } });
-    add('SwordMonument', D.cx - 4, D.cz + 6.5, rad(150), 1.1, { rect: { w: 3.2, d: 2.2 } }); }
-  // Cinder Barrow: dead trees + ember rocks, boss lair
+    for (let i = 0; i < 9; i++) { const a = i / 9 * Math.PI * 2; add('ZheTree', D.cx + Math.cos(a) * 8.5, D.cz + Math.sin(a) * 8.5, rng() * 6, 1.2 + rng() * 0.4, { r: 0.7 }); }
+    add('JingweiPile', D.cx + 18, D.cz - 18, 0.4, 1.4, { r: 2.0, mark: 'jingwei' }); add('JingweiPile', D.cx + 24, D.cz - 12, 1.9, 1.0, { r: 1.5 });
+    for (const [fx, fz] of [[-6, 4], [7, -5], [-3, -9]]) add('XuanFox', D.cx + fx, D.cz + fz, rng() * 6, 1, { r: 0.35 });
+    add('Boulder', D.cx - 11, D.cz + 7, 0.4, 1.0, { r: 1.7 }); }
+  // East mountains (Tai / Tanggu): the Fusang tree with its ten suns above the hot valley, privet woods
   { const D = DISTRICTS[3]; shrine(D);
-    for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2; add('DeadTree', D.cx + Math.cos(a) * 9, D.cz + Math.sin(a) * 9, rng() * 6, 1.2 + rng() * 0.5, { r: 0.4 }); }
-    for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2 + 0.5; add('EmberRock', D.cx + Math.cos(a) * 4.5, D.cz + Math.sin(a) * 4.5, rng() * 6, 1.3, { r: 0.7 }); }
-    add('Boulder', D.cx - 12, D.cz + 6, 0.4, 1.1, { r: 1.9 }); add('Boulder', D.cx + 11, D.cz - 8, 2.4, 0.9, { r: 1.6 });
-    add('LavaFissure', D.cx + 6, D.cz + 6, 0.4, 1.2, { r: 1.3 }); add('LavaFissure', D.cx - 7, D.cz - 4, 1.9, 1.0, { r: 1.1 }); }
-  // Silvermere: reeds, boulders, a broken jetty of fence
+    add('FusangTree', D.cx + 8, D.cz + 7, 0.3, 1.1, { r: 1.6, mark: 'fusang' });
+    add('Tanggu', D.cx + 3, D.cz + 12, 0.5, 1, { r: 2.3 });
+    for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2 + 0.4; add('ZhenTree', D.cx + Math.cos(a) * 9, D.cz + Math.sin(a) * 9, rng() * 6, 1.1 + rng() * 0.4, { r: 0.5 }); }
+    add('Boulder', D.cx - 12, D.cz + 6, 0.4, 1.1, { r: 1.9 }); add('Rock_L', D.cx + 11, D.cz - 8, 2.4, 1.2, { r: 1.2 }); }
+  // South mountains (Zhaoyao / Qingqiu / Danxue): cassia woods, the phoenix cliff, the fox mound
   { const D = DISTRICTS[4]; shrine(D);
-    for (let i = 0; i < 14; i++) { const a = rng() * Math.PI * 2, r = 4 + rng() * 8; add('Reed', D.cx + Math.cos(a) * r, D.cz + Math.sin(a) * r, rng() * 6, 1 + rng() * 0.4, { solid: false }); }
-    add('Boulder', D.cx + 8, D.cz - 5, 1.1, 1.2, { r: 2 }); add('Rock_L', D.cx - 7, D.cz + 6, 0.5, 1.3, { r: 1.2 });
-    for (let i = 0; i < 4; i++) add('Fence', D.cx - 12 + i * 2.3, D.cz + 11, 0, 1, { solid: false });
-    add('LotusPond', D.cx - 2, D.cz - 7, 0.3, 1, { r: 2.9 }); }
+    for (let i = 0; i < 9; i++) { const a = i / 9 * Math.PI * 2; add(i % 3 === 2 ? 'Migu' : 'Cassia', D.cx + Math.cos(a) * 8, D.cz + Math.sin(a) * 8, rng() * 6, 1.2 + rng() * 0.3, { r: 0.6 }); }
+    add('Danxue', D.cx + 10, D.cz - 6, rad(-20), 1.2, { r: 1.6, mark: 'danxue' });
+    add('QingqiuMound', D.cx - 9, D.cz + 6, 0.6, 1.1, { r: 1.8 });
+    add('LotusPond', D.cx - 2, D.cz - 9, 0.3, 1, { r: 2.9 });
+    for (let i = 0; i < 10; i++) { const a = rng() * Math.PI * 2, r = 4 + rng() * 7; add('Zhuyu', D.cx + Math.cos(a) * r, D.cz + Math.sin(a) * r, rng() * 6, 1 + rng() * 0.3, { solid: false }); } }
 
   // ---- scatter
   const tables = {
-    hearth: [['Oak', 2], ['Oak2', 4], ['Bush', 4], ['Tuft', 14], ['Rock_S', 2], ['Mushroom', 1], ['Pine', 3]],
-    wildwood: [['Pine', 16], ['Oak', 4], ['Oak2', 2], ['Bush', 4], ['Tuft', 10], ['Rock_S', 2], ['Mushroom', 4], ['Stump', 1], ['Rock_L', 1]],
-    mossfall: [['DeadTree', 3], ['Oak', 1], ['Oak2', 1], ['Column', 2], ['BrokenColumn', 3], ['RuinWall', 1], ['Rock_S', 4], ['Rock_L', 2], ['Boulder', 1], ['Bush', 3], ['Tuft', 6], ['Mushroom', 2]],
-    cinder: [['DeadTree', 8], ['EmberRock', 5], ['Rock_S', 5], ['Rock_L', 3], ['Boulder', 1], ['Tuft', 2], ['Stump', 2]],
-    silvermere: [['Reed', 10], ['Oak2', 3], ['Oak', 3], ['Rock_S', 3], ['Rock_L', 2], ['Bush', 3], ['Tuft', 8], ['Mushroom', 2], ['Pine', 1]],
+    hearth: [['Cassia', 3], ['Migu', 1], ['Zhuyu', 5], ['Bush', 3], ['Tuft', 12], ['Rock_S', 2], ['Mushroom', 1]],
+    wildwood: [['LanggTree', 5], ['Shatang', 2], ['Rock_S', 7], ['Rock_L', 4], ['Boulder', 2], ['Tuft', 2], ['Mushroom', 1]],
+    mossfall: [['ZheTree', 12], ['XuanFox', 1], ['Rock_S', 4], ['Rock_L', 2], ['Bush', 2], ['Tuft', 4], ['Mushroom', 2], ['Stump', 1]],
+    cinder: [['ZhenTree', 8], ['Cassia', 2], ['Rock_S', 3], ['Rock_L', 1], ['Tuft', 6], ['Bush', 3], ['Mushroom', 1]],
+    silvermere: [['Cassia', 9], ['Migu', 4], ['Zhuyu', 10], ['Bush', 3], ['Rock_S', 2], ['Tuft', 4], ['Mushroom', 1]],
   };
   const density = { hearth: 0.5, wildwood: 1.35, mossfall: 0.85, cinder: 0.95, silvermere: 0.95 };
-  const solidKinds = new Set(['Oak', 'Oak2', 'Pine', 'DeadTree', 'Rock_L', 'Boulder', 'Column', 'BrokenColumn', 'RuinWall', 'EmberRock', 'Stump', 'Rock_S']);
+  const solidKinds = new Set(['Oak', 'Oak2', 'Pine', 'DeadTree', 'Rock_L', 'Boulder', 'Column', 'BrokenColumn', 'RuinWall', 'EmberRock', 'Stump', 'Rock_S', 'LanggTree', 'Shatang', 'ZheTree', 'ZhenTree', 'Cassia', 'Migu']);
   const tints = { wildwood: null, hearth: null, mossfall: new THREE.Color(0.85, 1.0, 0.9), cinder: new THREE.Color(0.75, 0.68, 0.7), silvermere: new THREE.Color(0.9, 1.0, 1.05) };
   const pick = (tab) => { let s = 0; for (const t of tab) s += t[1]; let r = rng() * s; for (const t of tab) { r -= t[1]; if (r <= 0) return t[0]; } return tab[0][0]; };
   const tmp = [];
@@ -596,7 +600,7 @@ export function generateMap(kit, scene, seed = 7) {
 
   // ---- upload instanced meshes
   const sets = {};
-  const TREES = new Set(['Oak', 'Oak2', 'Pine', 'DeadTree', 'BambooGiant']);
+  const TREES = new Set(['Oak', 'Oak2', 'Pine', 'DeadTree', 'BambooGiant', 'LanggTree', 'Shatang', 'ZheTree', 'ZhenTree', 'Cassia', 'Migu', 'FusangTree']);
   for (const name of Object.keys(placements)) sets[name] = new InstanceSet(kit, name, placements[name], scene, { tint: true, cast: !['Tuft', 'Reed'].includes(name), material: TREES.has(name) ? MATS.tree : null });
   return { placements, obstacles, landmarks, sets, forgePos, placedCount: placed };
 }
