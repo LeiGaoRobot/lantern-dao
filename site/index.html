@@ -305,6 +305,10 @@
   .lore i { display: block; color: var(--mutedP); font-style: normal; font-size: 11px; letter-spacing: .04em; margin-top: 2px; }
   .lore q { display: block; margin-top: 5px; color: var(--inkP); quotes: none; font-family: "Noto Serif SC", "STSong", "SimSun", Fraunces, serif; line-height: 1.5; }
   @media (max-width: 640px) { .loregrid { grid-template-columns: 1fr; } }
+  #omen { margin-top: 6px; font-size: 13px; letter-spacing: .08em; color: #e6d7a8; text-shadow: 0 1px 6px rgba(0,0,0,.7); opacity: 0; transition: opacity .5s; white-space: nowrap; }
+  #omen.show { opacity: .92; }
+  #omen.plague { color: #b6d09a; } #omen.fire { color: #ffb070; } #omen.bounty { color: #ffd98a; } #omen.calm { color: #ffc9c0; }
+  body.zh #omen { font-family: "Noto Serif SC", "STSong", "SimSun", serif; letter-spacing: .2em; }
 </style>
 </head>
 <body>
@@ -331,6 +335,7 @@
     <div id="timer">00:00 / 10:00</div>
     <div id="sub">The Hearth · Threat 01 · 0 enemies</div>
     <div id="banner"></div>
+    <div id="omen"></div>
     <div id="guide"></div>
     <div id="boss"><div class="name">THE ASH WARDEN</div><div class="bar" id="bossbar"><i></i></div></div>
   <div id="shrine"><div class="name">SHRINE</div><div class="bar" id="shrineBar"><i></i></div></div>

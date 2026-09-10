@@ -175,7 +175,28 @@ const LORE = [
   { key: 'salamander', zh: '蜚', en: 'Fei', src: '东山经·东次四经 太山', srcEn: 'East Mountains IV, Mount Tai', quote: '其狀如牛而白首,一目而蛇尾,行水則竭,行草則死,見則天下大疫。', quoteEn: "An ox with a white head, one eye and a serpent's tail; water dries and grass dies where it walks, and plague follows." },
   { key: 'maw', zh: '帝江', en: 'Dijiang', src: '西山经·西次三经 天山', srcEn: 'West Mountains III, Mount Tian', quote: '其狀如黃囊,赤如丹火,六足四翼,渾敦無面目,是識歌舞。', quoteEn: 'Like a yellow sack, red as cinnabar fire, six legs, four wings, no face at all; it understands song and dance.' },
   { key: 'boss', zh: '刑天', en: 'Xingtian', src: '海外西经', srcEn: 'Beyond the Seas: West', quote: '帝斷其首,葬之常羊之山,乃以乳為目,以臍為口,操干戚以舞。', quoteEn: 'The Emperor cut off his head and buried it on Mount Changyang; he made his nipples his eyes, his navel his mouth, and danced with shield and axe.' },
+  { key: 'dangkang', omen: 'bounty', zh: '当康', en: 'Dangkang', src: '东山经·东次四经 钦山', srcEn: 'East Mountains IV, Mount Qin', quote: '其狀如豚而有牙,其名曰當康,其鳴自叫,見則天下大穰。', quoteEn: 'Shaped like a pig with tusks; it calls its own name, and where it is seen a great harvest follows.' },
+  { key: 'fenghuang', omen: 'calm', zh: '凤皇', en: 'Fenghuang', src: '南山经 丹穴之山', srcEn: 'South Mountains, Mount Danxue', quote: '其狀如雞,五采而文,名曰鳳皇…飲食自然,自歌自舞,見則天下安寧。', quoteEn: 'Like a fowl patterned in five colours; it eats as it pleases, sings and dances for itself, and where it is seen all under heaven is at peace.' },
+  { key: 'zhulong', omen: 'dark', zh: '烛龙', en: 'Zhulong', src: '海外北经 钟山 · 大荒北经 章尾山', srcEn: 'Beyond the Seas: North, Mount Zhong', quote: '視為晝,瞑為夜,吹為冬,呼為夏…人面蛇身而赤,是謂燭龍。', quoteEn: 'Its open eyes are day, its closed eyes night; its breath is winter, its sigh summer; a red serpent with a human face: Zhulong.' },
+  { key: 'jingwei', seen: 'jingwei', zh: '精卫', en: 'Jingwei', src: '北山经·北次三经 发鸠之山', srcEn: 'North Mountains III, Mount Fajiu', quote: '其狀如烏,文首、白喙、赤足,名曰精衛…常銜西山之木石,以堙于東海。', quoteEn: 'Like a crow with a patterned head, white beak and red feet; it forever carries twigs and stones from the western hills to fill the Eastern Sea.' },
 ];
+// 见则… omens: each is a timer on S.omens with a banner, a weather tint (weatherTarget) and a rule hook
+const OMENS = {
+  drought: { zh: '鸣蛇见 · 其邑大旱', en: 'MINGSHE SEEN  ·  drought comes to the land', short: '大旱', shortEn: 'Drought', dur: 30, cd: 150, sfx: 'roar' },
+  fire:    { zh: '毕方见 · 其邑有讹火', en: 'BIFANG SEEN  ·  strange fires break out', short: '讹火', shortEn: 'Strange fire', dur: 28, cd: 150, sfx: 'thunder' },
+  plague:  { zh: '蜚见 · 天下大疫', en: 'FEI SEEN  ·  plague upon the land', short: '大疫', shortEn: 'Plague', dur: 45, cd: 240, sfx: 'roar' },
+  bounty:  { zh: '当康鸣 · 天下大穰', en: 'DANGKANG CALLS  ·  a great harvest', short: '大穰', shortEn: 'Harvest', dur: 20, cd: 120, sfx: 'district' },
+  calm:    { zh: '凤皇见 · 天下安宁', en: 'FENGHUANG SEEN  ·  all under heaven at peace', short: '安宁', shortEn: 'Peace', dur: 25, cd: 180, sfx: 'district' },
+  dark:    { zh: '烛龙瞑目 · 天地昏冥', en: 'ZHULONG CLOSES ITS EYES  ·  heaven and earth go dark', short: '昏冥', shortEn: 'Darkness', dur: 0, cd: 0, sfx: 'thunder' },
+};
+const TIDE_QUOTE = {
+  wisp:    { zh: '鬿雀群现 · 鼠足虎爪,亦食人', en: 'QIQUE SWARM  ·  rat feet, tiger claws; they eat men' },
+  cinder:  { zh: '山膏群现 · 赤若丹火,善詈', en: 'SHANGAO SWARM  ·  red as cinnabar fire, fond of cursing' },
+  crawler: { zh: '鸣蛇群现 · 其音如磬,见则大旱', en: 'MINGSHE SWARM  ·  a sound like chimes; drought follows' },
+  spitter: { zh: '毕方群现 · 见则其邑有讹火', en: 'BIFANG SWARM  ·  strange fires follow' },
+  brute:   { zh: '穷奇群现 · 音如嗥狗,是食人', en: 'QIONGQI SWARM  ·  howling like dogs; they eat men' },
+};
+function tideText(type) { const q = TIDE_QUOTE[type] || TIDE_QUOTE.wisp; return SET.lang === 'zh' ? q.zh : q.en; }
 const REALMS_ZH = ['练气一层', '练气二层', '练气三层', '练气四层', '练气五层', '练气六层', '练气七层', '练气八层', '练气九层', '筑基初期', '筑基中期', '筑基后期', '金丹初期', '金丹中期', '金丹后期', '元婴初期', '元婴中期', '元婴后期', '化神'];
 function realmName(l) { if (SET.lang !== 'zh') return `${tr('Level')} ${pad2(l)}`; const i = Math.min(REALMS_ZH.length - 1, l - 1); return REALMS_ZH[i] + (l > REALMS_ZH.length ? ' ' + (l - REALMS_ZH.length + 1) : ''); }
 const PATHS = [
@@ -467,7 +488,7 @@ const UNLOCKS = [
   { key: 'demonpath', name: 'Demon heart', how: 'Pass the tribulation on Tribulation difficulty', gives: 'A fourth path at Foundation: the Demon Path', test: (m, run) => run && run.won && run.diff === 'ash' },
 ];
 function loadMeta() {
-  const fresh = { v: META_V, totalKills: 0, bossKills: 0, runsPlayed: 0, bestTime: 0, runs: [], unlocks: {}, byDiff: {}, bestiary: {} };
+  const fresh = { v: META_V, totalKills: 0, bossKills: 0, runsPlayed: 0, bestTime: 0, runs: [], unlocks: {}, byDiff: {}, bestiary: {}, omens: {}, seen: {} };
   try {
     const m = JSON.parse(localStorage.getItem('emberlight.meta') || 'null');
     if (!m || typeof m !== 'object') return fresh;
@@ -478,6 +499,8 @@ function loadMeta() {
     out.bestiary = {}; if (m.bestiary && typeof m.bestiary === 'object') for (const k of ['wolfking', 'sentinel', 'salamander', 'maw']) if (m.bestiary[k]) out.bestiary[k] = String(m.bestiary[k]);
     out.byDiff = {}; if (m.byDiff && typeof m.byDiff === 'object') for (const k of ['calm', 'standard', 'ash']) if (m.byDiff[k]) out.byDiff[k] = { best: m.byDiff[k].best | 0, wins: m.byDiff[k].wins | 0, runs: m.byDiff[k].runs | 0 };
     out.guided = !!m.guided;
+    out.omens = {}; if (m.omens && typeof m.omens === 'object') for (const k in OMENS) if (m.omens[k]) out.omens[k] = 1;
+    out.seen = {}; if (m.seen && typeof m.seen === 'object') for (const k of ['jingwei']) if (m.seen[k]) out.seen[k] = 1;
     out.unlocks = {};
     if (m.unlocks && typeof m.unlocks === 'object') for (const u of UNLOCKS) if (m.unlocks[u.key]) out.unlocks[u.key] = m.unlocks[u.key];
     out.v = META_V;
@@ -508,7 +531,7 @@ function renderArchive() {
   const best = META.bestiary || {};
   const zhL = SET.lang === 'zh';
   h += `<div class="sub" style="margin:16px 0 6px">${tr('Bestiary')}</div><div class="loregrid">` + LORE.map((L) => {
-    const on = ['wolfking', 'sentinel', 'salamander', 'maw'].includes(L.key) ? !!best[L.key] : L.key === 'boss' ? META.bossKills > 0 : META.totalKills > 0;
+    const on = ['wolfking', 'sentinel', 'salamander', 'maw'].includes(L.key) ? !!best[L.key] : L.key === 'boss' ? META.bossKills > 0 : L.omen ? !!(META.omens && META.omens[L.omen]) : L.seen ? !!(META.seen && META.seen[L.seen]) : META.totalKills > 0;
     return `<div class="lore ${on ? 'on' : ''}"><b>${on ? (zhL ? L.zh : L.en) : '???'}</b><i>${zhL ? L.src : L.srcEn}</i>${on ? `<q>${zhL ? L.quote : L.quoteEn}</q>` : ''}</div>`;
   }).join('') + '</div>';
   h += `<div class="sub" style="margin:16px 0 6px">${tr('Best runs')}</div>`;
@@ -866,14 +889,21 @@ const WX_PRESET = {
 function weatherTarget() {
   const T = TOD_PRESET[W.tod], X = WX_PRESET[W.wx];
   const dark = new THREE.Color(0x2a2a38), trib = new THREE.Color(0x160f24), tk = S.tribK || 0;
-  return {
+  const ok = S.omenK || {}, kd = ok.drought || 0, kp = ok.plague || 0, kc = ok.calm || 0;
+  const o = {
     sky: T.sky.clone().lerp(dark, X.skyDark).lerp(trib, tk * 0.75), fog: T.fog.clone().lerp(dark, X.skyDark).lerp(trib, tk * 0.6),
     hemiSky: T.hemiSky.clone(), hemiGround: T.hemiGround.clone(), hemiI: (T.hemiI * (1 - X.skyDark * 0.4) + (W.wx === 'snow' ? 0.15 : 0)) * (1 - tk * 0.35),
     sunC: T.sunC.clone(), sunI: T.sunI * X.sunMul * (1 - tk * 0.55), sunDir: T.sunDir.clone(), exposure: T.exposure,
     glowWin: T.glowWin + X.skyDark * 0.8, glowLamp: T.glowLamp + X.skyDark * 0.8, lamp: T.lamp + X.skyDark * 1.5 + tk * 2.5,
     rain: X.rain, snow: X.snow, cloud: X.cloud, wet: X.wet, fogNear: 45 * X.fogMul * (1 - tk * 0.35), fogFar: 130 * X.fogMul * (1 - tk * 0.35), wind: X.wind,
   };
+  // omens: drought bakes the sky yellow and dries the ground; plague sickens it green and thickens the fog; the phoenix warms it
+  if (kd > 0.01) { o.sky.lerp(OMEN_COL.droughtSky, kd * 0.45); o.fog.lerp(OMEN_COL.droughtFog, kd * 0.4); o.sunC.lerp(OMEN_COL.droughtSun, kd * 0.7); o.hemiSky.lerp(OMEN_COL.droughtSky, kd * 0.6); o.hemiGround.lerp(OMEN_COL.droughtGround, kd * 0.6); o.sunI *= 1 + kd * 0.35; o.hemiI *= 1 - kd * 0.1; o.wet *= 1 - kd; o.rain *= 1 - kd; o.snow *= 1 - kd; o.cloud *= 1 - kd * 0.7; o.fogFar *= 1 + kd * 0.3; o.exposure *= 1 + kd * 0.08; }
+  if (kp > 0.01) { o.sky.lerp(OMEN_COL.plagueSky, kp * 0.45); o.fog.lerp(OMEN_COL.plagueFog, kp * 0.5); o.sunC.lerp(OMEN_COL.plagueSun, kp * 0.7); o.hemiSky.lerp(OMEN_COL.plagueSky, kp * 0.7); o.hemiGround.lerp(OMEN_COL.plagueGround, kp * 0.6); o.hemiI *= 1 - kp * 0.2; o.sunI *= 1 - kp * 0.25; o.fogNear *= 1 - kp * 0.35; o.fogFar *= 1 - kp * 0.35; o.exposure *= 1 - kp * 0.08; }
+  if (kc > 0.01) { o.sky.lerp(OMEN_COL.calmSky, kc * 0.3); o.fog.lerp(OMEN_COL.calmFog, kc * 0.25); o.sunC.lerp(OMEN_COL.calmSun, kc * 0.6); o.hemiSky.lerp(OMEN_COL.calmSky, kc * 0.5); o.hemiI *= 1 + kc * 0.1; }
+  return o;
 }
+const OMEN_COL = { droughtSky: C('#e9d9a6'), droughtFog: C('#e6d7a8'), droughtSun: C('#ffd070'), droughtGround: C('#8a7a4a'), plagueSky: C('#7f8f66'), plagueFog: C('#8d9a70'), plagueSun: C('#b8c88a'), plagueGround: C('#3e4a30'), calmSky: C('#f2d9c8'), calmFog: C('#efd6c6'), calmSun: C('#ffd8c0') };
 function applyWeatherInstant() { W.tgt = weatherTarget(); W.cur = weatherTarget(); applyWeather(); }
 function lerpColor(a, b, t) { a.lerp(b, t); }
 function updateWeather(dt) {
@@ -1179,7 +1209,7 @@ function showBanner(text, secs = 4) { const b = $('#banner'); b.textContent = tr
 // =====================================================================
 function startRun() {
   P = newPlayer();
-  S.phase = 'run'; S.paused = false; S.modal = null; S.t = 0; S.endless = false; S.tribK = 0; S.tribWarned = false; S.tide = null;
+  S.phase = 'run'; S.paused = false; S.modal = null; S.t = 0; S.endless = false; S.tribK = 0; S.tribWarned = false; S.tide = null; S.omens = {}; S.omenK = {}; S.omenCd = {}; S.omenClock = 0; S.omenTick = 0;
   S.recorded = false;
   S.enemies.length = 0; S.pickups.length = 0; S.projectiles.length = 0; S.eprojectiles.length = 0; S.burns.length = 0; S.timers.length = 0;
   for (const m of S.slashes) scene.remove(m); S.slashes.length = 0;
@@ -1722,11 +1752,51 @@ function mixFor() {
   if (D === 'hearth') w.wisp *= 1.2;
   return w;
 }
+function healMul() { return S.omens && (S.omens.drought || S.omens.plague) ? 0.5 : 1; }
+function triggerOmen(key) {
+  const o = OMENS[key]; if (!o || !S.omens || S.phase !== 'run') return false;
+  if (S.omens[key] || (S.omenCd[key] || 0) > 0) return false;
+  if (key !== 'dark' && key !== 'calm' && S.omens.calm) return false;   // the phoenix's peace holds ill omens off
+  S.omens[key] = o.dur || 1e9; S.omenCd[key] = o.cd;
+  showBanner(SET.lang === 'zh' ? o.zh : o.en, 4.5); AUDIO.sfx(o.sfx || 'district');
+  META.omens = META.omens || {}; if (!META.omens[key]) { META.omens[key] = 1; saveMeta(); }
+  if (key === 'bounty') burstParticles(P.x, 1, P.z, 30, [1, 0.85, 0.4], 4, 0.4, 0.7, -2);
+  if (key === 'calm') burstParticles(P.x, 1.2, P.z, 40, [1, 0.6, 0.55], 5, 0.4, 0.9, -1);
+  if (key === 'fire') W.lightning = Math.max(W.lightning, 0.5);
+  return true;
+}
+function updateOmens(dt) {
+  if (!S.omens || S.phase !== 'run') return;
+  for (const k in S.omenCd) S.omenCd[k] = Math.max(0, S.omenCd[k] - dt);
+  S.omenTick = (S.omenTick || 0) + dt;
+  if (S.omenTick >= 1) {
+    S.omenTick = 0;
+    let crawlers = 0, spitters = 0;
+    for (const e of S.enemies) { if (e.dying) continue; if (e.type === 'crawler') crawlers++; else if (e.type === 'spitter') spitters++; }
+    if (crawlers >= 6) triggerOmen('drought');
+    if (spitters >= 5) triggerOmen('fire');
+    if (!S.omens.plague && S.minis.some((m) => m.key === 'salamander' && !m.dead)) triggerOmen('plague');
+    // auspicious omens roll on a slow clock while the valley is quiet
+    S.omenClock = (S.omenClock || 0) + 1;
+    if (S.omenClock >= 75 && S.t > 80 && !S.boss && !S.tide && !S.shrineActive) { S.omenClock = 0; const r = Math.random(); if (r < 0.4) triggerOmen('bounty'); else if (r < 0.7 && S.t > 170) triggerOmen('calm'); }
+    // Jingwei is 'seen' once you have stood by her pile of twigs on Mount Fajiu
+    if (!(META.seen && META.seen.jingwei) && world.landmarks) for (const l of world.landmarks) if (l.kind === 'jingwei' && Math.hypot(P.x - l.x, P.z - l.z) < 10) { META.seen = META.seen || {}; META.seen.jingwei = 1; saveMeta(); showBanner(SET.lang === 'zh' ? '精卫 · 常衔西山之木石,以堙于东海' : 'JINGWEI  ·  carrying twigs and stones to fill the Eastern Sea', 4); break; }
+  }
+  for (const k in S.omens) {
+    if (k === 'dark') continue;
+    S.omens[k] -= dt;
+    if (k === 'fire' && Math.random() < dt * 1.3) { const a = Math.random() * 6.28, d = 3 + Math.random() * 7; S.burns.push({ x: P.x + Math.cos(a) * d, z: P.z + Math.sin(a) * d, t: 4, hostile: true }); if (S.burns.length > 70) S.burns.shift(); }
+    if (k === 'bounty' && Math.random() < dt * 1.5) { const a = Math.random() * 6.28, d = 2 + Math.random() * 5; dropPickup('ember', P.x + Math.cos(a) * d, P.z + Math.sin(a) * d, 3); }
+    if (k === 'drought' && W.wx !== 'clear') { W.wx = 'clear'; W.wxTimer = Math.max(W.wxTimer, 20); refreshWeatherButtons(); }
+    if (S.omens[k] <= 0) { delete S.omens[k]; if (k === 'bounty') { P.shards += 4; showBanner(SET.lang === 'zh' ? '大穰已过 · +4 丹粟' : 'THE HARVEST PASSES  ·  +4 cinnabar grains', 3); AUDIO.sfx('shard', 0.2); } }
+  }
+  for (const k in OMENS) { const tgt = S.omens[k] ? 1 : 0; S.omenK[k] = lerp(S.omenK[k] || 0, tgt, 1 - Math.pow(0.001, dt / 4)); }
+}
 function pickType(w) { let s = 0; for (const k in w) s += w[k]; let r = Math.random() * s; for (const k in w) { r -= w[k]; if (r <= 0) return k; } return 'wisp'; }
 function updateSpawner(dt) {
   const m = minute();
   const shrineActive = S.shrineActive;
-  const rate = (0.55 + m * 0.3 + (S.endless ? 0.8 : 0)) * DIFF().spawn * (S.district.key === 'hearth' ? 0.8 : 1) * (S.district.key === 'cinder' ? 1.2 : 1) * (shrineActive ? 2.0 : 1);
+  const rate = (0.55 + m * 0.3 + (S.endless ? 0.8 : 0)) * DIFF().spawn * (S.district.key === 'hearth' ? 0.8 : 1) * (S.district.key === 'cinder' ? 1.2 : 1) * (shrineActive ? 2.0 : 1) * (S.omens && S.omens.calm ? 0.45 : 1);
   const cap = Math.min(260, 28 + m * 14 + (S.endless ? 50 : 0));
   S.spawnBudget += rate * dt;
   const w = mixFor();
@@ -1739,7 +1809,7 @@ function updateSpawner(dt) {
     if (e && n > 1) for (let i = 1; i < n; i++) { const a = Math.random() * 6.28; spawnEnemy(type, e.x + Math.cos(a) * 1.5, e.z + Math.sin(a) * 1.5); }
   }
   // demon tide: from 2:00, every 150 s, one demon kind pours in from one side for 20 s
-  if (!S.tide && S.t >= 120 && !S.boss && !S.shrineActive && ((S.t - 120) % 150) < dt) { S.tide = { type: pickType(w), a: Math.random() * Math.PI * 2, t: 20 }; showBanner('DEMON TIDE  ·  They come from one side. Hold.', 4); AUDIO.sfx('roar'); }
+  if (!S.tide && S.t >= 120 && !S.boss && !S.shrineActive && !(S.omens && S.omens.calm) && ((S.t - 120) % 150) < dt) { S.tide = { type: pickType(w), a: Math.random() * Math.PI * 2, t: 20 }; showBanner(tideText(S.tide.type), 4); AUDIO.sfx('roar'); if (S.tide.type === 'crawler') triggerOmen('drought'); else if (S.tide.type === 'spitter') triggerOmen('fire'); }
   if (S.tide) {
     S.tide.t -= dt;
     if (Math.random() < 3.2 * DIFF().spawn * dt && S.enemies.length < cap + 40) {
@@ -1749,14 +1819,14 @@ function updateSpawner(dt) {
     }
     if (S.tide.t <= 0) { S.tide = null; P.shards += 6; showBanner('THE TIDE BREAKS  ·  +6 cinnabar grains', 3); AUDIO.sfx('district'); burstParticles(P.x, 1, P.z, 24, [1, 0.85, 0.4], 4, 0.4, 0.7, -2); }
   }
-  S.eliteTimer -= dt;
+  S.eliteTimer -= dt * (S.omens && S.omens.calm ? 0 : 1);
   if (S.eliteTimer <= 0 && m > 1.8) {
     S.eliteTimer = Math.max(22, 50 - m * 2.5) * DIFF().elite;
     const e = spawnAround('brute', { hpMul: 1 });
     if (e) { showBanner('AN ASH BRUTE PROWLS NEARBY', 3); AUDIO.sfx('roar'); }
   }
   // tribulation: 30 s before the boss the sky closes in, lightning starts, then Xingtian descends
-  if (!S.endless && !S.tribWarned && S.t >= BOSS_AT_FN() - 30) { S.tribWarned = true; showBanner('THE SKY DARKENS  ·  The tribulation is near.', 5); AUDIO.sfx('thunder'); W.lightning = 0.6; }
+  if (!S.endless && !S.tribWarned && S.t >= BOSS_AT_FN() - 30) { S.tribWarned = true; showBanner('THE SKY DARKENS  ·  The tribulation is near.', 5); AUDIO.sfx('thunder'); W.lightning = 0.6; if (S.omens) { S.omens.dark = 1e9; META.omens = META.omens || {}; if (!META.omens.dark) { META.omens.dark = 1; saveMeta(); } } }
   const tribTarget = ((!S.endless && S.t >= BOSS_AT_FN() - 30 && !S.bossKilled) || S.boss) ? 1 : 0;
   S.tribK = lerp(S.tribK, tribTarget, 1 - Math.pow(0.001, dt / 8));
   if (!S.bossSpawned && S.t >= BOSS_AT_FN() && !S.endless) spawnBoss();
@@ -1816,7 +1886,7 @@ function hurtEnemy(e, dmg, crit = false, quiet = false) {
   if (e.dead || e.dying) return;
   if (P.wards && P.wards.ashwalker && (e.type === 'cinder' || e.type === 'brute')) dmg *= 1.25;
   e.hp -= dmg; e.flash = 1;
-  if (P.leech) P.hp = Math.min(P.maxHp, P.hp + dmg * P.leech);
+  if (P.leech) P.hp = Math.min(P.maxHp, P.hp + dmg * P.leech * healMul());
   S.stats.dmgDealt += dmg;
   if (!quiet) showNumber(e.x, 1.2 * e.scale, e.z, String(Math.round(dmg)), crit ? 'crit' : '');
   if (crit && !quiet) AUDIO.sfx('crit', 0.1);
@@ -1831,12 +1901,12 @@ function killEnemy(e) {
   burstParticles(e.x, 0.5, e.z, e.t.elite ? 60 : 14, [0.25, 0.2, 0.28], e.t.elite ? 6 : 3.5, 0.5, 0.7);
   burstParticles(e.x, 0.6, e.z, e.t.elite ? 30 : 6, [1, 0.5, 0.15], 3, 0.35, 0.5);
   // drops
-  const n = e.t.elite ? 6 : (Math.random() < 0.25 ? 2 : 1);
+  const n = (e.t.elite ? 6 : (Math.random() < 0.25 ? 2 : 1)) * (S.omens && S.omens.bounty ? 2 : 1);
   for (let i = 0; i < n; i++) dropPickup('ember', e.x, e.z, e.t.xp);
   const shardChance = e.t.elite ? 1 : e.t.shards * P.luck * 0.9;
   if (e.t.elite) { for (let i = 0; i < Math.round(e.t.shards * P.luck); i++) dropPickup('shard', e.x, e.z, 1); }
   else if (Math.random() < shardChance) dropPickup('shard', e.x, e.z, 1);
-  if (e.t.elite || Math.random() < 0.04 * (P.heartMult || 1)) dropPickup('heart', e.x, e.z, 25);
+  if (e.t.elite || Math.random() < 0.04 * (P.heartMult || 1) * (S.omens && S.omens.bounty ? 3 : 1)) dropPickup('heart', e.x, e.z, 25);
   if (P.kindling && Math.random() < P.kindling) dropPickup('ember', e.x, e.z, e.t.xp);
 }
 function dropPickup(kind, x, z, value) {
@@ -1856,7 +1926,7 @@ function updatePickups(dt) {
       S.pickups.splice(i, 1);
       if (p.kind === 'ember') { gainXp(p.value); P.xpTotal = (P.xpTotal || 0) + p.value; AUDIO.sfx('ember', 0.04); spawnParticle(p.x, 0.6, p.z, 0, 2, 0, 0.5, 0.95, 0.85, 0.5, 0.3, 0); }
       else if (p.kind === 'shard') { P.shards += p.value; AUDIO.sfx('shard', 0.05); spawnParticle(p.x, 0.6, p.z, 0, 2, 0, 1, 0.7, 0.3, 0.6, 0.35, 0); }
-      else { const heal = P.leech ? Math.round(p.value / 2) : p.value; P.hp = Math.min(P.maxHp, P.hp + heal); showNumber(P.x, 1.6, P.z, '+' + heal, 'heal'); AUDIO.sfx('heart'); burstParticles(P.x, 0.8, P.z, 12, [0.6, 1, 0.75], 2, 0.35, 0.5, -1); }
+      else { const heal = Math.round((P.leech ? p.value / 2 : p.value) * healMul()); P.hp = Math.min(P.maxHp, P.hp + heal); showNumber(P.x, 1.6, P.z, '+' + heal, 'heal'); AUDIO.sfx('heart'); burstParticles(P.x, 0.8, P.z, 12, [0.6, 1, 0.75], 2, 0.35, 0.5, -1); }
     }
   }
 }
@@ -1931,6 +2001,7 @@ function spawnMini(distKey) {
   const hp = (d.hp + minute() * 90) * DIFF().hp * (S.endless ? 1.4 : 1);
   const m = { mini: true, key: d.key, def: d, x, z, r: d.r, hp, maxHp: hp, face: 0, flash: 0, kx: 0, kz: 0, t: { mass: 12, dmg: d.dmg }, atkCd: 1, moveCd: 3.5, moveIdx: 0, phase: 'chase', pt: 0, burrowed: false, speedMul: 1, buffT: 0, dead: false, animOnce: 'special', bob: 0 };
   S.minis.push(m);
+  if (d.key === 'salamander') S.timers.push({ t: 4, fn: () => triggerOmen('plague') });   // after the elite's own banner
   const R = MINI_RIGS[distKey]; R.rig.visible = true; R.rig.position.set(x, 0, z); R.rig.scale.setScalar(d.scale);
   for (const k in R.anim.actions) if (!['idle', 'walk'].includes(k)) R.anim.actions[k].stop();
   setBase(R.anim, 0);
@@ -1943,7 +2014,7 @@ function spawnMini(distKey) {
 function hurtMini(m, dmg, crit = false) {
   if (!m || m.dead || m.burrowed) return;
   m.hp -= dmg; m.flash = 1; S.stats.dmgDealt += dmg;
-  if (P.leech) P.hp = Math.min(P.maxHp, P.hp + dmg * P.leech);
+  if (P.leech) P.hp = Math.min(P.maxHp, P.hp + dmg * P.leech * healMul());
   showNumber(m.x, 2.4, m.z, String(Math.round(dmg)), crit ? 'crit' : '');
   burstParticles(m.x, 1.2, m.z, 4, [0.8, 0.5, 1], 3, 0.3, 0.4);
   if (m.hp <= 0) killMini(m);
@@ -2131,7 +2202,7 @@ function updatePlayer(dt) {
   P.invuln = Math.max(0, P.invuln - dt); P.hitFlash = Math.max(0, P.hitFlash - dt);
   P.dashCd = Math.max(0, P.dashCd - dt); P.heavyCd = Math.max(0, P.heavyCd - dt); P.novaCd = Math.max(0, P.novaCd - dt);
   P.swing = Math.max(0, P.swing - dt);
-  if (P.regen > 0 && !P.noRegen) P.hp = Math.min(P.maxHp, P.hp + P.regen * dt);
+  if (P.regen > 0 && !P.noRegen) P.hp = Math.min(P.maxHp, P.hp + P.regen * dt * healMul());
   const mv = moveVector();
   let sp = moveSpeed();
   let dx = mv.x, dz = mv.z;
@@ -2310,6 +2381,8 @@ function updateHUD() {
   $('#lvlText').textContent = realmName(P.level);
   $('#xpText').textContent = `${Math.floor(P.xp)} / ${P.xpNext} ${tr('XP')}`;
   $('#shardText').textContent = zh ? `${P.shards} 丹粟` : `${P.shards} cinnabar grain${P.shards === 1 ? '' : 's'}`;
+  { const om = $('#omen'); const keys = S.omens ? Object.keys(S.omens).filter((k) => k !== 'dark') : [];
+    if (keys.length) { om.textContent = keys.map((k) => (zh ? OMENS[k].short : OMENS[k].shortEn) + ' ' + Math.ceil(S.omens[k])).join('  ·  '); om.className = 'show ' + keys[0]; } else om.className = ''; }
   $('#forgeText').textContent = `${tr('Edge')} ${P.forge.edge} / 3 · ${tr('Mail')} ${P.forge.mail} / 3 · ${tr('Charm')} ${P.forge.charm} / 3`;
   $('#statText').textContent = `${tr('Damage')} ×${dmgMult().toFixed(2)} · ${tr('Armour')} ${Math.round(armour() * 100)}%${P.path ? ' · ' + tr({ sword: 'Sword Path', talisman: 'Talisman Path', body: 'Body Path', demon: 'Demon Path' }[P.path]) : ''}`;
   $('#bestText').textContent = `${tr('Best')} ${fmtTime(S.best.time)} · ${S.best.kills} ${tr('kills')}`;
@@ -2368,6 +2441,7 @@ function tick(dt) {
     $('#forgeHint').classList.remove('show');
   }
   if (S.bannerT > 0) { S.bannerT -= dt; if (S.bannerT <= 0) $('#banner').classList.remove('show'); }
+  if (S.phase === 'run' && !S.paused && !S.modal) updateOmens(dt);
   updateWeather(dt);
   updatePrecip(dt);
   updateParticles(running || S.phase === 'title' ? dt : 0);
@@ -2519,7 +2593,7 @@ function autopilot(dt) {
 // debug / capture hooks (used by the verification script)
 // =====================================================================
 window.__emberlight = {
-  S, P: () => P, W, world: () => world, startRun, endRun, spawnBoss, spawnEnemy, spawnAround, setWeather: (tod, wx) => { W.tod = tod; W.wx = wx; W.auto = false; refreshWeatherButtons(); },
+  S, P: () => P, W, world: () => world, startRun, endRun, spawnBoss, triggerOmen, omens: () => S.omens, spawnEnemy, spawnAround, setWeather: (tod, wx) => { W.tod = tod; W.wx = wx; W.auto = false; refreshWeatherButtons(); },
   cheat: (o) => Object.assign(P, o), META, recordRun, SET, applyLang, applyQuality, applyCues, gainXp, AUDIO, camDist: (v) => { camDist = v; }, PAD, pollGamepad, lightShrine, nearShrine, shrines: () => S.shrines, DIFFS, rollTalents, TALENTS, WEAPONS, spawnMini, MINIS, minis: () => S.minis, hurtMini, killMini, GUIDE, ANIM, clips: () => kit.clips.map((c) => c.name + ':' + c.duration.toFixed(2)), post: () => ({ ao: gtaoPass && gtaoPass.enabled, bloom: bloomPass && bloomPass.enabled, passes: composer && composer.passes.length }),
   project: (x, y, z) => { const v = new THREE.Vector3(x, y, z).project(camera); return { sx: (v.x * 0.5 + 0.5) * window.innerWidth, sy: (-v.y * 0.5 + 0.5) * window.innerHeight }; },
   slashes: () => S.slashes.map((m) => ({ ry: m.rotation.y, arc: m.userData.arc })), giveShards: (n) => { P.shards += n; }, teleport: (x, z) => { P.x = x; P.z = z; }, cranes: () => craneSet ? { count: craneSet.count, body: !!craneSet.body, tris: craneSet.body ? craneSet.body.geometry.attributes.position.count / 3 : 0 } : null,
