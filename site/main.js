@@ -547,7 +547,7 @@ function renderArchive() {
   if (bdRows) h += `<div class="dbadges">${bdRows}</div>`;
   box.innerHTML = h;
 }
-const dmgMult = () => P.dmgTalent * (1 + 0.2 * P.forge.edge);
+const dmgMult = () => P.dmgTalent * (1 + 0.2 * P.forge.edge) * ((S.cursedT || 0) > 0 ? 0.85 : 1);   // 山膏善詈: cursed for a few breaths after it lands a hit
 const armour = () => Math.min(0.75, P.armourTalent + 0.08 * P.forge.mail);
 const pickupR = () => 3.2 * P.pickupMult * (1 + 0.25 * P.forge.charm);
 const moveSpeed = () => 7.2 * P.speedMult * (S.jwQuest ? 0.88 : 1);
@@ -1048,7 +1048,7 @@ function onAction(a) {
     case 'dash': tryDash(); break;
     case 'nova': tryNova(); break;
     case 'swap': P.weapon = (P.weapon + 1) % WEAPONS.length; P.attackT = Math.min(P.attackT, 0.2); refreshWeaponCard(); AUDIO.sfx('ui'); break;
-    case 'forge': if (nearForge()) openForge(); else if (nearJingweiPile() && !S.jwQuest) startJingweiErrand(); else { const ns = nearShrine(); if (ns && ns.state === 'done' && !S.shrineActive) travelVein(ns); else if (!ns && nearWellVein()) travelVein(null); else lightShrine(ns); } break;
+    case 'forge': if (nearForge()) openForge(); else if (nearJingweiPile() && !S.jwQuest) startJingweiErrand(); else if (nearDitai()) playDitai(); else { const ns = nearShrine(); if (ns && ns.state === 'done' && !S.shrineActive) travelVein(ns); else if (!ns && nearWellVein()) travelVein(null); else lightShrine(ns); } break;
     case 'heavy': tryHeavy(); break;
     case 'auto': P.auto = !P.auto; refreshAutoBtn(); AUDIO.sfx('ui'); break;
     case 'pause': togglePause(); break;
@@ -1220,7 +1220,7 @@ function showBanner(text, secs = 4) { const b = $('#banner'); b.textContent = tr
 // =====================================================================
 function startRun() {
   P = newPlayer();
-  S.phase = 'run'; S.paused = false; S.modal = null; S.t = 0; S.endless = false; S.tribK = 0; S.tribWarned = false; S.tide = null; S.omens = {}; S.omenK = {}; S.omenCd = {}; S.omenClock = 0; S.omenTick = 0; S.dangkang = null; S.fusangLm = null; S.fusangSeen = false; S.fusangT = 0; S.jwQuest = null; S.jwDone = 0; S.danceOn = false; S.tenSuns = false; S.devourSeen = false;
+  S.phase = 'run'; S.paused = false; S.modal = null; S.t = 0; S.endless = false; S.tribK = 0; S.tribWarned = false; S.tide = null; S.omens = {}; S.omenK = {}; S.omenCd = {}; S.omenClock = 0; S.omenTick = 0; S.dangkang = null; S.fusangLm = null; S.fusangSeen = false; S.fusangT = 0; S.jwQuest = null; S.jwDone = 0; S.danceOn = false; S.tenSuns = false; S.devourSeen = false; S.qiCd = 0; S.cursedT = 0; S.curseSeen = false;
   S.recorded = false;
   S.enemies.length = 0; S.pickups.length = 0; S.projectiles.length = 0; S.eprojectiles.length = 0; S.burns.length = 0; S.timers.length = 0;
   for (const m of S.slashes) scene.remove(m); S.slashes.length = 0;
@@ -1339,6 +1339,20 @@ function startJingweiErrand() {
   // the pile sits on Mount Fajiu in the north-east; the Eastern Sea is due east, a real walk away
   S.jwQuest = { t: 60, x: PLAY_R - 5, z: 2, ringT: 0 };
   showBanner(SET.lang === 'zh' ? '衔起西山之石 · 六十息内投入东海' : 'A STONE FROM THE WESTERN HILLS  ·  cast it into the Eastern Sea within sixty breaths', 4.5); AUDIO.sfx('district');
+}
+// 帝台之棋 (高前之山 / 中次七经): 五色而文,其状如鹑卵. Five grains buys a cast of the stones; the answer comes as fortune, great fortune, or ill omen
+const DITAI = { x: -5.6, z: -3.4 };
+function nearDitai() { return S.phase === 'run' && Math.hypot(P.x - DITAI.x, P.z - DITAI.z) < 3.4; }
+function playDitai() {
+  const zh = SET.lang === 'zh';
+  if ((S.qiCd || 0) > 0) { showBanner(zh ? '帝台之棋 · 石纹未定,稍候再问' : 'DITAI STONES  ·  the patterns are still settling; ask again soon', 2.5); return; }
+  if (P.shards < 5) { showBanner(zh ? '帝台之棋 · 需 5 丹粟' : 'DITAI STONES  ·  five cinnabar grains to cast', 2.5); AUDIO.sfx('ui'); return; }
+  P.shards -= 5; S.qiCd = 45; S.stats.qi = (S.stats.qi || 0) + 1; AUDIO.sfx('shard', 0.2);
+  spawnRing(DITAI.x, DITAI.z, 2.4, 0xe8c070, 0.9, 0.2); burstParticles(DITAI.x, 1.2, DITAI.z, 40, [0.95, 0.8, 0.45], 4, 0.4, 0.8, -2);
+  const r = Math.random();
+  if (r < 0.42) { const heal = Math.round(P.maxHp * 0.4); P.hp = Math.min(P.maxHp, P.hp + heal); showNumber(P.x, 1.6, P.z, '+' + heal, 'heal'); showBanner(zh ? '帝台之棋 · 吉 · 命火回四成' : 'DITAI STONES  ·  fortune  ·  two fifths of your fire returns', 4); AUDIO.sfx('heart'); }
+  else if (r < 0.75) { const xp = Math.round(P.xpNext * 0.6); gainXp(xp); P.shards += 3; showBanner(zh ? '帝台之棋 · 大吉 · 灵气大进,退回 3 丹粟' : 'DITAI STONES  ·  great fortune  ·  a surge of qi, three grains returned', 4); AUDIO.sfx('levelup'); }
+  else { for (let k = 0; k < 6; k++) { const a = k / 6 * Math.PI * 2; const e = spawnEnemy(k % 2 ? 'wisp' : 'cinder', P.x + Math.cos(a) * 5, P.z + Math.sin(a) * 5); if (e) e.spawnT = 0.6; } P.shards += 10; showBanner(zh ? '帝台之棋 · 凶 · 妖邪应声而至,但石下有 10 丹粟' : 'DITAI STONES  ·  ill omen  ·  demons answer the cast, but ten grains lay under the stone', 4); AUDIO.sfx('roar'); }
 }
 function nearShrine() { if (!S.shrines) return null; for (const k in S.shrines) { const sh = S.shrines[k]; if (Math.hypot(P.x - sh.x, P.z - sh.z) < 3.6) return sh; } return null; }
 function nearWellVein() { return Math.hypot(P.x, P.z) < 3.8 && !!S.shrines && Object.values(S.shrines).some((s) => s.state === 'done') && !S.shrineActive; }
@@ -1619,6 +1633,7 @@ function hurtPlayer(raw, src = 'other') {
   const dmg = Math.max(1, Math.round(scaled * (1 - armour())));
   S.lastHits.push({ src, dmg, t: S.t }); if (S.lastHits.length > 12) S.lastHits.shift();
   S.dmgLog[src] = (S.dmgLog[src] || 0) + dmg;
+  if (src === 'cinder') { S.cursedT = 3; showNumber(P.x, 2.1, P.z, SET.lang === 'zh' ? '被詈' : 'cursed', 'player'); if (!S.curseSeen) { S.curseSeen = true; showBanner(SET.lang === 'zh' ? '山膏善詈 · 被它骂中,三息内出手 −15%' : 'SHANGAO CURSES  ·  its hit leaves you cursed: −15% damage for three breaths', 4); } }
   P.hp -= dmg; P.invuln = 0.6 + (P.invBonus || 0); P.hitFlash = 0.2; if (!P.animOnce) P.animOnce = 'hurt';
   if (P.shell) { const sd = 10 * P.shell * dmgMult(); for (const e of S.enemies) { if (!e.dying && (e.x - P.x) ** 2 + (e.z - P.z) ** 2 < 9) { hurtEnemy(e, sd, false, true); const d = Math.hypot(e.x - P.x, e.z - P.z) || 0.5; e.kx += (e.x - P.x) / d * 4 / e.t.mass; e.kz += (e.z - P.z) / d * 4 / e.t.mass; } } spawnRing(P.x, P.z, 3, 0xff8a4a, 0.35, 0.15); }
   showNumber(P.x, 1.6, P.z, '-' + dmg, 'player');
@@ -2272,6 +2287,7 @@ function updatePlayer(dt) {
   P.dashCd = Math.max(0, P.dashCd - dt); P.heavyCd = Math.max(0, P.heavyCd - dt); P.novaCd = Math.max(0, P.novaCd - dt);
   P.swing = Math.max(0, P.swing - dt);
   if (P.regen > 0 && !P.noRegen) P.hp = Math.min(P.maxHp, P.hp + P.regen * dt * healMul());
+  if (S.cursedT > 0) S.cursedT -= dt; if (S.qiCd > 0) S.qiCd -= dt;
   const mv = moveVector();
   let sp = moveSpeed();
   let dx = mv.x, dz = mv.z;
@@ -2320,7 +2336,7 @@ function updatePlayer(dt) {
   FX.playerRing.position.set(P.x, 0.03, P.z);
   FX.playerRing.material.opacity = 0.35 + 0.25 * Math.sin(S.wall * 4);
   // forge hint
-  { const jw = !nearForge() && !S.jwQuest && nearJingweiPile(); $('#forgeHint').classList.toggle('show', nearForge() || jw); if (jw) $('#forgeHint').innerHTML = `<b>F</b> ${SET.lang === 'zh' ? '衔石' : 'Take a stone'}`; else if (nearForge()) $('#forgeHint').innerHTML = `<b>F</b> ${tr('Enter forge')}`; }
+  { const jw = !nearForge() && !S.jwQuest && nearJingweiPile(); const di = !nearForge() && !jw && nearDitai(); $('#forgeHint').classList.toggle('show', nearForge() || jw || di); if (jw) $('#forgeHint').innerHTML = `<b>F</b> ${SET.lang === 'zh' ? '衔石' : 'Take a stone'}`; else if (di) $('#forgeHint').innerHTML = `<b>F</b> ${SET.lang === 'zh' ? '帝台之棋 · 5 丹粟' : 'Cast the Ditai stones · 5 grains'}`; else if (nearForge()) $('#forgeHint').innerHTML = `<b>F</b> ${tr('Enter forge')}`; }
   FX.forgeRing.material.opacity = nearForge() ? 0.6 : 0.25;
 }
 
@@ -2672,7 +2688,7 @@ function autopilot(dt) {
 // debug / capture hooks (used by the verification script)
 // =====================================================================
 window.__emberlight = {
-  S, P: () => P, W, world: () => world, startRun, endRun, spawnBoss, triggerOmen, omens: () => S.omens, dangkang: () => S.dangkang, startJingweiErrand, jwQuest: () => S.jwQuest, spawnEnemy, spawnAround, setWeather: (tod, wx) => { W.tod = tod; W.wx = wx; W.auto = false; refreshWeatherButtons(); },
+  S, P: () => P, W, world: () => world, startRun, endRun, spawnBoss, triggerOmen, omens: () => S.omens, playDitai, nearDitai, DITAI, dangkang: () => S.dangkang, startJingweiErrand, jwQuest: () => S.jwQuest, spawnEnemy, spawnAround, setWeather: (tod, wx) => { W.tod = tod; W.wx = wx; W.auto = false; refreshWeatherButtons(); },
   cheat: (o) => Object.assign(P, o), META, recordRun, SET, applyLang, applyQuality, applyCues, gainXp, AUDIO, camDist: (v) => { camDist = v; }, PAD, pollGamepad, lightShrine, nearShrine, shrines: () => S.shrines, DIFFS, rollTalents, TALENTS, WEAPONS, spawnMini, MINIS, minis: () => S.minis, hurtMini, killMini, GUIDE, ANIM, clips: () => kit.clips.map((c) => c.name + ':' + c.duration.toFixed(2)), post: () => ({ ao: gtaoPass && gtaoPass.enabled, bloom: bloomPass && bloomPass.enabled, passes: composer && composer.passes.length }),
   project: (x, y, z) => { const v = new THREE.Vector3(x, y, z).project(camera); return { sx: (v.x * 0.5 + 0.5) * window.innerWidth, sy: (-v.y * 0.5 + 0.5) * window.innerHeight }; },
   slashes: () => S.slashes.map((m) => ({ ry: m.rotation.y, arc: m.userData.arc })), giveShards: (n) => { P.shards += n; }, teleport: (x, z) => { P.x = x; P.z = z; }, cranes: () => craneSet ? { count: craneSet.count, body: !!craneSet.body, tris: craneSet.body ? craneSet.body.geometry.attributes.position.count / 3 : 0 } : null,
