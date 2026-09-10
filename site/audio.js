@@ -134,6 +134,7 @@ const SFX = {
   mingshe() { tone('sine', 1975, 1975, 0.5, 0.1); tone('sine', 2960, 2960, 0.35, 0.05); tone('sine', 5270, 5270, 0.22, 0.03); },                                  // 鸣蛇其音如磬: stone-chime overtones
   bifang() { tone('sawtooth', 900, 1500, 0.22, 0.05); tone('triangle', 1400, 700, 0.3, 0.08, sfxBus, 0.03); burst(0.25, 0.12, 'bandpass', 1800, 900, 3); },        // 毕方: a crane's cry
   foxcry() { tone('sine', 520, 780, 0.35, 0.12, sfxBus, 0.08); setTimeout(() => tone('sine', 700, 430, 0.5, 0.12, sfxBus, 0.05), 380); },                         // 九尾狐 其音如婴儿
+  dangkang() { tone('sawtooth', 380, 520, 0.12, 0.06); setTimeout(() => tone('sawtooth', 460, 300, 0.16, 0.07), 140); burst(0.1, 0.1, 'bandpass', 900, 500, 2); },   // 当康 其鸣自叫: a two-note grunt
   axe() { burst(0.05, 0.9, 'highpass', 5000, 1500, 1); tone('triangle', 2400, 600, 0.18, 0.25); tone('square', 95, 40, 0.5, 0.35); burst(0.6, 0.6, 'lowpass', 800, 60, 0.5); },   // 刑天干戚: shield clang + axe thud
 };
 let lastAt = {};

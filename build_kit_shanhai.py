@@ -1023,6 +1023,21 @@ for sx in (-1, 1):
 cyl("JwTwig", (0, -0.4, -0.12), 0.02, 0.6, M["Twig"], P, rot=(0, math.pi / 2, 0), verts=4)
 box("JwTail", (0, 0.32, 0.02), (0.16, 0.24, 0.03), M["Hair"], P, bevel=0.0)
 
+P = kit("Dangkang")   # 当康: "其状如豚而有牙,其鸣自叫,见则天下大穰" - a tusked pig that runs from you during the harvest omen
+M["Boar"] = mat("Boar", "#b8905a"); M["BoarDark"] = mat("BoarDark", "#7a5a38")
+ball("DkBody", (0, 0.05, 0.55), 0.46, M["Boar"], P, scale=(0.95, 1.35, 0.85), sub=1)
+ball("DkHead", (0, -0.62, 0.55), 0.3, M["Boar"], P, scale=(0.9, 1.0, 0.85), sub=1)
+cyl("DkSnout", (0, -0.9, 0.48), 0.13, 0.16, M["BoarDark"], P, rot=(math.pi / 2, 0, 0), verts=8)
+for sx in (-1, 1):
+    cone(f"DkTusk{sx}", (sx * 0.14, -0.86, 0.42), 0.035, 0.26, M["Bone"], P, verts=5, rot=(-0.9, sx * 0.35, 0))
+    box(f"DkEar{sx}", (sx * 0.24, -0.5, 0.82), (0.12, 0.08, 0.16), M["BoarDark"], P, rot=(0.2, sx * 0.5, 0), bevel=0.0)
+    ball(f"EnemyEye_Dk{sx}", (sx * 0.16, -0.86, 0.66), 0.035, M["EnemyEye"], P, sub=0)
+    for i, dy in enumerate((-0.32, 0.3)):
+        cyl(f"DkLeg{sx}{i}", (sx * 0.24, dy, 0.16), 0.07, 0.34, M["BoarDark"], P, verts=6)
+for i in range(4):
+    box(f"DkBristle{i}", (0, -0.35 + i * 0.22, 0.98), (0.06, 0.16, 0.1), M["BoarDark"], P, rot=(0.3, 0, 0), bevel=0.0)
+cyl("DkTail", (0, 0.68, 0.72), 0.02, 0.3, M["BoarDark"], P, rot=(1.1, 0, 0), verts=4)
+
 # ---------------------------------------------------------------- Player rig: robed cultivator with a spirit lamp and a flying sword
 P = kit("Player")
 body = empty("P_Body"); body.parent = P

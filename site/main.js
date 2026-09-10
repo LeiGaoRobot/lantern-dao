@@ -9,7 +9,7 @@ import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
 import { Kit, DynSet, buildGround, generateMap, districtAt, DISTRICTS, ROADS, ISLAND_R, PLAY_R, collideStatic, Grid, setGlow, glowMat, MATS, treeUniforms, mulberry32, vnoise } from './world.js?v=39';
-import * as AUDIO from './audio.js?v=34';
+import * as AUDIO from './audio.js?v=35';
 
 const $ = (s) => document.querySelector(s);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -295,11 +295,11 @@ const ZH = {
   'Dawn breaks over the wildwood.': '劫云散去,道基已成。', 'The light went out.': '灯灭了。',
   'Ten minutes, and the valley is still here. Keep going — it only gets wilder.': '十分钟过去,天劫已渡。继续吧 —— 问道无尽,只会更凶险。',
   'You kept the light for': '你守住灵灯', 'Go endless  →': '问道无尽  →', 'Try again': '再来一局', 'Back to title': '返回',
-  'Time survived': '守灯时长', 'Defeated': '斩妖', 'Elites': '精英', 'Damage dealt': '造成伤害', 'Forge shards': '丹粟',
+  'Omens': '征兆', 'Dangkang': '当康', 'Time survived': '守灯时长', 'Defeated': '斩妖', 'Elites': '精英', 'Damage dealt': '造成伤害', 'Forge shards': '丹粟',
   'Rested': '调息完毕', 'Unlocked': '机缘', 'Shrines lit': '点亮法阵', ' shrines': ' 座法阵', 'dawns': '次过山',
   'Hold the shrine for 45 seconds.': '守住法阵 45 秒。', 'THE SHRINE GUTTERS OUT  ·  You strayed too far.': '法阵黯淡  ·  你走得太远。', 'WARD GAINED': '习得护体功法', 'SHRINE': '灵脉法阵', '· too far!': '· 太远了!',
-  'Wolfsbane': '天狗·御凶', 'Wisps no longer hunt in packs and hit for half.': '鬿雀不再成群,伤害减半。', 'Stonewatch': '猼訑·不畏', 'Your attacks shatter spitter bolts; the rest sting 30% less.': '你的攻击能击碎毕方火弹,余下伤害 −30%。',
-  'Ashwalker': '鸓鸟·御火', 'Burning ground cannot hurt you; +25% damage to cinders and brutes.': '燃烧地面对你无害;对山膏与穷奇伤害 +25%。', 'Tidewalker': '迷榖·不迷', 'Move 12% faster and dash recovers 25% sooner.': '移速 +12%,踏云步冷却 −25%。',
+  'Wolfsbane': '天狗·御凶', 'Wisps no longer hunt in packs and hit for half; ill omens return half as often.': '鬿雀不再成群,伤害减半;凶兆重现间隔 +50%。', 'Stonewatch': '猼訑·不畏', 'Your attacks shatter spitter bolts; the rest sting 30% less; elites hit 15% softer.': '你的攻击能击碎毕方火弹,余下伤害 −30%;精英伤害 −15%。',
+  'Ashwalker': '鸓鸟·御火', 'Burning ground cannot hurt you; +25% damage to cinders and brutes; strange fire burns out twice as fast.': '燃烧地面对你无害;对山膏与穷奇伤害 +25%;讹火只烧一半时间。', 'Tidewalker': '迷榖·不迷', 'Move 12% faster and dash recovers 25% sooner; drought and plague sap only a quarter of your healing.': '移速 +12%,踏云步冷却 −25%;大旱与大疫只削去四分之一回复。',
   'Light the shrine': '布下法阵', 'Travel the vein': '循灵脉传送', 'THE VEIN CARRIES YOU  ·  Press F at any lit array to travel.': '灵脉相送  ·  在任意已点亮的法阵按 F 即可传送。', 'Difficulty': '难度', 'Starting weapon': '起手法宝',
   'THE WOLF KING': '九尾狐', 'THE STONE SENTINEL': '狍鸮', 'THE CINDER SALAMANDER': '蜚', 'THE SILVERMERE MAW': '帝江', 'wakes': '现身', 'falls': '伏诛', 'FIRST KILL': '首次伏诛', 'Bestiary': '妖录', 'Elites felled': '伏诛精英',
   'ASH LONGBOW': '落雁弓', 'EMBER CHAIN': '缚灵索', 'LONGBOW': '落雁弓', 'CHAIN': '缚灵索',
@@ -375,8 +375,8 @@ const EN = {
   'You kept the light for': 'You kept the lamp for', 'Go endless  →': 'Endless Dao  →', 'Shrines lit': 'Arrays lit', ' shrines': ' arrays', 'dawns': 'tribulations',
   'Hold the shrine for 45 seconds.': 'Hold the array for 45 seconds.', 'THE SHRINE GUTTERS OUT  ·  You strayed too far.': 'THE ARRAY FADES  ·  You strayed too far.', 'WARD GAINED': 'TECHNIQUE LEARNED', 'SHRINE': 'SPIRIT ARRAY',
   'Light the shrine': 'Set the array', 'Starting weapon': 'Starting artefact',
-  'Wolfsbane': 'Tiangou: Ward Off Evil', 'Wisps no longer hunt in packs and hit for half.': 'Qique no longer hunts in packs and hits for half.', 'Stonewatch': 'Boyi: Fear Nothing', 'Your attacks shatter spitter bolts; the rest sting 30% less.': 'Your attacks shatter Bifang fire; the rest stings 30% less.',
-  'Ashwalker': 'Lei Bird: Ward Off Fire', 'Burning ground cannot hurt you; +25% damage to cinders and brutes.': 'Burning ground cannot hurt you; +25% damage to Shangao and Qiongqi.', 'Tidewalker': 'Migu: Never Lost',
+  'Wolfsbane': 'Tiangou: Ward Off Evil', 'Wisps no longer hunt in packs and hit for half; ill omens return half as often.': 'Qique no longer hunts in packs and hits for half; ill omens return half as often.', 'Stonewatch': 'Boyi: Fear Nothing', 'Your attacks shatter spitter bolts; the rest sting 30% less; elites hit 15% softer.': 'Your attacks shatter Bifang fire; the rest stings 30% less; elites hit 15% softer.',
+  'Ashwalker': 'Lei Bird: Ward Off Fire', 'Burning ground cannot hurt you; +25% damage to cinders and brutes; strange fire burns out twice as fast.': 'Burning ground cannot hurt you; +25% damage to Shangao and Qiongqi; strange fire burns out twice as fast.', 'Tidewalker': 'Migu: Never Lost',
   'THE WOLF KING': 'THE NINE-TAILED FOX', 'THE STONE SENTINEL': 'PAOXIAO', 'THE CINDER SALAMANDER': 'FEI', 'THE SILVERMERE MAW': 'DIJIANG', 'Bestiary': 'Demon record', 'Keystone': 'Core technique',
   'Still burning': 'Turtle Breath', 'Wildfire soles': 'Fire-Walking Boots', 'Keen edge': 'Sword Intent', 'Ember magnet': 'Qi Draw', 'Pick up embers from 35% further away.': 'Pick up langgan jade from 35% further away.',
   'Second wind': 'Breath Cycle', 'Twin spark': 'Twin Talisman', 'Cinder bolt fires one more bolt.': 'Talisman throws one more.', 'Nova echo': 'Burst Echo', 'Ember nova recharges 25% faster.': 'Spirit burst recharges 25% faster.',
@@ -547,7 +547,7 @@ function renderArchive() {
 const dmgMult = () => P.dmgTalent * (1 + 0.2 * P.forge.edge);
 const armour = () => Math.min(0.75, P.armourTalent + 0.08 * P.forge.mail);
 const pickupR = () => 3.2 * P.pickupMult * (1 + 0.25 * P.forge.charm);
-const moveSpeed = () => 7.2 * P.speedMult;
+const moveSpeed = () => 7.2 * P.speedMult * (S.jwQuest ? 0.88 : 1);
 const minute = () => S.t / 60;
 const threat = () => Math.floor(minute()) + 1;
 
@@ -556,9 +556,9 @@ const threat = () => Math.floor(minute()) + 1;
 // =====================================================================
 const kit = new Kit();
 let world, ground, playerRig, wardenRig, enemySets = {}, pickupSets = {}, boltSet, spitSet;
-let craneSet = null, jingweiSet = null;
+let craneSet = null, jingweiSet = null, dangkangSet = null;
 const loadBar = $('#loadBar'), loadText = $('#loadText');
-kit.load('./assets/kit.glb?v=16', (e) => { if (e.total) loadBar.style.transform = `scaleX(${(e.loaded / e.total) * 0.6})`; }).then(() => {
+kit.load('./assets/kit.glb?v=17', (e) => { if (e.total) loadBar.style.transform = `scaleX(${(e.loaded / e.total) * 0.6})`; }).then(() => {
   loadText.textContent = 'Planting the wildwood…';
   setTimeout(() => { const t0 = performance.now(); buildWorld(); console.log('world built in', Math.round(performance.now() - t0), 'ms'); }, 30);
 }).catch((err) => { loadText.textContent = 'Failed to load kit: ' + err.message; console.error(err); });
@@ -585,7 +585,8 @@ function buildWorld() {
   pickupSets.heart = new DynSet(kit, 'Heart', 40, scene, { cast: false, glowKey: 'HeartGlow' });
   craneSet = new DynSet(kit, 'Crane', 8, scene, { cast: false, outline: 0 });
   jingweiSet = new DynSet(kit, 'Jingwei', 4, scene, { cast: false, outline: 0 });
-  FX.jingwei = []; { const jw = (world.landmarks || []).find((l) => l.kind === 'jingwei'); const D = DISTRICTS[2]; const from = { x: D.cx, z: D.cz }, to = jw ? { x: jw.x, z: jw.z } : { x: D.cx + 18, z: D.cz - 18 }; for (let i = 0; i < 3; i++) FX.jingwei.push({ from, to, t: i / 3, dir: 1, h: 6 + i * 0.8, ph: i * 2.1 }); }
+  dangkangSet = new DynSet(kit, 'Dangkang', 2, scene, { cast: true, outline: 0 });
+  FX.jingwei = []; { const jw = (world.landmarks || []).find((l) => l.kind === 'jingwei'); const D = DISTRICTS[2]; const from = jw ? { x: jw.x, z: jw.z } : { x: D.cx + 18, z: D.cz - 18 }; const fl = Math.hypot(from.x, from.z) || 1, to = { x: from.x / fl * (ISLAND_R + 9), z: from.z / fl * (ISLAND_R + 9) }; /* 常衔西山之木石,以堙于东海: out over the cloud sea and back */ for (let i = 0; i < 3; i++) FX.jingwei.push({ from, to, t: i / 3, dir: 1, h: 6 + i * 0.8, ph: i * 2.1 }); }
   FX.cranes = []; for (let i = 0; i < 6; i++) FX.cranes.push({ a: i / 6 * Math.PI * 2, r: 10 + (i % 3) * 4, h: 7 + (i % 2) * 1.5, spd: 0.12 + (i % 3) * 0.02, ph: i * 1.3 }); FX.craneC = { x: 0, z: 0 };
   boltSet = new DynSet(kit, 'Ember', 200, scene, { cast: false, glowKey: 'Bolt', glowMat: new THREE.MeshBasicMaterial({ color: 0xffb060, toneMapped: false }) });
   spitSet = new DynSet(kit, 'Ember', 120, scene, { cast: false, glowKey: 'Spit', glowMat: new THREE.MeshBasicMaterial({ color: 0xff5a2a, toneMapped: false }) });
@@ -781,6 +782,9 @@ function buildEffects() {
   for (const t of [...(world.placements.Pine || []), ...(world.placements.ZheTree || [])]) if (Math.random() < 0.5) FX.ambient.push({ x: t.x, z: t.z, kind: 1 });
   for (const t of [...(world.placements.Reed || []), ...(world.placements.Zhuyu || [])]) if (Math.random() < 0.35) FX.ambient.push({ x: t.x, z: t.z, kind: 2 });
   for (const t of (world.placements.Tanggu || [])) FX.emberSources.push({ x: t.x, z: t.z, y: 0.4, rate: 9, smoke: true });
+  for (const t of (world.placements.Ruoshui || [])) FX.ambient.push({ x: t.x, z: t.z, kind: 3 });      // 弱水: 鸿毛不浮 - feathers drift down and sink
+  for (const t of (world.placements.FusangTree || [])) FX.ambient.push({ x: t.x, z: t.z, kind: 4 });   // 扶桑: gold motes rise from the ten suns at night
+  for (const t of (world.placements.Danxue || [])) FX.ambient.push({ x: t.x, z: t.z, kind: 5 });       // 丹穴: five-colour phoenix feathers
   FX.ambientGrid = new Grid(12); for (const a of FX.ambient) FX.ambientGrid.insert(a);
 }
 function spawnParticle(x, y, z, vx, vy, vz, r, g, b, size, life, grav = 0) {
@@ -1041,7 +1045,7 @@ function onAction(a) {
     case 'dash': tryDash(); break;
     case 'nova': tryNova(); break;
     case 'swap': P.weapon = (P.weapon + 1) % WEAPONS.length; P.attackT = Math.min(P.attackT, 0.2); refreshWeaponCard(); AUDIO.sfx('ui'); break;
-    case 'forge': if (nearForge()) openForge(); else { const ns = nearShrine(); if (ns && ns.state === 'done' && !S.shrineActive) travelVein(ns); else if (!ns && nearWellVein()) travelVein(null); else lightShrine(ns); } break;
+    case 'forge': if (nearForge()) openForge(); else if (nearJingweiPile() && !S.jwQuest) startJingweiErrand(); else { const ns = nearShrine(); if (ns && ns.state === 'done' && !S.shrineActive) travelVein(ns); else if (!ns && nearWellVein()) travelVein(null); else lightShrine(ns); } break;
     case 'heavy': tryHeavy(); break;
     case 'auto': P.auto = !P.auto; refreshAutoBtn(); AUDIO.sfx('ui'); break;
     case 'pause': togglePause(); break;
@@ -1204,7 +1208,7 @@ function togglePause() {
   }
 }
 function statRows() {
-  return `<div>${tr('Time survived')} <b>${fmtTime(S.t)}</b></div><div>${tr('Level')} <b>${SET.lang === 'zh' ? realmName(P.level) : P.level}</b></div><div>${tr('Defeated')} <b>${S.stats.kills}</b></div><div>${tr('Elites')} <b>${S.stats.elites}</b></div><div>${tr('Damage dealt')} <b>${Math.round(S.stats.dmgDealt)}</b></div><div>${tr('Forge shards')} <b>${P.shards}</b></div><div>${tr('Shrines lit')} <b>${S.stats.shrines || 0} / 4</b></div><div>${tr('Elites felled')} <b>${S.stats.minis || 0} / 4</b></div>`;
+  return `<div>${tr('Time survived')} <b>${fmtTime(S.t)}</b></div><div>${tr('Level')} <b>${SET.lang === 'zh' ? realmName(P.level) : P.level}</b></div><div>${tr('Defeated')} <b>${S.stats.kills}</b></div><div>${tr('Elites')} <b>${S.stats.elites}</b></div><div>${tr('Damage dealt')} <b>${Math.round(S.stats.dmgDealt)}</b></div><div>${tr('Forge shards')} <b>${P.shards}</b></div><div>${tr('Shrines lit')} <b>${S.stats.shrines || 0} / 4</b></div><div>${tr('Elites felled')} <b>${S.stats.minis || 0} / 4</b></div><div>${tr('Omens')} <b>${S.stats.omens || 0}${S.stats.dangkang ? ' · ' + tr('Dangkang') + ' ' + S.stats.dangkang : ''}</b></div>`;
 }
 function showBanner(text, secs = 4) { const b = $('#banner'); b.textContent = tr(text); b.classList.add('show'); S.bannerT = secs; }
 
@@ -1213,7 +1217,7 @@ function showBanner(text, secs = 4) { const b = $('#banner'); b.textContent = tr
 // =====================================================================
 function startRun() {
   P = newPlayer();
-  S.phase = 'run'; S.paused = false; S.modal = null; S.t = 0; S.endless = false; S.tribK = 0; S.tribWarned = false; S.tide = null; S.omens = {}; S.omenK = {}; S.omenCd = {}; S.omenClock = 0; S.omenTick = 0;
+  S.phase = 'run'; S.paused = false; S.modal = null; S.t = 0; S.endless = false; S.tribK = 0; S.tribWarned = false; S.tide = null; S.omens = {}; S.omenK = {}; S.omenCd = {}; S.omenClock = 0; S.omenTick = 0; S.dangkang = null; S.fusangLm = null; S.fusangSeen = false; S.fusangT = 0; S.jwQuest = null; S.jwDone = 0; S.danceOn = false; S.tenSuns = false;
   S.recorded = false;
   S.enemies.length = 0; S.pickups.length = 0; S.projectiles.length = 0; S.eprojectiles.length = 0; S.burns.length = 0; S.timers.length = 0;
   for (const m of S.slashes) scene.remove(m); S.slashes.length = 0;
@@ -1315,16 +1319,23 @@ function saveBest() {
 function nearForge() { return Math.hypot(P.x - world.forgePos.x, P.z - world.forgePos.z) < 3.8; }
 // shrines: one per outer district. Light it (F) → hold the ground for 45 s at doubled spawns → district ward + shards.
 const WARDS = {
-  wildwood:   { key: 'wolfsbane',  name: 'Wolfsbane',  desc: 'Wisps no longer hunt in packs and hit for half.' },
-  mossfall:   { key: 'stonewatch', name: 'Stonewatch', desc: 'Your attacks shatter spitter bolts; the rest sting 30% less.' },
-  cinder:     { key: 'ashwalker',  name: 'Ashwalker',  desc: 'Burning ground cannot hurt you; +25% damage to cinders and brutes.' },
-  silvermere: { key: 'tidewalker', name: 'Tidewalker', desc: 'Move 12% faster and dash recovers 25% sooner.' },
+  wildwood:   { key: 'wolfsbane',  name: 'Wolfsbane',  desc: 'Wisps no longer hunt in packs and hit for half; ill omens return half as often.' },
+  mossfall:   { key: 'stonewatch', name: 'Stonewatch', desc: 'Your attacks shatter spitter bolts; the rest sting 30% less; elites hit 15% softer.' },
+  cinder:     { key: 'ashwalker',  name: 'Ashwalker',  desc: 'Burning ground cannot hurt you; +25% damage to cinders and brutes; strange fire burns out twice as fast.' },
+  silvermere: { key: 'tidewalker', name: 'Tidewalker', desc: 'Move 12% faster and dash recovers 25% sooner; drought and plague sap only a quarter of your healing.' },
 };
 const SHRINE_HOLD = 45, SHRINE_LEASH = 18;
 function initShrines() {
   S.shrines = {};
   for (const D of DISTRICTS) if (D.key !== 'hearth') S.shrines[D.key] = { key: D.key, x: D.cx, z: D.cz, state: 'idle', t: 0, cd: 0 };
   S.shrineActive = null;
+}
+function nearJingweiPile() { if (!world.landmarks) return false; for (const l of world.landmarks) if (l.kind === 'jingwei' && Math.hypot(P.x - l.x, P.z - l.z) < 3.8) return true; return false; }
+function startJingweiErrand() {
+  // 常衔西山之木石,以堙于东海: pick up a stone at the pile, carry it to the shore before it slips
+  // the pile sits on Mount Fajiu in the north-east; the Eastern Sea is due east, a real walk away
+  S.jwQuest = { t: 60, x: PLAY_R - 5, z: 2, ringT: 0 };
+  showBanner(SET.lang === 'zh' ? '衔起西山之石 · 六十息内投入东海' : 'A STONE FROM THE WESTERN HILLS  ·  cast it into the Eastern Sea within sixty breaths', 4.5); AUDIO.sfx('district');
 }
 function nearShrine() { if (!S.shrines) return null; for (const k in S.shrines) { const sh = S.shrines[k]; if (Math.hypot(P.x - sh.x, P.z - sh.z) < 3.6) return sh; } return null; }
 function nearWellVein() { return Math.hypot(P.x, P.z) < 3.8 && !!S.shrines && Object.values(S.shrines).some((s) => s.state === 'done') && !S.shrineActive; }
@@ -1599,6 +1610,8 @@ function hurtPlayer(raw, src = 'other') {
   let scaled = raw * DIFF().dmg;
   if (P.wards && P.wards.wolfsbane && src === 'wisp') scaled *= 0.5;
   if (P.wards && P.wards.stonewatch && src === 'spit') scaled *= 0.7;
+  if (P.wards && P.wards.stonewatch && src === 'mini') scaled *= 0.85;   // 猼訑: 佩之不畏
+  if (P.foxProof && src === 'spit') scaled *= 0.5;                       // 食九尾狐者不蛊
   if (P.eliteRes && (src === 'brute' || src.startsWith('boss'))) scaled *= 1 - P.eliteRes;
   const dmg = Math.max(1, Math.round(scaled * (1 - armour())));
   S.lastHits.push({ src, dmg, t: S.t }); if (S.lastHits.length > 12) S.lastHits.shift();
@@ -1757,12 +1770,17 @@ function mixFor() {
   if (D === 'hearth') w.wisp *= 1.2;
   return w;
 }
-function healMul() { return S.omens && (S.omens.drought || S.omens.plague) ? 0.5 : 1; }
+const omenSeverity = () => SET.difficulty === 'calm' ? 0.6 : SET.difficulty === 'ash' ? 1.3 : 1;   // ill omens bite softer on 清修, harder on 劫难
+function healMul() { if (!(S.omens && (S.omens.drought || S.omens.plague))) return 1; const pen = 0.5 * omenSeverity() * (P.wards && P.wards.tidewalker ? 0.5 : 1); return clamp(1 - pen, 0.25, 1); }
 function triggerOmen(key) {
   const o = OMENS[key]; if (!o || !S.omens || S.phase !== 'run') return false;
   if (S.omens[key] || (S.omenCd[key] || 0) > 0) return false;
   if (key !== 'dark' && key !== 'calm' && S.omens.calm) return false;   // the phoenix's peace holds ill omens off
-  S.omens[key] = o.dur || 1e9; S.omenCd[key] = o.cd;
+  const ill = key === 'drought' || key === 'fire' || key === 'plague';
+  S.omens[key] = (o.dur || 1e9) * (key === 'fire' && P.wards && P.wards.ashwalker ? 0.5 : 1);
+  S.stats.omens = (S.stats.omens || 0) + 1;   // 鸓鸟御火: strange fire burns out in half the time
+  S.omenCd[key] = o.cd * (ill && P.wards && P.wards.wolfsbane ? 1.5 : 1);                          // 天狗御凶: ill omens return half as often
+  if (key === 'bounty') { const a = Math.random() * 6.28; S.dangkang = { x: P.x + Math.cos(a) * 9, z: P.z + Math.sin(a) * 9, face: 0, spd: 0, wob: Math.random() * 6.28, callT: 1.5 }; const rr = Math.hypot(S.dangkang.x, S.dangkang.z); if (rr > PLAY_R - 4) { S.dangkang.x *= (PLAY_R - 4) / rr; S.dangkang.z *= (PLAY_R - 4) / rr; } }
   showBanner(SET.lang === 'zh' ? o.zh : o.en, 4.5); AUDIO.sfx(o.sfx || 'district');
   META.omens = META.omens || {}; if (!META.omens[key]) { META.omens[key] = 1; saveMeta(); }
   if (key === 'bounty') burstParticles(P.x, 1, P.z, 30, [1, 0.85, 0.4], 4, 0.4, 0.7, -2);
@@ -1784,16 +1802,54 @@ function updateOmens(dt) {
     // auspicious omens roll on a slow clock while the valley is quiet
     S.omenClock = (S.omenClock || 0) + 1;
     if (S.omenClock >= 75 && S.t > 80 && !S.boss && !S.tide && !S.shrineActive) { S.omenClock = 0; const r = Math.random(); if (r < 0.4) triggerOmen('bounty'); else if (r < 0.7 && S.t > 170) triggerOmen('calm'); }
+    if (S.endless && !S.tenSuns && S.t >= BOSS_AT_FN() + 240) { S.tenSuns = true; S.omenCd.drought = 0; delete S.omens.drought; if (triggerOmen('drought')) { S.omens.drought = 120; showBanner(SET.lang === 'zh' ? '十日并出 · 焦禾稼,杀草木' : 'TEN SUNS RISE TOGETHER  ·  crops scorch, trees die', 5); } }
     // Jingwei is 'seen' once you have stood by her pile of twigs on Mount Fajiu
     if (!(META.seen && META.seen.jingwei) && world.landmarks) for (const l of world.landmarks) if (l.kind === 'jingwei' && Math.hypot(P.x - l.x, P.z - l.z) < 10) { META.seen = META.seen || {}; META.seen.jingwei = 1; saveMeta(); showBanner(SET.lang === 'zh' ? '精卫 · 常衔西山之木石,以堙于东海' : 'JINGWEI  ·  carrying twigs and stones to fill the Eastern Sea', 4); break; }
+  }
+  if (S.jwQuest) {
+    const q = S.jwQuest; q.t -= dt; q.ringT -= dt;
+    if (q.ringT <= 0) { q.ringT = 1.2; spawnRing(q.x, q.z, 3.5, 0xdfe8f0, 1.1, 0.14); }
+    if (Math.hypot(P.x - q.x, P.z - q.z) < 4.2) {
+      S.jwQuest = null; S.jwDone = (S.jwDone || 0) + 1; const reward = 8; P.shards += reward;
+      for (let k = 0; k < 24; k++) spawnParticle(q.x + (Math.random() - 0.5) * 3, 0.3, q.z + (Math.random() - 0.5) * 3, (Math.random() - 0.5) * 2, 1.5 + Math.random() * 2, (Math.random() - 0.5) * 2, 0.9, 0.95, 1.0, 0.16, 1.0, -4);
+      showBanner(SET.lang === 'zh' ? `以堙于东海 · +${reward} 丹粟` : `CAST INTO THE EASTERN SEA  ·  +${reward} cinnabar grains`, 4); AUDIO.sfx('win');
+      META.jingweiStones = (META.jingweiStones || 0) + 1; saveMeta();
+    } else if (q.t <= 0) { S.jwQuest = null; showBanner(SET.lang === 'zh' ? '石落半途 · 精卫又衔起一块' : 'THE STONE SLIPPED  ·  Jingwei picks up another', 3.5); AUDIO.sfx('lose', 0.5); }
+  }
+  { const dancing = S.minis.some((m) => m.key === 'maw' && !m.dead);   // 帝江是识歌舞: while it dances, everyone's hands quicken
+    if (dancing !== S.danceOn) { S.danceOn = dancing; P.speedTalent *= dancing ? 1.1 : 1 / 1.1; if (dancing) showBanner(SET.lang === 'zh' ? '帝江歌舞 · 出手加快一成' : 'DIJIANG DANCES  ·  your hands quicken by a tenth', 3.5); } }
+  if (S.nightK > 0.5 && world.landmarks) {
+    if (!S.fusangLm) S.fusangLm = world.landmarks.find((l) => l.kind === 'fusang') || false;
+    if (S.fusangLm && Math.hypot(P.x - S.fusangLm.x, P.z - S.fusangLm.z) < 9) {
+      P.hp = Math.min(P.maxHp, P.hp + 2.5 * dt * healMul()); S.fusangT = (S.fusangT || 0) + dt;
+      if (!S.fusangSeen) { S.fusangSeen = true; showBanner(SET.lang === 'zh' ? '扶桑之下 · 十日所浴,命火渐复' : 'UNDER THE FUSANG  ·  where the ten suns bathe, the lamp mends', 4); AUDIO.sfx('district'); }
+      if (Math.random() < dt * 6) spawnParticle(P.x + (Math.random() - 0.5) * 1.2, 0.3, P.z + (Math.random() - 0.5) * 1.2, 0, 0.9, 0, 1.0, 0.8, 0.4, 0.1, 1.2, -0.02);
+    }
+  }
+  if (S.dangkang) {
+    const dk = S.dangkang; const dx = dk.x - P.x, dz = dk.z - P.z, d = Math.hypot(dx, dz) || 1;
+    dk.wob += dt * 2.2;
+    // 其鸣自叫: it keeps calling its own name; it runs when you come near, trots when you don't
+    const scared = d < 11; dk.spd = lerp(dk.spd, scared ? 6.4 : 1.6, 1 - Math.pow(0.001, dt / 0.6));
+    const ax = (scared ? dx / d : Math.cos(dk.wob * 0.7)) + Math.cos(dk.wob * 1.9) * 0.45, az = (scared ? dz / d : Math.sin(dk.wob * 0.7)) + Math.sin(dk.wob * 1.9) * 0.45; const al = Math.hypot(ax, az) || 1;
+    dk.x += ax / al * dk.spd * dt; dk.z += az / al * dk.spd * dt; dk.face = Math.atan2(ax, az);
+    const rr = Math.hypot(dk.x, dk.z); if (rr > PLAY_R - 4) { dk.x *= (PLAY_R - 4) / rr; dk.z *= (PLAY_R - 4) / rr; }
+    collideStatic(dk, world.obstacles, 0.7);
+    if (d > 34) { const a = Math.atan2(dx, dz); dk.x = P.x + Math.sin(a) * 14; dk.z = P.z + Math.cos(a) * 14; }   // never lose it entirely
+    dk.callT -= dt; if (dk.callT <= 0) { dk.callT = 2.5 + Math.random() * 2; if (d < 26) AUDIO.sfx('dangkang', 0.5); }
+    if (d < 1.4 + P.r) {
+      S.dangkang = null; P.shards += 6; const heal = Math.round(P.maxHp * 0.25 * healMul()); P.hp = Math.min(P.maxHp, P.hp + heal); showNumber(P.x, 1.6, P.z, '+' + heal, 'heal');
+      showBanner(SET.lang === 'zh' ? '当康到手 · +6 丹粟,命火 +25%' : 'DANGKANG CAUGHT  ·  +6 cinnabar grains, +25% health', 3.5); AUDIO.sfx('win'); burstParticles(P.x, 1, P.z, 40, [1, 0.85, 0.45], 5, 0.4, 0.8, -2);
+      S.stats.dangkang = (S.stats.dangkang || 0) + 1; META.dangkangCaught = (META.dangkangCaught || 0) + 1; saveMeta();
+    }
   }
   for (const k in S.omens) {
     if (k === 'dark') continue;
     S.omens[k] -= dt;
-    if (k === 'fire' && Math.random() < dt * 1.3) { const a = Math.random() * 6.28, d = 3 + Math.random() * 7; S.burns.push({ x: P.x + Math.cos(a) * d, z: P.z + Math.sin(a) * d, t: 4, hostile: true }); if (S.burns.length > 70) S.burns.shift(); }
+    if (k === 'fire' && Math.random() < dt * 1.3 * omenSeverity()) { const a = Math.random() * 6.28, d = 3 + Math.random() * 7; S.burns.push({ x: P.x + Math.cos(a) * d, z: P.z + Math.sin(a) * d, t: 4, hostile: true }); if (S.burns.length > 70) S.burns.shift(); }
     if (k === 'bounty' && Math.random() < dt * 1.5) { const a = Math.random() * 6.28, d = 2 + Math.random() * 5; dropPickup('ember', P.x + Math.cos(a) * d, P.z + Math.sin(a) * d, 3); }
     if (k === 'drought' && W.wx !== 'clear') { W.wx = 'clear'; W.wxTimer = Math.max(W.wxTimer, 20); refreshWeatherButtons(); }
-    if (S.omens[k] <= 0) { delete S.omens[k]; if (k === 'bounty') { P.shards += 4; showBanner(SET.lang === 'zh' ? '大穰已过 · +4 丹粟' : 'THE HARVEST PASSES  ·  +4 cinnabar grains', 3); AUDIO.sfx('shard', 0.2); } }
+    if (S.omens[k] <= 0) { delete S.omens[k]; if (k === 'bounty') { S.dangkang = null; P.shards += 4; showBanner(SET.lang === 'zh' ? '大穰已过 · +4 丹粟' : 'THE HARVEST PASSES  ·  +4 cinnabar grains', 3); AUDIO.sfx('shard', 0.2); } }
   }
   for (const k in OMENS) { const tgt = S.omens[k] ? 1 : 0; S.omenK[k] = lerp(S.omenK[k] || 0, tgt, 1 - Math.pow(0.001, dt / 4)); }
 }
@@ -2028,6 +2084,7 @@ function hurtMini(m, dmg, crit = false) {
 function killMini(m) {
   m.dead = true; S.minis.splice(S.minis.indexOf(m), 1); if (m.key === 'maw') AUDIO.setDance(false);
   S.miniDone = S.miniDone || {}; S.miniDone[m.key] = true;
+  if (m.key === 'wolfking' && !P.foxProof) { P.foxProof = true; S.timers.push({ t: 5, fn: () => { if (S.phase === 'run') showBanner(SET.lang === 'zh' ? '食者不蛊 · 毕方火弹对你伤害减半' : 'WHO EATS THE FOX IS PROOF AGAINST POISON  ·  Bifang fire halved', 4.5); } }); }
   S.stats.elites++; S.stats.kills++; S.stats.minis = (S.stats.minis || 0) + 1;
   META.bestiary = META.bestiary || {}; if (!META.bestiary[m.key]) { META.bestiary[m.key] = new Date().toISOString().slice(0, 10); saveMeta(); showBanner(tr('FIRST KILL') + ' · ' + tr(m.def.name), 5); }
   else showBanner(tr(m.def.name) + '  ·  ' + tr('falls'), 4);
@@ -2257,7 +2314,7 @@ function updatePlayer(dt) {
   FX.playerRing.position.set(P.x, 0.03, P.z);
   FX.playerRing.material.opacity = 0.35 + 0.25 * Math.sin(S.wall * 4);
   // forge hint
-  $('#forgeHint').classList.toggle('show', nearForge());
+  { const jw = !nearForge() && !S.jwQuest && nearJingweiPile(); $('#forgeHint').classList.toggle('show', nearForge() || jw); if (jw) $('#forgeHint').innerHTML = `<b>F</b> ${SET.lang === 'zh' ? '衔石' : 'Take a stone'}`; else if (nearForge()) $('#forgeHint').innerHTML = `<b>F</b> ${tr('Enter forge')}`; }
   FX.forgeRing.material.opacity = nearForge() ? 0.6 : 0.25;
 }
 
@@ -2388,7 +2445,8 @@ function updateHUD() {
   $('#xpText').textContent = `${Math.floor(P.xp)} / ${P.xpNext} ${tr('XP')}`;
   $('#shardText').textContent = zh ? `${P.shards} 丹粟` : `${P.shards} cinnabar grain${P.shards === 1 ? '' : 's'}`;
   { const om = $('#omen'); const keys = S.omens ? Object.keys(S.omens).filter((k) => k !== 'dark') : [];
-    if (keys.length) { om.textContent = keys.map((k) => (zh ? OMENS[k].short : OMENS[k].shortEn) + ' ' + Math.ceil(S.omens[k])).join('  ·  '); om.className = 'show ' + keys[0]; } else om.className = ''; }
+    const parts = keys.map((k) => (zh ? OMENS[k].short : OMENS[k].shortEn) + ' ' + Math.ceil(S.omens[k])); if (S.jwQuest) parts.push((zh ? '衔石 ' : 'Stone ') + Math.ceil(S.jwQuest.t));
+    if (parts.length) { om.textContent = parts.join('  ·  '); om.className = 'show ' + (keys[0] || 'quest'); } else om.className = ''; }
   $('#forgeText').textContent = `${tr('Edge')} ${P.forge.edge} / 3 · ${tr('Mail')} ${P.forge.mail} / 3 · ${tr('Charm')} ${P.forge.charm} / 3`;
   $('#statText').textContent = `${tr('Damage')} ×${dmgMult().toFixed(2)} · ${tr('Armour')} ${Math.round(armour() * 100)}%${P.path ? ' · ' + tr({ sword: 'Sword Path', talisman: 'Talisman Path', body: 'Body Path', demon: 'Demon Path' }[P.path]) : ''}`;
   $('#bestText').textContent = `${tr('Best')} ${fmtTime(S.best.time)} · ${S.best.kills} ${tr('kills')}`;
@@ -2469,13 +2527,19 @@ function tick(dt) {
     if (jingweiSet && FX.jingwei) {
       jingweiSet.begin();
       for (const j of FX.jingwei) {
-        j.t += j.dir * dt * 0.035; if (j.t > 1) { j.t = 1; j.dir = -1; } else if (j.t < 0) { j.t = 0; j.dir = 1; }
+        j.t += j.dir * dt * 0.06; if (j.t > 1) { j.t = 1; j.dir = -1; for (let k = 0; k < 10; k++) spawnParticle(j.to.x + (Math.random() - 0.5) * 1.2, 0.3, j.to.z + (Math.random() - 0.5) * 1.2, (Math.random() - 0.5) * 1.6, 1.2 + Math.random() * 1.5, (Math.random() - 0.5) * 1.6, 0.9, 0.95, 1.0, 0.14, 0.9, -4); } else if (j.t < 0) { j.t = 0; j.dir = 1; }
         const x = lerp(j.from.x, j.to.x, j.t), z = lerp(j.from.z, j.to.z, j.t), y = j.h + Math.sin(S.wall * 0.9 + j.ph) * 0.4;
         const yaw = Math.atan2((j.to.x - j.from.x) * j.dir, (j.to.z - j.from.z) * j.dir);
         _e.set(0, yaw, Math.sin(S.wall * 7 + j.ph) * 0.3); _q.setFromEuler(_e); _p.set(x, y, z);
         jingweiSet.push(_m.compose(_p, _q, _s));
       }
       jingweiSet.end();
+    }
+    if (dangkangSet) {
+      dangkangSet.begin();
+      const dk = S.dangkang;
+      if (dk && S.phase === 'run') { const run = dk.spd > 0.5 ? 1 : 0; _e.set(run * Math.sin(S.wall * 16) * 0.12, dk.face, 0); _q.setFromEuler(_e); _p.set(dk.x, run * Math.abs(Math.sin(S.wall * 16)) * 0.18, dk.z); dangkangSet.push(_m.compose(_p, _q, _s)); }
+      dangkangSet.end();
     }
   }
   if (FX.lordRing) { const b = S.boss; if (b && !b.dead && b.phase !== 'intro') { FX.lordRing.visible = true; FX.lordRing.position.set(b.x, 0.06, b.z); FX.lordRing.rotation.y += dt * (b.phase2 ? 1.3 : 0.5); FX.lordRing.children[0].material.opacity = (b.phase2 ? 0.7 : 0.35) * (0.8 + 0.2 * Math.sin(S.t * 5)); } else FX.lordRing.visible = false; }
@@ -2484,12 +2548,15 @@ function tick(dt) {
     const near = []; FX.ambientGrid.query(P.x, P.z, 30, near);
     const w = W.cur.wind, nk = S.nightK;
     for (const a of near) {
-      if (a.kind === 2 && nk < 0.5) continue;
-      const rate = a.kind === 0 ? 1.4 : a.kind === 1 ? 0.9 : 0.6 * nk;
+      if ((a.kind === 2 || a.kind === 4) && nk < 0.5) continue;
+      const rate = a.kind === 0 ? 1.4 : a.kind === 1 ? 0.9 : a.kind === 3 ? 1.6 : a.kind === 4 ? 6 * nk : a.kind === 5 ? 1.2 : 0.6 * nk;
       if (Math.random() > rate * dt) continue;
       const ox = (Math.random() - 0.5) * 2.4, oz = (Math.random() - 0.5) * 2.4;
       if (a.kind === 0) spawnParticle(a.x + ox, 2.0 + Math.random() * 0.8, a.z + oz, 0.5 + w * 1.5 + (Math.random() - 0.5) * 0.6, -0.25 - Math.random() * 0.2, 0.2 + (Math.random() - 0.5) * 0.6, 0.95, 0.75, 0.35, 0.16, 4.5, 0.02);
       else if (a.kind === 1) spawnParticle(a.x + ox, 2.6 + Math.random() * 0.8, a.z + oz, 0.6 + w * 1.8 + (Math.random() - 0.5) * 0.8, -0.35 - Math.random() * 0.25, (Math.random() - 0.5) * 0.8, 0.55, 0.75, 0.32, 0.13, 4.0, 0.03);
+      else if (a.kind === 3) spawnParticle(a.x + ox * 1.8, 3.2 + Math.random() * 1.5, a.z + oz * 1.8, (Math.random() - 0.5) * 0.4 + w * 0.6, -0.55 - Math.random() * 0.3, (Math.random() - 0.5) * 0.4, 0.96, 0.96, 0.92, 0.17, 5.5, 0.0);
+      else if (a.kind === 4) spawnParticle(a.x + ox * 1.4, 1.5 + Math.random() * 3.5, a.z + oz * 1.4, (Math.random() - 0.5) * 0.4, 0.5 + Math.random() * 0.6, (Math.random() - 0.5) * 0.4, 1.0, 0.8, 0.35, 0.12, 2.5 + Math.random() * 1.5, -0.03);
+      else if (a.kind === 5) { const c = [[0.9, 0.2, 0.2], [0.95, 0.75, 0.25], [0.3, 0.7, 0.45], [0.35, 0.55, 0.9], [0.85, 0.4, 0.75]][Math.floor(Math.random() * 5)]; spawnParticle(a.x + ox * 2, 2.4 + Math.random() * 1.2, a.z + oz * 2, 0.4 + w * 1.2 + (Math.random() - 0.5) * 0.6, -0.3 - Math.random() * 0.2, (Math.random() - 0.5) * 0.6, c[0], c[1], c[2], 0.15, 5, 0.02); }
       else spawnParticle(a.x + ox * 1.5, 0.4 + Math.random() * 1.2, a.z + oz * 1.5, (Math.random() - 0.5) * 0.5, 0.15 + Math.random() * 0.25, (Math.random() - 0.5) * 0.5, 0.55, 1.0, 0.6, 0.11, 3.0 + Math.random() * 2, -0.02);
     }
   }
@@ -2599,7 +2666,7 @@ function autopilot(dt) {
 // debug / capture hooks (used by the verification script)
 // =====================================================================
 window.__emberlight = {
-  S, P: () => P, W, world: () => world, startRun, endRun, spawnBoss, triggerOmen, omens: () => S.omens, spawnEnemy, spawnAround, setWeather: (tod, wx) => { W.tod = tod; W.wx = wx; W.auto = false; refreshWeatherButtons(); },
+  S, P: () => P, W, world: () => world, startRun, endRun, spawnBoss, triggerOmen, omens: () => S.omens, dangkang: () => S.dangkang, startJingweiErrand, jwQuest: () => S.jwQuest, spawnEnemy, spawnAround, setWeather: (tod, wx) => { W.tod = tod; W.wx = wx; W.auto = false; refreshWeatherButtons(); },
   cheat: (o) => Object.assign(P, o), META, recordRun, SET, applyLang, applyQuality, applyCues, gainXp, AUDIO, camDist: (v) => { camDist = v; }, PAD, pollGamepad, lightShrine, nearShrine, shrines: () => S.shrines, DIFFS, rollTalents, TALENTS, WEAPONS, spawnMini, MINIS, minis: () => S.minis, hurtMini, killMini, GUIDE, ANIM, clips: () => kit.clips.map((c) => c.name + ':' + c.duration.toFixed(2)), post: () => ({ ao: gtaoPass && gtaoPass.enabled, bloom: bloomPass && bloomPass.enabled, passes: composer && composer.passes.length }),
   project: (x, y, z) => { const v = new THREE.Vector3(x, y, z).project(camera); return { sx: (v.x * 0.5 + 0.5) * window.innerWidth, sy: (-v.y * 0.5 + 0.5) * window.innerHeight }; },
   slashes: () => S.slashes.map((m) => ({ ry: m.rotation.y, arc: m.userData.arc })), giveShards: (n) => { P.shards += n; }, teleport: (x, z) => { P.x = x; P.z = z; }, cranes: () => craneSet ? { count: craneSet.count, body: !!craneSet.body, tris: craneSet.body ? craneSet.body.geometry.attributes.position.count / 3 : 0 } : null,
