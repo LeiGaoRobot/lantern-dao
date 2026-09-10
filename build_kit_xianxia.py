@@ -796,6 +796,19 @@ for i in range(3):
         b = a + k * 1.6
         cone(f"GLeaf{i}{k}", (bx + math.cos(b) * 0.5, by + math.sin(b) * 0.5, h - 0.6 + k * 0.25), 0.25, 1.2, M["BambooLeaf"], P, verts=4, rot=(math.sin(b) * 1.2, -math.cos(b) * 1.2, 0))
 
+P = kit("Crane")   # spirit crane, wings spread; flown by the page high over the valley
+ball("CrBody", (0, 0, 0), 0.22, M["Mist"], P, scale=(0.7, 1.6, 0.6), sub=1)
+cyl("CrNeck", (0, -0.45, 0.12), 0.05, 0.5, M["Mist"], P, rot=(1.2, 0, 0), verts=6)
+ball("CrHead", (0, -0.7, 0.28), 0.09, M["Mist"], P, sub=0)
+box("CrCrown", (0, -0.72, 0.36), (0.06, 0.08, 0.04), M["Flag"], P, bevel=0.0)
+cone("CrBeak", (0, -0.86, 0.26), 0.03, 0.2, M["Belt"], P, verts=4, rot=(math.pi / 2, 0, 0))
+for sx in (-1, 1):
+    box(f"CrWing{sx}", (sx * 0.75, 0.05, 0.05), (1.3, 0.5, 0.04), M["Mist"], P, bevel=0.0, rot=(0, sx * 0.12, 0))
+    box(f"CrWingTip{sx}", (sx * 1.45, 0.1, 0.12), (0.4, 0.36, 0.03), M["Hair"], P, bevel=0.0, rot=(0, sx * 0.25, 0))
+box("CrTail", (0, 0.42, 0.02), (0.2, 0.3, 0.03), M["Hair"], P, bevel=0.0)
+for sx in (-1, 1):
+    cyl(f"CrLeg{sx}", (sx * 0.06, 0.15, -0.2), 0.015, 0.35, M["Hair"], P, rot=(-0.4, 0, 0), verts=4)
+
 # ---------------------------------------------------------------- Player rig: robed cultivator with a spirit lamp and a flying sword
 P = kit("Player")
 body = empty("P_Body"); body.parent = P
@@ -868,6 +881,9 @@ eyes(P, -0.26, 1.06, sep=0.1, r=0.05)
 for sx in (-1, 1):
     cyl(f"CinderArm{sx}", (sx * 0.42, -0.15, 0.7), 0.07, 0.6, M["Ash"], P, rot=(-0.5, sx * 0.4, 0), verts=6)
     ball(f"CinderClaw{sx}", (sx * 0.5, -0.4, 0.5), 0.09, M["AshLight"], P, sub=0)
+for i in range(5):
+    a = i / 5 * math.tau + 0.2
+    box(f"CinderRag{i}", (math.cos(a) * 0.36, math.sin(a) * 0.36, 0.18), (0.08, 0.05, 0.36 + (i % 2) * 0.16), M["AshLight"], P, rot=(math.sin(a) * 0.3, -math.cos(a) * 0.3, a), bevel=0.0)
 for i in range(4):
     a = i / 4 * math.tau + 0.4
     ball(f"CinderMist{i}", (math.cos(a) * 0.4, math.sin(a) * 0.4, 0.1), 0.16, M["AshLight"], P, scale=(1.3, 1.3, 0.5), sub=0)
@@ -902,6 +918,7 @@ for sx in (-1, 1):
     cyl(f"ToadLegB{sx}", (sx * 0.6, 0.3, 0.3), 0.11, 0.7, M["Toad"], P, rot=(-0.6, sx * 0.9, 0), verts=6)
     ball(f"ToadFootF{sx}", (sx * 0.62, -0.4, 0.06), 0.13, M["ToadBelly"], P, scale=(1.2, 1.4, 0.4), sub=0)
     ball(f"ToadFootB{sx}", (sx * 0.85, 0.15, 0.06), 0.15, M["ToadBelly"], P, scale=(1.2, 1.5, 0.4), sub=0)
+cyl("ToadHat", (0.05, 0.05, 1.0), 0.34, 0.03, M["MudLight"], P, verts=9, rot=(0.15, -0.1, 0))
 for i in range(6):
     a = i * 1.7
     ball(f"Wart{i}", (math.cos(a) * 0.4, 0.1 + math.sin(a) * 0.35, 0.85 + (i % 2) * 0.08), 0.07, M["Mud"], P, sub=0)

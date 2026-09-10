@@ -8,7 +8,7 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
-import { Kit, DynSet, buildGround, generateMap, districtAt, DISTRICTS, ROADS, ISLAND_R, PLAY_R, collideStatic, Grid, setGlow, glowMat, MATS, treeUniforms, mulberry32, vnoise } from './world.js?v=37';
+import { Kit, DynSet, buildGround, generateMap, districtAt, DISTRICTS, ROADS, ISLAND_R, PLAY_R, collideStatic, Grid, setGlow, glowMat, MATS, treeUniforms, mulberry32, vnoise } from './world.js?v=38';
 import * as AUDIO from './audio.js?v=33';
 
 const $ = (s) => document.querySelector(s);
@@ -266,7 +266,7 @@ const ZH = {
   'Hold the shrine for 45 seconds.': '守住法阵 45 秒。', 'THE SHRINE GUTTERS OUT  ·  You strayed too far.': '法阵黯淡  ·  你走得太远。', 'WARD GAINED': '习得护体功法', 'SHRINE': '灵脉法阵', '· too far!': '· 太远了!',
   'Wolfsbane': '避雾诀', 'Wisps no longer hunt in packs and hit for half.': '磷火不再成群,伤害减半。', 'Stonewatch': '金钟罩', 'Your attacks shatter spitter bolts; the rest sting 30% less.': '你的攻击能击碎蟾妖毒弹,余下伤害 −30%。',
   'Ashwalker': '踏火诀', 'Burning ground cannot hurt you; +25% damage to cinders and brutes.': '燃烧地面对你无害;对煞灵与山魈伤害 +25%。', 'Tidewalker': '踏浪步', 'Move 12% faster and dash recovers 25% sooner.': '移速 +12%,踏云步冷却 −25%。',
-  'Light the shrine': '布下法阵', 'Difficulty': '难度', 'Starting weapon': '起手法宝',
+  'Light the shrine': '布下法阵', 'Travel the vein': '循灵脉传送', 'THE VEIN CARRIES YOU  ·  Press F at any lit array to travel.': '灵脉相送  ·  在任意已点亮的法阵按 F 即可传送。', 'Difficulty': '难度', 'Starting weapon': '起手法宝',
   'THE WOLF KING': '雾狼王', 'THE STONE SENTINEL': '剑冢石傀', 'THE CINDER SALAMANDER': '赤炎火蜥', 'THE SILVERMERE MAW': '泽底巨口', 'wakes': '现身', 'falls': '伏诛', 'FIRST KILL': '首次伏诛', 'Bestiary': '妖录', 'Elites felled': '伏诛精英',
   'ASH LONGBOW': '落雁弓', 'EMBER CHAIN': '缚灵索', 'LONGBOW': '落雁弓', 'CHAIN': '缚灵索',
   'Pierce two more enemies': '多穿透两个妖邪', 'Arrows split into three': '一箭化三', 'Arrows scorch where they land': '落点燃地',
@@ -511,8 +511,9 @@ const threat = () => Math.floor(minute()) + 1;
 // =====================================================================
 const kit = new Kit();
 let world, ground, playerRig, wardenRig, enemySets = {}, pickupSets = {}, boltSet, spitSet;
+let craneSet = null;
 const loadBar = $('#loadBar'), loadText = $('#loadText');
-kit.load('./assets/kit.glb?v=10', (e) => { if (e.total) loadBar.style.transform = `scaleX(${(e.loaded / e.total) * 0.6})`; }).then(() => {
+kit.load('./assets/kit.glb?v=12', (e) => { if (e.total) loadBar.style.transform = `scaleX(${(e.loaded / e.total) * 0.6})`; }).then(() => {
   loadText.textContent = 'Planting the wildwood…';
   setTimeout(() => { const t0 = performance.now(); buildWorld(); console.log('world built in', Math.round(performance.now() - t0), 'ms'); }, 30);
 }).catch((err) => { loadText.textContent = 'Failed to load kit: ' + err.message; console.error(err); });
@@ -537,6 +538,8 @@ function buildWorld() {
   pickupSets.ember = new DynSet(kit, 'Ember', 600, scene, { cast: false, glowKey: 'Crystal' });
   pickupSets.shard = new DynSet(kit, 'Shard', 200, scene, { cast: false, glowKey: 'ShardCrystal' });
   pickupSets.heart = new DynSet(kit, 'Heart', 40, scene, { cast: false, glowKey: 'HeartGlow' });
+  craneSet = new DynSet(kit, 'Crane', 8, scene, { cast: false, outline: 0 });
+  FX.cranes = []; for (let i = 0; i < 6; i++) FX.cranes.push({ a: i / 6 * Math.PI * 2, r: 10 + (i % 3) * 4, h: 7 + (i % 2) * 1.5, spd: 0.12 + (i % 3) * 0.02, ph: i * 1.3 }); FX.craneC = { x: 0, z: 0 };
   boltSet = new DynSet(kit, 'Ember', 200, scene, { cast: false, glowKey: 'Bolt', glowMat: new THREE.MeshBasicMaterial({ color: 0xffb060, toneMapped: false }) });
   spitSet = new DynSet(kit, 'Ember', 120, scene, { cast: false, glowKey: 'Spit', glowMat: new THREE.MeshBasicMaterial({ color: 0xff5a2a, toneMapped: false }) });
   setGlow('EnemyGlow', 2.2);
@@ -983,7 +986,7 @@ function onAction(a) {
     case 'dash': tryDash(); break;
     case 'nova': tryNova(); break;
     case 'swap': P.weapon = (P.weapon + 1) % WEAPONS.length; P.attackT = Math.min(P.attackT, 0.2); refreshWeaponCard(); AUDIO.sfx('ui'); break;
-    case 'forge': if (nearForge()) openForge(); else lightShrine(nearShrine()); break;
+    case 'forge': if (nearForge()) openForge(); else { const ns = nearShrine(); if (ns && ns.state === 'done' && !S.shrineActive) travelVein(ns); else if (!ns && nearWellVein()) travelVein(null); else lightShrine(ns); } break;
     case 'heavy': tryHeavy(); break;
     case 'auto': P.auto = !P.auto; refreshAutoBtn(); AUDIO.sfx('ui'); break;
     case 'pause': togglePause(); break;
@@ -1269,6 +1272,17 @@ function initShrines() {
   S.shrineActive = null;
 }
 function nearShrine() { if (!S.shrines) return null; for (const k in S.shrines) { const sh = S.shrines[k]; if (Math.hypot(P.x - sh.x, P.z - sh.z) < 3.6) return sh; } return null; }
+function nearWellVein() { return Math.hypot(P.x, P.z) < 3.8 && !!S.shrines && Object.values(S.shrines).some((s) => s.state === 'done') && !S.shrineActive; }
+function travelVein(from) {
+  const dests = Object.values(S.shrines).filter((s) => s.state === 'done' && s !== from).map((s) => ({ x: s.x + 2.4, z: s.z + 2.0 }));
+  if (from) dests.push({ x: 2.5, z: 3.5 });   // the market well is always on the vein (unless we are leaving from it)
+  S.tpIdx = ((S.tpIdx || 0) + 1) % dests.length;
+  const d = dests[S.tpIdx];
+  spawnRing(P.x, P.z, 3, 0x8ff0dc, 0.6, 0.12); burstParticles(P.x, 0.8, P.z, 40, [0.55, 0.95, 0.85], 5, 0.4, 0.8, -2);
+  P.x = d.x; P.z = d.z; P.invuln = Math.max(P.invuln, 1.2); P.animOnce = 'cheer';
+  spawnRing(P.x, P.z, 3, 0x8ff0dc, 0.8, 0.12); burstParticles(P.x, 0.8, P.z, 40, [0.55, 0.95, 0.85], 5, 0.4, 0.8, -2);
+  showBanner('THE VEIN CARRIES YOU  ·  Press F at any lit array to travel.', 3); AUDIO.sfx('district'); S.novaFlash = Math.max(S.novaFlash || 0, 0.5);
+}
 function lightShrine(sh) {
   if (!sh || sh.state !== 'idle' || sh.cd > 0 || S.shrineActive) return;
   sh.state = 'active'; sh.t = SHRINE_HOLD; S.shrineActive = sh;
@@ -1304,7 +1318,10 @@ function updateShrines(dt) {
     }
   }
   const ns = nearShrine();
-  $('#shrineHint').classList.toggle('show', !!ns && ns.state === 'idle' && ns.cd <= 0 && !S.shrineActive);
+  const canLight = !!ns && ns.state === 'idle' && ns.cd <= 0 && !S.shrineActive, canTravel = (!!ns && ns.state === 'done' && !S.shrineActive) || (!ns && nearWellVein());
+  const hintMode = canTravel ? 'travel' : canLight ? 'light' : '';
+  if (hintMode !== S.hintMode) { S.hintMode = hintMode; if (hintMode) $('#shrineHint').innerHTML = `<b>F</b> ${tr(hintMode === 'travel' ? 'Travel the vein' : 'Light the shrine')}`; }
+  $('#shrineHint').classList.toggle('show', canLight || canTravel);
 }
 function applyWard(key) {
   if (key === 'tidewalker') { P.speedMult *= 1.12; P.dashCdMult = (P.dashCdMult || 1) * 0.75; }
@@ -2336,6 +2353,19 @@ function tick(dt) {
   updateSlashes(dt);
   updateNumbers(dt);
   // ambient sparks
+  if (craneSet && FX.cranes) {
+    FX.craneC.x = lerp(FX.craneC.x, P.x, 1 - Math.pow(0.001, dt / 25)); FX.craneC.z = lerp(FX.craneC.z, P.z, 1 - Math.pow(0.001, dt / 25));
+    craneSet.begin();
+    const _m = new THREE.Matrix4(), _q = new THREE.Quaternion(), _e = new THREE.Euler(), _p = new THREE.Vector3(), _s = new THREE.Vector3(1, 1, 1);
+    for (const c of FX.cranes) {
+      c.a += c.spd * dt;
+      const x = FX.craneC.x + Math.cos(c.a) * c.r, z = FX.craneC.z + Math.sin(c.a) * c.r, y = c.h + Math.sin(S.wall * 0.7 + c.ph) * 0.6;
+      const yaw = Math.atan2(-Math.sin(c.a), Math.cos(c.a));
+      _e.set(0, yaw, Math.sin(S.wall * 5.5 + c.ph) * 0.28); _q.setFromEuler(_e); _p.set(x, y, z);
+      craneSet.push(_m.compose(_p, _q, _s));
+    }
+    craneSet.end();
+  }
   if (FX.lordRing) { const b = S.boss; if (b && !b.dead && b.phase !== 'intro') { FX.lordRing.visible = true; FX.lordRing.position.set(b.x, 0.06, b.z); FX.lordRing.rotation.y += dt * (b.phase2 ? 1.3 : 0.5); FX.lordRing.children[0].material.opacity = (b.phase2 ? 0.7 : 0.35) * (0.8 + 0.2 * Math.sin(S.t * 5)); } else FX.lordRing.visible = false; }
   if (FX.bolts) for (const b of FX.bolts) if (b.visible) { b.userData.life -= dt; const k = Math.max(0, b.userData.life / 0.32); b.material.opacity = k * k; b.scale.set(0.6 + k * 0.6, 1, 0.6 + k * 0.6); if (k <= 0) b.visible = false; }
   if ((running || S.phase === 'title') && FX.ambient) {
@@ -2460,7 +2490,7 @@ window.__emberlight = {
   S, P: () => P, W, world: () => world, startRun, endRun, spawnBoss, spawnEnemy, spawnAround, setWeather: (tod, wx) => { W.tod = tod; W.wx = wx; W.auto = false; refreshWeatherButtons(); },
   cheat: (o) => Object.assign(P, o), META, recordRun, SET, applyLang, applyQuality, applyCues, gainXp, AUDIO, camDist: (v) => { camDist = v; }, PAD, pollGamepad, lightShrine, nearShrine, shrines: () => S.shrines, DIFFS, rollTalents, TALENTS, WEAPONS, spawnMini, MINIS, minis: () => S.minis, hurtMini, killMini, GUIDE, ANIM, clips: () => kit.clips.map((c) => c.name + ':' + c.duration.toFixed(2)), post: () => ({ ao: gtaoPass && gtaoPass.enabled, bloom: bloomPass && bloomPass.enabled, passes: composer && composer.passes.length }),
   project: (x, y, z) => { const v = new THREE.Vector3(x, y, z).project(camera); return { sx: (v.x * 0.5 + 0.5) * window.innerWidth, sy: (-v.y * 0.5 + 0.5) * window.innerHeight }; },
-  slashes: () => S.slashes.map((m) => ({ ry: m.rotation.y, arc: m.userData.arc })), giveShards: (n) => { P.shards += n; }, teleport: (x, z) => { P.x = x; P.z = z; },
+  slashes: () => S.slashes.map((m) => ({ ry: m.rotation.y, arc: m.userData.arc })), giveShards: (n) => { P.shards += n; }, teleport: (x, z) => { P.x = x; P.z = z; }, cranes: () => craneSet ? { count: craneSet.count, body: !!craneSet.body, tris: craneSet.body ? craneSet.body.geometry.attributes.position.count / 3 : 0 } : null,
   capture: async (url) => {
     if (composer) composer.render(); else renderer.render(scene, camera);
     const data = canvas.toDataURL('image/jpeg', 0.85);

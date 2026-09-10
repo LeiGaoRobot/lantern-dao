@@ -39,6 +39,7 @@ Kit 名、骨架节点名(P_*/W_*/M1_..M4_*)、发光材质名、39 条剪辑名
 | WolkKing / Sentinel / Salamander / Maw | 雾狼王(白毛 + 雾团)/ 剑冢石傀(背插四剑)/ 赤炎火蜥(`HotMetal_SLCrest`)/ 泽底巨口(荷叶莲花伪装) | 骨架同名,剪辑复用 |
 | Stall / Banner | 市集摊位 / 朱砂幡 | 坊市广场(打磨一) |
 | SwordMonument / LavaFissure / LotusPond / BambooGiant | 剑碑 / 地火裂隙 / 荷塘 / 巨竹 | 四域地标(打磨一) |
+| Crane | 灵鹤 | 上空盘旋的氛围飞禽(打磨三) |
 | Warden | 劫主 | 黑袍雷紫纹、白面具、青铜冠、雷紫巨剑 `EmberCore_WBlade` |
 
 顺手修掉的原版 bug:原 `build_kit.py` 的 `RIG_P` 用到的 `body/head` 变量已被精英骨架覆盖,所有 P_* 剪辑实际打在 `M4_Body/M4_Head` 上;本版改为 `P_RIG` 显式捕获,`P_idle` 目标为 `P_Body/P_Head`。
