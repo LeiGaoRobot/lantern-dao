@@ -1,0 +1,6 @@
+build.log
+shot.log
+__pycache__/
+*.pyc
+preview_big.png
+shots/

@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>灯下问道 · Lantern Dao</title>
+<meta name="description" content="守一盏灯,渡一场劫。仙侠幸存者:Blender + three.js。A xianxia survivors-like built with Blender and three.js.">
+<meta name="theme-color" content="#1a1524">
+<meta property="og:title" content="灯下问道 · Lantern Dao">
+<meta property="og:description" content="Keep one lamp, outlast one tribulation. A xianxia survivors-like: five domains, a refinery, a Tribulation Lord at eight minutes.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23f7c39a' d='M12 2c1 4 5 5 5 10a5 5 0 0 1-10 0c0-2 1-3 2-4 0 2 1 3 2 3 0-3-1-6 1-9z'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&text=%E7%81%AF%E4%B8%8B%E9%97%AE%E9%81%93&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #f3ecdf;
+    --muted: #b9afc4;
+    --gold: #e9c46a;
+    --peach: #f7c39a;
+    --teal: #6fd6c5;
+    --panel: rgba(46, 32, 66, 0.82);
+    --panel2: rgba(30, 22, 44, 0.92);
+    --line: rgba(255, 255, 255, 0.08);
+    --bg: #1a1524;
+  }
+  * { box-sizing: border-box; }
+  body.zh { font-family: "Source Sans 3", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", "Segoe UI", system-ui, sans-serif; }
+  body.zh #title h1 { font-family: "Ma Shan Zheng", "STKaiti", "KaiTi", "Noto Serif SC", serif; letter-spacing: .12em; font-weight: 400; }
+  body.zh #title .lead, body.zh #banner, body.zh #loading .t, body.zh h2 { font-family: "Noto Serif SC", "STSong", "SimSun", "Songti SC", Fraunces, serif; }
+  html, body { margin: 0; height: 100%; height: 100dvh; background: var(--bg); -webkit-tap-highlight-color: transparent; overscroll-behavior: none; color: var(--ink); font-family: "Source Sans 3", "Segoe UI", system-ui, sans-serif; overflow: hidden; user-select: none; -webkit-user-select: none; }
+  #c { position: fixed; inset: 0; display: block; width: 100%; height: 100%; cursor: crosshair; touch-action: none; }
+  #vignette { position: fixed; inset: 0; pointer-events: none; z-index: 2; background: radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0) 55%, rgba(0,0,0,.18) 100%); }
+  #hurt { position: fixed; inset: 0; pointer-events: none; z-index: 3; background: radial-gradient(ellipse at 50% 50%, rgba(255,60,40,0) 40%, rgba(255,60,40,.55) 100%); opacity: 0; transition: opacity .08s; }
+  #flash { position: fixed; inset: 0; pointer-events: none; z-index: 3; background: #fff; opacity: 0; }
+  #ui { position: fixed; inset: 0; z-index: 5; pointer-events: none; }
+  body.hide-ui #ui, body.hide-ui #vignette { display: none; }
+  body.title #ui > .hud:not(#weather), body.title #forgeHint, body.title #dmgLayer { display: none; }
+  .pill { pointer-events: auto; display: inline-flex; align-items: center; gap: 8px; background: var(--panel); border: 1px solid var(--line); color: var(--ink); padding: 7px 14px; border-radius: 12px; font-size: 13px; font-weight: 500; cursor: pointer; backdrop-filter: blur(6px); white-space: nowrap; }
+  .pill:hover { background: rgba(70, 50, 95, .9); }
+  .pill b { font-weight: 700; color: var(--peach); }
+  .pill.on b { color: var(--teal); }
+  .hud { position: absolute; }
+  /* ---------- top-left status ---------- */
+  #status { left: 18px; top: 14px; width: 220px; }
+  #status .brand { color: var(--gold); font-weight: 700; letter-spacing: .12em; font-size: 12px; }
+  #status .hp { font-weight: 600; font-size: 15px; margin-top: 6px; }
+  .bar { height: 9px; border-radius: 6px; background: rgba(0,0,0,.45); overflow: hidden; margin-top: 4px; border: 1px solid rgba(255,255,255,.06); }
+  .bar > i { display: block; height: 100%; width: 100%; transform-origin: left; transition: transform .12s linear; }
+  #hpbar > i { background: var(--peach); }
+  #xpbar > i { background: var(--teal); }
+  #xpbar { height: 6px; margin-top: 6px; }
+  #status .row { font-size: 11px; color: var(--muted); margin-top: 6px; letter-spacing: .04em; text-transform: uppercase; }
+  #status .row b { color: var(--ink); font-weight: 600; }
+  #status .row.shards { color: var(--peach); font-weight: 600; }
+  #status .pill { margin-top: 10px; }
+  /* ---------- top-center ---------- */
+  #topc { left: 50%; top: 14px; transform: translateX(-50%); text-align: center; }
+  #timer { font-size: 18px; font-weight: 600; letter-spacing: .04em; text-shadow: 0 2px 8px rgba(0,0,0,.6); }
+  #sub { font-size: 12px; color: var(--muted); margin-top: 2px; text-shadow: 0 2px 6px rgba(0,0,0,.6); }
+  #banner { margin-top: 26px; font-family: Fraunces, Georgia, serif; font-size: 18px; color: var(--gold); text-shadow: 0 2px 10px rgba(0,0,0,.7); opacity: 0; transition: opacity .6s; white-space: nowrap; }
+  #banner.show { opacity: 1; }
+  #guide { margin: 14px auto 0; max-width: 420px; background: rgba(46,32,66,.88); border: 1px solid rgba(247,195,154,.45); border-radius: 12px; padding: 9px 14px; font-size: 13px; color: var(--ink); opacity: 0; transform: translateY(-6px); transition: opacity .35s, transform .35s; pointer-events: none; }
+  #guide.show { opacity: 1; transform: none; }
+  #guide::before { content: '✦ '; color: var(--peach); }
+  #deathReview { margin: 6px 0 10px; }
+  #deathReview .sub { margin-bottom: 6px; }
+  #deathLine { font-size: 14px; color: var(--ink); }
+  #deathTop { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  #deathCurve { display: block; width: 100%; height: 64px; margin-top: 8px; background: rgba(0,0,0,.25); border-radius: 8px; }
+  #boss { margin-top: 10px; width: 380px; display: none; }
+  #boss.show { display: block; }
+  #boss .name { font-size: 12px; letter-spacing: .18em; color: #ff9a6a; font-weight: 700; }
+  #bossbar { height: 8px; margin-top: 4px; }
+  #bossbar > i { background: linear-gradient(90deg, #ff6a3d, #ffb347); }
+  /* ---------- top-right ---------- */
+  #topr { right: 18px; top: 14px; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+  #topr .btns { display: flex; gap: 8px; }
+  #minimap { width: 150px; height: 150px; border-radius: 16px; background: rgba(20, 14, 30, .85); border: 1px solid var(--line); box-shadow: 0 6px 20px rgba(0,0,0,.35); }
+  /* ---------- bottom-left weapon ---------- */
+  #weapon { left: 18px; bottom: 18px; display: flex; align-items: flex-end; gap: 12px; }
+  #wcard { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; backdrop-filter: blur(6px); min-width: 160px; }
+  #wcard .name { color: var(--gold); font-weight: 700; letter-spacing: .08em; font-size: 13px; }
+  #wcard .keys { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  #wcard .keys b { color: var(--ink); font-weight: 600; }
+  /* ---------- bottom-center weather ---------- */
+  #weather { left: 50%; bottom: 18px; transform: translateX(-50%); text-align: center; }
+  #weather .label { font-size: 10px; letter-spacing: .22em; color: var(--muted); text-transform: uppercase; margin-bottom: 6px; text-shadow: 0 1px 4px rgba(0,0,0,.6); }
+  #weather .btns { display: flex; gap: 8px; justify-content: center; }
+  #forgeHint { position: absolute; left: 50%; bottom: 84px; transform: translateX(-50%); display: none; }
+  #forgeHint.show { display: inline-flex; }
+  #shrineHint { position: absolute; left: 50%; bottom: 84px; transform: translateX(-50%); display: none; }
+  #shrineHint.show { display: inline-flex; }
+  #shrine { margin-top: 10px; width: 300px; display: none; }
+  #shrine.show { display: block; }
+  #shrine .name { font-size: 12px; letter-spacing: .18em; color: var(--teal); font-weight: 700; }
+  #mini { margin-top: 8px; width: 300px; display: none; } #mini.show { display: block; }
+  #mini .name { font-size: 11px; letter-spacing: .18em; color: #c48aff; font-weight: 700; }
+  #minibar { height: 6px; margin-top: 4px; } #minibar > i { background: linear-gradient(90deg, #8a5cff, #c48aff); }
+  .bestiary { display: flex; gap: 8px; flex-wrap: wrap; }
+  .bb { font-size: 12px; padding: 5px 10px; border-radius: 10px; border: 1px solid var(--line); color: var(--muted); }
+  .bb.on { color: #d9b8ff; border-color: rgba(196,138,255,.5); background: rgba(196,138,255,.08); }
+  #shrineBar { height: 7px; margin-top: 4px; } #shrineBar > i { background: linear-gradient(90deg, #6fd6c5, #ffd08a); }
+  .pickrow { display: flex; align-items: center; gap: 12px; margin: 0 0 8px; }
+  .plabel { font-size: 11px; letter-spacing: .2em; color: var(--muted); text-transform: uppercase; min-width: 88px; }
+  .picks { display: flex; gap: 6px; flex-wrap: wrap; }
+  .dp { pointer-events: auto; background: var(--panel); border: 1px solid var(--line); color: var(--muted); border-radius: 10px; padding: 6px 12px; font: inherit; font-size: 13px; cursor: pointer; }
+  .dp.on { color: var(--ink); border-color: rgba(247,195,154,.6); background: rgba(247,195,154,.14); }
+  .pdesc { color: var(--muted); font-size: 12px; margin: -2px 0 12px 100px; min-height: 16px; }
+  .dbadges { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+  .dbadge { font-size: 12px; color: var(--muted); background: rgba(255,255,255,.04); border-radius: 10px; padding: 6px 10px; }
+  .dbadge b { color: var(--peach); margin-right: 6px; }
+  /* ---------- bottom-right ---------- */
+  #botr { right: 18px; bottom: 18px; text-align: right; font-size: 13px; text-shadow: 0 2px 6px rgba(0,0,0,.6); }
+  #botr div { margin-top: 4px; }
+  #botr b { color: var(--peach); font-weight: 700; margin-right: 6px; }
+  #botr .ready { color: var(--ink); }
+  #botr .cd { color: var(--muted); }
+  #botr .stat { font-size: 11px; color: var(--muted); letter-spacing: .04em; }
+  /* ---------- floating damage numbers ---------- */
+  .dmg { position: absolute; left: 0; top: 0; pointer-events: none; font-weight: 700; font-size: 14px; color: #ffd9a0; text-shadow: 0 1px 3px rgba(0,0,0,.8); will-change: transform, opacity; transform: translate(-50%, -50%); display: none; }
+  .dmg.crit { color: #ffb347; font-size: 18px; }
+  .dmg.heal { color: #8ff0c8; }
+  .dmg.player { color: #ff8a7a; font-size: 16px; }
+  /* ---------- overlays ---------- */
+  .overlay { position: fixed; inset: 0; z-index: 10; display: none; pointer-events: auto; }
+  .overlay.show { display: block; }
+  #title { background: linear-gradient(90deg, rgba(20,14,30,.92) 0%, rgba(20,14,30,.75) 42%, rgba(20,14,30,0) 70%); }
+  #title .panel { position: absolute; left: 7vw; top: 50%; transform: translateY(-50%); max-width: 520px; }
+  .kicker { font-size: 11px; letter-spacing: .28em; color: var(--peach); text-transform: uppercase; }
+  h1 { font-family: Fraunces, Georgia, serif; font-weight: 600; font-size: clamp(56px, 7.5vw, 104px); line-height: .95; margin: 10px 0 18px; letter-spacing: -.01em; }
+  .lead { font-size: 22px; line-height: 1.3; font-weight: 500; }
+  .desc { color: var(--muted); font-size: 15px; line-height: 1.55; margin: 16px 0 22px; }
+  .btn { pointer-events: auto; display: inline-flex; align-items: center; justify-content: center; gap: 10px; background: var(--peach); color: #2a1a12; border: 0; border-radius: 12px; padding: 13px 26px; font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; min-width: 240px; }
+  .btn:hover { filter: brightness(1.06); }
+  .btn.ghost { background: var(--panel); color: var(--ink); border: 1px solid var(--line); font-weight: 600; }
+  .controls { margin-top: 22px; font-size: 12px; color: var(--muted); line-height: 1.9; }
+  .controls b { color: var(--ink); font-weight: 600; }
+  .controls .dot { margin: 0 8px; opacity: .5; }
+  .tiny { font-size: 10px; letter-spacing: .2em; color: var(--muted); text-transform: uppercase; margin-top: 18px; }
+  .center { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(12, 8, 20, .55); backdrop-filter: blur(4px); }
+  .modal { background: var(--panel2); border: 1px solid var(--line); border-radius: 18px; padding: 28px 30px; width: min(560px, 92vw); box-shadow: 0 30px 80px rgba(0,0,0,.5); }
+  .modal h2 { font-family: Fraunces, Georgia, serif; font-weight: 600; font-size: 30px; margin: 0 0 6px; color: var(--gold); }
+  .modal .sub { color: var(--muted); font-size: 13px; margin-bottom: 18px; }
+  .choice { display: block; width: 100%; text-align: left; background: rgba(255,255,255,.05); border: 1px solid var(--line); color: var(--ink); border-radius: 12px; padding: 12px 16px; margin-top: 10px; font: inherit; cursor: pointer; }
+  .choice:hover, .choice:focus-visible { background: rgba(247, 195, 154, .14); border-color: rgba(247,195,154,.5); outline: none; }
+  .choice .t { font-weight: 700; font-size: 14px; }
+  .choice .t small { color: var(--muted); font-weight: 500; margin-left: 8px; }
+  .choice .d { color: var(--muted); font-size: 13px; margin-top: 3px; }
+  .choice.disabled { opacity: .45; cursor: default; }
+  .choice.rare { border-color: rgba(111,214,197,.45); }
+  .choice.keystone { border-color: rgba(233,196,106,.7); background: rgba(233,196,106,.07); }
+  .choice .t em { font-style: normal; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; margin-left: 10px; color: var(--teal); }
+  .choice.keystone .t em { color: var(--gold); }
+  .modal .actions { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+  .modal .actions .btn { min-width: 0; padding: 10px 18px; font-size: 14px; }
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 18px; margin: 14px 0 6px; font-size: 14px; }
+  .stats b { color: var(--peach); }
+  .track { display: grid; grid-template-columns: 90px 1fr auto; align-items: center; gap: 12px; margin-top: 10px; padding: 10px 12px; background: rgba(255,255,255,.04); border-radius: 12px; }
+  .track .k { font-weight: 700; letter-spacing: .12em; font-size: 12px; color: var(--gold); }
+  .track .d { font-size: 13px; color: var(--muted); }
+  .track .d b { color: var(--ink); }
+  .track .pips { display: inline-flex; gap: 4px; margin-left: 8px; vertical-align: middle; }
+  .track .pips i { width: 10px; height: 10px; border-radius: 3px; background: rgba(255,255,255,.12); display: inline-block; }
+  .track .pips i.on { background: var(--teal); }
+  .track .btn { min-width: 0; padding: 8px 14px; font-size: 13px; }
+  .track .btn:disabled { opacity: .4; cursor: default; filter: none; }
+  #stick { position: absolute; width: 120px; height: 120px; border-radius: 50%; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.18); display: none; pointer-events: none; }
+  #stickKnob { position: absolute; left: 35px; top: 35px; width: 50px; height: 50px; border-radius: 50%; background: rgba(247,195,154,.7); }
+  #touchBtns { position: absolute; right: 14px; bottom: 110px; display: none; flex-direction: column; gap: 10px; align-items: flex-end; }
+  .tbtn { pointer-events: auto; width: 68px; height: 68px; border-radius: 50%; border: 1px solid rgba(255,255,255,.2); background: rgba(46,32,66,.8); color: var(--ink); font: inherit; font-size: 12px; font-weight: 700; }
+  body.touch #touchBtns { display: flex; }
+  body.touch #weapon, body.touch #botr { display: none; }
+  .tbtn.cd { opacity: .38; }
+  .tbtn.hot { box-shadow: 0 0 0 2px rgba(247,195,154,.7); }
+  #padHint { position: absolute; left: 50%; top: 52px; transform: translateX(-50%); font-size: 11px; color: var(--muted); letter-spacing: .08em; display: none; }
+  body.pad #padHint { display: block; }
+  #lowToast { position: fixed; left: 50%; bottom: 96px; transform: translateX(-50%); z-index: 8; background: rgba(46,32,66,.92); border: 1px solid var(--line); color: var(--ink); padding: 8px 14px; border-radius: 12px; font-size: 13px; display: none; }
+  body.touch #botr { bottom: 20px; right: 14px; }
+  body.touch.title #touchBtns { display: none; }
+  .statrow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 6px 0 14px; }
+  .statrow .stat { background: rgba(255,255,255,.04); border-radius: 12px; padding: 10px 12px; }
+  .statrow .stat b { display: block; font-size: 22px; color: var(--peach); font-variant-numeric: tabular-nums; }
+  .statrow .stat span { font-size: 11px; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+  .achgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .ach { border: 1px solid var(--line); border-radius: 12px; padding: 12px; opacity: .55; }
+  .ach.on { opacity: 1; border-color: rgba(111,214,197,.5); background: rgba(111,214,197,.06); }
+  .ach .t { font-weight: 700; font-size: 14px; }
+  .ach .d { color: var(--muted); font-size: 12px; margin-top: 4px; }
+  .ach .g { color: var(--teal); font-size: 12px; margin-top: 8px; }
+  .ach:not(.on) .g { color: var(--muted); }
+  table.runs { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+  table.runs td { padding: 6px 4px; border-top: 1px solid var(--line); color: var(--muted); }
+  table.runs td:first-child { color: var(--ink); font-weight: 600; }
+  .unlock { margin-top: 10px; padding: 10px 14px; border-radius: 12px; background: rgba(111,214,197,.1); border: 1px solid rgba(111,214,197,.4); }
+  .unlock b { display: block; color: var(--teal); font-size: 13px; }
+  .unlock span { color: var(--muted); font-size: 13px; }
+  @media (max-width: 640px) { .statrow, .achgrid { grid-template-columns: 1fr 1fr; } }
+  .settings { display: grid; gap: 6px; }
+  .srow { display: grid; grid-template-columns: 1fr 70px auto; align-items: center; gap: 10px; padding: 6px 10px; background: rgba(255,255,255,.04); border-radius: 10px; font-size: 13px; }
+  .srow .k { color: var(--muted); }
+  .srow .v { font-weight: 700; }
+  .srow .btn { min-width: 0; padding: 6px 12px; font-size: 12px; }
+  .srow input[type=range] { grid-column: 2 / 4; width: 100%; accent-color: var(--peach); }
+  body.zh { font-family: "Source Sans 3", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", system-ui, sans-serif; }
+  body.zh h1, body.zh .modal h2, body.zh #banner { font-family: Fraunces, "Noto Serif CJK SC", "Songti SC", "SimSun", serif; }
+  #loading { position: fixed; inset: 0; z-index: 20; background: var(--bg); display: grid; place-items: center; text-align: center; }
+  #loading .t { font-family: Fraunces, Georgia, serif; font-size: 40px; color: var(--gold); }
+  #loading .bar { width: 240px; margin: 14px auto 0; }
+  #loading .bar > i { background: var(--peach); transform: scaleX(0); transition: transform .2s; }
+  #loading .s { color: var(--muted); font-size: 13px; margin-top: 10px; }
+  #about .modal p { color: var(--muted); font-size: 14px; line-height: 1.6; }
+  #about .modal p b { color: var(--ink); }
+  @media (max-width: 900px) { #status { width: 180px; } #minimap { width: 110px; height: 110px; } h1 { font-size: 56px; } #title .panel { left: 5vw; max-width: 80vw; } }
+  /* phone landscape: short viewport, keep only what matters */
+  @media (max-height: 520px) {
+    #status { width: 150px; top: 8px; left: 10px; } #status .brand { display: none; } #status .hp { font-size: 12px; margin-top: 0; }
+    #forgeText, #statText, #bestText, #status .pill { display: none; } #status .row { margin-top: 3px; font-size: 10px; }
+    #topc { top: 6px; } #timer { font-size: 14px; } #sub { font-size: 10px; } #banner { margin-top: 8px; font-size: 13px; white-space: normal; max-width: 60vw; }
+    #topr { top: 8px; right: 10px; gap: 6px; } #minimap { width: 78px; height: 78px; border-radius: 10px; } #topr .pill { padding: 4px 9px; font-size: 11px; }
+    #weather { bottom: 6px; } #weather .label { display: none; } #weather .pill { padding: 4px 9px; font-size: 11px; }
+    #botr { bottom: 8px; right: 10px; font-size: 11px; } #botr .stat { display: none; }
+    #touchBtns { bottom: 44px; right: 8px; gap: 6px; flex-direction: row; flex-wrap: wrap; width: 132px; justify-content: flex-end; }
+    .tbtn { width: 50px; height: 50px; font-size: 10px; }
+    #title .panel { transform: none; top: 8px; max-width: 70vw; } h1 { font-size: 34px; margin: 4px 0 6px; } .lead { font-size: 14px; } .desc { font-size: 12px; margin: 6px 0 10px; }
+    #title .controls, #title .tiny, .pdesc { display: none; } .pickrow { margin-bottom: 4px; } .btn { padding: 9px 16px; font-size: 13px; min-width: 0; }
+    .modal { padding: 14px 16px; max-height: 92vh; overflow-y: auto; } .modal h2 { font-size: 20px; margin-bottom: 2px; } .choice { padding: 8px 12px; margin-top: 6px; }
+  }
+  /* phone portrait */
+  @media (max-width: 520px) {
+    #status { width: 140px; } #forgeText, #statText, #bestText { display: none; } #status .pill { padding: 5px 10px; font-size: 11px; }
+    #timer { font-size: 15px; } #banner { font-size: 13px; white-space: normal; max-width: 90vw; margin-top: 10px; }
+    #minimap { width: 84px; height: 84px; } #topr .pill { padding: 4px 9px; font-size: 11px; }
+    #weather .pill { padding: 5px 9px; font-size: 11px; } #botr { font-size: 11px; }
+    h1 { font-size: 44px; } #title .panel { left: 5vw; right: 5vw; max-width: none; } .btn { min-width: 0; width: 100%; }
+    #title .controls, .pdesc { display: none; } .plabel { min-width: 0; }
+  }
+  /* ===== Lantern Dao · rice-paper / ink / cinnabar / gilt theme (X4) ===== */
+  :root { --paper: rgba(243,235,219,.94); --paper2: rgba(247,241,228,.98); --inkP: #1c1a1f; --mutedP: #6a6157; --cinnabar: #c8422b; --cinnabarD: #8f2d1f; --gilt: #9c7b24; --indigo: #2b4a5a; --lineP: rgba(28,26,31,.16); }
+  .pill, #wcard, #guide, .modal, .dp, .choice, .track, .srow, .statrow .stat, .ach, .unlock, .tbtn, #lowToast, #status, #botr, .dbadge {
+    background-color: var(--paper); color: var(--inkP); border-color: var(--lineP);
+    background-image: radial-gradient(rgba(60,40,20,.07) .6px, transparent 1.1px), linear-gradient(135deg, rgba(255,255,255,.35), rgba(120,90,40,.07));
+    background-size: 5px 5px, 100% 100%; box-shadow: 0 2px 10px rgba(0,0,0,.22);
+  }
+  .modal { background-color: var(--paper2); border: 1px solid rgba(156,123,36,.4); border-radius: 6px; box-shadow: 0 30px 80px rgba(0,0,0,.45), inset 0 0 0 4px rgba(247,241,228,1), inset 0 0 0 5px rgba(156,123,36,.35); }
+  .pill { border-radius: 6px; } .pill:hover { background-color: rgba(236,226,206,.98); } .pill b { color: var(--cinnabar); } .pill.on b { color: var(--indigo); }
+  #status { padding: 10px 12px; border-radius: 6px; width: 236px; }
+  #status .brand { color: var(--cinnabar); font-family: "Ma Shan Zheng", "STKaiti", "KaiTi", "Noto Serif SC", serif; font-size: 17px; letter-spacing: .32em; font-weight: 400; }
+  #status .hp { display: flex; align-items: baseline; gap: 8px; }
+  #status .hp .lbl { color: var(--cinnabar); font-size: 12px; letter-spacing: .2em; font-weight: 700; }
+  #status .row { color: var(--mutedP); text-transform: none; letter-spacing: .02em; } #status .row b { color: var(--inkP); } #status .row.shards { color: var(--gilt); }
+  .bar { background: rgba(28,26,31,.12); border-color: rgba(28,26,31,.08); }
+  #hpbar > i { background: linear-gradient(90deg, #c8422b, #e0653f); } #xpbar > i { background: linear-gradient(90deg, #2b4a5a, #3f8a7a); }
+  #bossbar > i { background: linear-gradient(90deg, #5a3fa0, #b28cff); } #boss .name { color: #c8a8ff; }
+  #shrineBar > i { background: linear-gradient(90deg, #3f8a7a, #d9b04a); } #shrine .name { color: #7fe0c8; } #mini .name { color: #c8a8ff; }
+  #timer { color: #f6efe2; } #sub, #weather .label { color: #e6dccb; }
+  #banner { color: #f2d27a; font-family: "Noto Serif SC", "STSong", "SimSun", Fraunces, serif; letter-spacing: .12em; }
+  #botr { padding: 8px 12px; border-radius: 6px; text-shadow: none; } #botr b { color: var(--cinnabar); } #botr .ready { color: var(--inkP); } #botr .cd, #botr .stat { color: var(--mutedP); }
+  #wcard { border-radius: 6px; } #wcard .name { color: var(--cinnabar); } #wcard .keys { color: var(--mutedP); } #wcard .keys b { color: var(--inkP); }
+  #guide { color: var(--inkP); border-color: rgba(200,66,43,.45); border-radius: 6px; } #guide::before { color: var(--cinnabar); }
+  #compass { position: relative; width: 150px; height: 150px; }
+  #minimap { width: 100%; height: 100%; border-radius: 50%; border: 3px double #b8922e; background: rgba(28,26,31,.82); box-shadow: 0 0 0 4px rgba(243,235,219,.92), 0 6px 20px rgba(0,0,0,.35); }
+  #compass span { position: absolute; font-size: 11px; color: var(--gilt); font-weight: 700; background: rgba(243,235,219,.96); border-radius: 50%; width: 18px; height: 18px; line-height: 18px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,.25); }
+  #compass .n { top: -8px; left: 50%; transform: translateX(-50%); } #compass .s { bottom: -8px; left: 50%; transform: translateX(-50%); }
+  #compass .e { right: -8px; top: 50%; transform: translateY(-50%); } #compass .w { left: -8px; top: 50%; transform: translateY(-50%); }
+  body.zh .modal h2, .modal h2 { color: var(--cinnabar); font-family: "Noto Serif SC", "STSong", "SimSun", Fraunces, serif; font-weight: 700; }
+  .modal .sub, .choice .d, .choice .t small, .track .d, .srow .k, .ach .d, table.runs td, .unlock span, .statrow .stat span, #about .modal p, .pdesc, .plabel { color: var(--mutedP); }
+  #about .modal p b, .stats, .track .d b, .ach .t, .srow .v, table.runs td:first-child, #deathLine { color: var(--inkP); }
+  .choice { background-color: rgba(255,255,255,.4); border-radius: 6px; } .choice:hover, .choice:focus-visible { background-color: rgba(200,66,43,.10); border-color: rgba(200,66,43,.5); }
+  .choice .t { color: var(--inkP); } .choice .t em { color: var(--indigo); } .choice.rare { border-color: rgba(43,74,90,.5); }
+  .choice.keystone { border-color: rgba(156,123,36,.7); background-color: rgba(217,176,74,.16); } .choice.keystone .t em { color: var(--gilt); }
+  .track { border-radius: 6px; } .track .k { color: var(--gilt); } .track .pips i { background: rgba(28,26,31,.12); } .track .pips i.on { background: var(--cinnabar); }
+  .stats b, .statrow .stat b, .dbadge b { color: var(--cinnabar); }
+  .ach { border-radius: 6px; } .ach.on { border-color: rgba(43,74,90,.5); background-color: rgba(63,138,122,.10); } .ach .g { color: var(--indigo); } .ach:not(.on) .g { color: var(--mutedP); }
+  table.runs td { border-color: var(--lineP); }
+  .unlock { background-color: rgba(63,138,122,.12); border-color: rgba(43,74,90,.4); border-radius: 6px; } .unlock b { color: var(--indigo); }
+  .srow { background-color: rgba(28,26,31,.05); border-radius: 6px; } .srow input[type=range] { accent-color: var(--cinnabar); }
+  .dp { color: var(--mutedP); border-radius: 6px; } .dp.on { color: var(--inkP); border-color: rgba(200,66,43,.6); background-color: rgba(200,66,43,.12); }
+  .bb { color: var(--mutedP); border-color: var(--lineP); } .bb.on { color: #4a2f8a; border-color: rgba(90,63,160,.5); background: rgba(90,63,160,.08); }
+  #deathCurve { background: rgba(28,26,31,.78); } #deathTop { color: var(--mutedP); }
+  .btn { background: var(--cinnabar); color: #fff7ea; border-radius: 6px; border: 1px solid var(--cinnabarD); box-shadow: inset 0 0 0 2px rgba(255,247,234,.35); }
+  .btn:hover { filter: brightness(1.08); }
+  .btn.ghost { background-color: var(--paper); color: var(--inkP); border: 1px solid var(--lineP); box-shadow: none; }
+  .btn:disabled, .track .btn:disabled { filter: none; }
+  #title { background: linear-gradient(90deg, rgba(243,235,219,.97) 0%, rgba(243,235,219,.93) 40%, rgba(243,235,219,0) 72%); }
+  #title .panel { color: var(--inkP); }
+  #title .kicker { color: var(--cinnabar); } #title .lead { color: var(--inkP); } #title .desc, #title .controls, #title .tiny { color: var(--mutedP); } #title .controls b { color: var(--inkP); }
+  h1 { color: var(--inkP); } #titleBest { color: var(--gilt) !important; }
+  #startBtn { font-family: "STKaiti", "KaiTi", "Noto Serif SC", serif; font-size: 18px; letter-spacing: .18em; padding: 14px 30px; }
+  @media (min-height: 560px) and (min-width: 700px) {
+    body.zh #title h1 { writing-mode: vertical-rl; float: left; height: 440px; margin: 0 34px 8px 0; font-size: 80px; line-height: 1; letter-spacing: .14em; padding: 16px 8px 16px 6px; border-left: 3px double var(--cinnabar); }
+    body.zh #title .panel { width: min(680px, 86vw); max-width: none; }
+  }
+  #loading { background: #1c1a1f; } #loading .t { color: #e9c46a; } #loading .s { color: #b9afc4; }
+  .tbtn { color: var(--inkP); border-color: var(--lineP); }
+  #stickKnob { background: rgba(200,66,43,.65); }
+  @media (max-height: 520px) { #status { padding: 6px 8px; } #botr { padding: 5px 8px; } #compass { width: 78px; height: 78px; } #compass span { display: none; } }
+  @media (max-width: 520px) { #compass { width: 84px; height: 84px; } #compass span { display: none; } }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="vignette"></div>
+<div id="hurt"></div>
+<div id="flash"></div>
+
+<div id="ui">
+  <div id="status" class="hud">
+    <div class="brand">LANTERN DAO</div>
+    <div class="hp"><span class="lbl" id="hpLbl">HP</span><span id="hpText">100 / 100</span></div>
+    <div class="bar" id="hpbar"><i></i></div>
+    <div class="bar" id="xpbar"><i></i></div>
+    <div class="row"><b id="lvlText">Level 01</b> · <span id="xpText">0 / 12 XP</span></div>
+    <div class="row shards"><span id="shardText">0 forge shards</span></div>
+    <div class="row" id="forgeText">Edge 0 / 3 · Mail 0 / 3 · Charm 0 / 3</div>
+    <div class="row" id="statText">Damage ×1.00 · Armour 0%</div>
+    <div class="row" id="bestText">Best 00:00 · 0 kills</div>
+    <button class="pill on" id="autoBtn"><b>Tab</b> Auto attack ON</button>
+  </div>
+
+  <div id="topc" class="hud">
+    <div id="timer">00:00 / 10:00</div>
+    <div id="sub">The Hearth · Threat 01 · 0 enemies</div>
+    <div id="banner"></div>
+    <div id="guide"></div>
+    <div id="boss"><div class="name">THE ASH WARDEN</div><div class="bar" id="bossbar"><i></i></div></div>
+  <div id="shrine"><div class="name">SHRINE</div><div class="bar" id="shrineBar"><i></i></div></div>
+  <div id="mini"><div class="name">ELITE</div><div class="bar" id="minibar"><i></i></div></div>
+  </div>
+
+  <div id="topr" class="hud">
+    <div class="btns"><button class="pill" id="soundBtn">Sound</button><button class="pill" id="pauseBtn">Pause</button></div>
+    <div id="compass"><canvas id="minimap" width="300" height="300"></canvas><span class="n">N</span><span class="e">E</span><span class="s">S</span><span class="w">W</span></div>
+  </div>
+
+  <div id="weapon" class="hud">
+    <div id="wcard"><div class="name" id="wName">EMBER CRESCENT</div><div class="keys"><b>LMB / J</b> Attack &nbsp; <b>RMB / K</b> Heavy</div></div>
+    <button class="pill" id="swapBtn"><b>Q</b> Swap artefact</button>
+  </div>
+
+  <div id="weather" class="hud">
+    <div class="label">The living valley</div>
+    <div class="btns">
+      <button class="pill" id="todBtn"><b>T</b> <span>Day</span></button>
+      <button class="pill" id="wxBtn"><b>R</b> <span>Clear</span></button>
+      <button class="pill" id="autoWxBtn"><b>Y</b> <span>Auto</span></button>
+    </div>
+  </div>
+  <button class="pill" id="forgeHint"><b>F</b> Enter the refinery</button>
+  <button class="pill" id="shrineHint"><b>F</b> Set the array</button>
+
+  <div id="botr" class="hud">
+    <div id="dashText"><b>SPACE</b><span class="ready">Dash ready</span></div>
+    <div id="novaText"><b>E</b><span class="ready">Ember nova ready</span></div>
+    <div class="stat" id="killText">0 defeated · 0 elites</div>
+  </div>
+  <div id="dmgLayer"></div>
+  <div id="padHint">🎮 Gamepad connected</div>
+  <div id="stick"><div id="stickKnob"></div></div>
+  <div id="touchBtns">
+    <button class="tbtn" id="tHeavy">Heavy</button><button class="tbtn" id="tDash">Dash</button><button class="tbtn" id="tNova">Nova</button><button class="tbtn" id="tSwap">Swap</button><button class="tbtn" id="tForge">Forge</button>
+  </div>
+</div>
+
+<!-- title -->
+<div id="title" class="overlay show">
+  <div class="panel">
+    <div class="kicker">Keep one lamp. Outlast one tribulation.</div>
+    <h1>Lantern Dao.</h1>
+    <div class="lead">A hidden valley. A tribulation coming.<br>One lamp, one cultivator.</div>
+    <div class="desc">Walk five domains. Gather spirit stones.<br>Refine your artefacts. Face the Tribulation Lord.<br>Hold out ten minutes — then walk the endless Dao.</div>
+    <div class="pickrow"><span class="plabel" id="diffLabel">Difficulty</span><div class="picks" id="diffPick"><button class="dp" data-d="calm"><span class="n">Serene</span></button><button class="dp on" data-d="standard"><span class="n">Cultivate</span></button><button class="dp" data-d="ash"><span class="n">Tribulation</span></button></div></div>
+    <div class="pdesc" id="diffDesc"></div>
+    <div class="pickrow" id="weaponRow"><span class="plabel" id="weaponLabel">Starting weapon</span><div class="picks" id="weaponPick" style="display:none"></div></div>
+    <button class="btn" id="startBtn">Enter the valley &nbsp;→</button>
+    <div class="controls">
+      <b>WASD</b> Move <span class="dot">•</span> <b>Mouse</b> Aim <span class="dot">•</span> <b>Auto attack on</b> <span class="dot">•</span> <b>Right click / K</b> Heavy<br>
+      <b>Space</b> Cloud step <span class="dot">•</span> <b>E</b> Spirit burst <span class="dot">•</span> <b>Q</b> Swap artefact<br>
+      <b>F</b> Refinery <span class="dot">•</span> <b>Tab</b> Auto / manual <span class="dot">•</span> <b>Esc</b> Pause<br>
+      <b>Scroll</b> Zoom <span class="dot">•</span> <b>F4</b> Hide interface
+    </div>
+    <div class="tiny">Keep the lamp / Break through / Refine</div>
+    <div class="tiny" id="titleBest" style="color:var(--peach);letter-spacing:.08em;text-transform:none;margin-top:8px"></div>
+    <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap"><button class="btn ghost" id="archiveBtn" style="min-width:0;padding:10px 22px">Dao archive</button><button class="btn ghost" id="aboutBtn" style="min-width:0;padding:10px 22px">About</button></div>
+  </div>
+</div>
+
+<div id="about" class="overlay"><div class="center"><div class="modal">
+  <h2>About Lantern Dao</h2>
+  <p>A small survivors-like set in a valley that keeps its own weather. Every building, tree, ruin and creature was modelled headlessly in <b>Blender</b> from primitives and shipped as one 1.8&nbsp;MB kit; the world, the crowds and the light are assembled at runtime in <b>three.js</b>.</p>
+  <p><b>The loop.</b> Demons born of sha pour in from the mist. Cut them down, gather the spirit stones they drop, and choose a technique at every breakthrough. Spirit crystals buy permanent refinements at the refinery in the Gate Market. Thirty seconds before the eighth minute the sky closes in; then the Tribulation Lord descends. Hold out ten minutes and the clouds part.</p>
+  <p><b>Districts.</b> The Hearth, The Wildwood, Mossfall Ruins, Cinder Barrow, Silvermere Shore. Each favours different enemies.</p>
+  <p><b>Lantern Dao</b> is the xianxia re-skin of <b>Emberlight</b>, itself inspired by 歸藏's GPT-6 Astra + Blender + Godot original. Every building, tree and demon was modelled headlessly in Blender 5.2 from primitives; the valley, the crowds, the weather and the tribulation run in three.js r184, and every sound is synthesised in WebAudio.</p>
+  <div class="actions"><button class="btn" id="aboutClose">Back</button></div>
+</div></div></div>
+
+<div id="archive" class="overlay"><div class="center"><div class="modal" style="width:min(640px,94vw)">
+  <h2>The Dao Archive</h2>
+  <div class="sub">What the valley remembers of you. Kept on this device.</div>
+  <div id="archiveBody"></div>
+  <div class="actions"><button class="btn" id="archiveClose">Back</button></div>
+</div></div></div>
+
+<div id="levelup" class="overlay"><div class="center"><div class="modal">
+  <h2 id="luTitle">Level 02. A brighter spark.</h2>
+  <div class="sub" id="luSub">Choose a talent. Your run is paused. &nbsp;[ 1 / 2 / 3 ]</div>
+  <div id="luChoices"></div>
+</div></div></div>
+
+<div id="forge" class="overlay"><div class="center"><div class="modal">
+  <h2>The Refinery</h2>
+  <div class="sub">Spend forge shards on permanent upgrades. &nbsp;<span id="forgeShards">0 shards</span></div>
+  <div id="forgeTracks"></div>
+  <div class="actions"><button class="btn ghost" id="forgeRest">Rest by the furnace — heal to full (5 crystals)</button><button class="btn" id="forgeClose">Leave &nbsp;(F / Esc)</button></div>
+</div></div></div>
+
+<div id="pause" class="overlay"><div class="center"><div class="modal">
+  <h2>Paused</h2>
+  <div class="sub">The valley waits.</div>
+  <div class="stats" id="pauseStats"></div>
+  <div class="sub" id="settingsTitle" style="margin:16px 0 4px">Settings</div>
+  <div class="settings">
+    <div class="srow" id="setQuality"><span class="k">Quality</span><span class="v">High</span><button class="btn ghost">Toggle</button></div>
+    <div class="srow" id="setShake"><span class="k">Screen shake</span><span class="v">On</span><button class="btn ghost">Toggle</button></div>
+    <div class="srow" id="setNumbers"><span class="k">Damage numbers</span><span class="v">On</span><button class="btn ghost">Toggle</button></div>
+    <div class="srow" id="setMusic"><span class="k">Music</span><input type="range" min="0" max="100" value="56"></div>
+    <div class="srow" id="setSfx"><span class="k">Sound effects</span><input type="range" min="0" max="100" value="69"></div>
+    <div class="srow" id="setLang"><span class="k">Language / 语言</span><span class="v">English</span><button class="btn ghost">Toggle</button></div>
+    <div class="srow" id="setCues"><span class="k">Colour-blind cues (shapes + contrast)</span><span class="v">Off</span><button class="btn ghost">Toggle</button></div>
+  </div>
+  <div class="actions"><button class="btn" id="resumeBtn">Resume &nbsp;(Esc)</button><button class="btn ghost" id="quitBtn">Back to title</button><button class="btn ghost" id="diagBtn" style="min-width:0">Copy diagnostics</button></div>
+</div></div></div>
+
+<div id="end" class="overlay"><div class="center"><div class="modal">
+  <h2 id="endTitle">The light went out.</h2>
+  <div class="sub" id="endSub"></div>
+  <div class="stats" id="endStats"></div>
+  <div id="deathReview" style="display:none"><div class="sub" id="deathReviewLabel">Post-mortem</div><div id="deathLine"></div><div id="deathTop"></div><canvas id="deathCurve" width="480" height="64"></canvas></div>
+  <div id="endUnlocks"></div>
+  <div class="actions"><button class="btn" id="endPrimary">Try again</button><button class="btn ghost" id="endSecondary">Back to title</button></div>
+</div></div></div>
+
+<div id="loading"><div><div class="t">灯下问道</div><div class="bar"><i id="loadBar"></i></div><div class="s" id="loadText">唤醒灵谷…</div></div></div>
+<div id="fatal" class="overlay"><div class="center"><div class="modal"><h2 id="fatalTitle">Something went wrong</h2><p id="fatalText" style="color:var(--muted);font-size:14px;line-height:1.6"></p><div class="actions"><button class="btn" onclick="location.reload()">Reload</button></div></div></div></div>
+<div id="lowToast"></div>
+<div id="errToast" style="position:fixed;left:12px;bottom:12px;z-index:30;display:none;background:rgba(120,30,40,.92);color:#fff;font:12px 'Source Sans 3',system-ui,sans-serif;padding:8px 12px;border-radius:10px;max-width:60vw"></div>
+<script>
+  // boot guard + diagnostics ring buffer: plain script so it runs even when the module graph fails to load
+  window.__emberLogs = [];
+  window.__emberLog = function (kind, msg) { const L = window.__emberLogs; L.push(new Date().toISOString().slice(11, 19) + ' ' + kind + ' ' + String(msg).slice(0, 300)); if (L.length > 20) L.shift(); };
+  window.__emberFatal = function (title, text) { const f = document.getElementById('fatal'); if (!f) return; document.getElementById('fatalTitle').textContent = title; document.getElementById('fatalText').textContent = text; f.classList.add('show'); const l = document.getElementById('loading'); if (l) l.style.display = 'none'; };
+  window.addEventListener('error', function (e) { window.__emberLog('error', (e.message || e) + (e.filename ? ' @' + e.filename.split('/').pop() + ':' + e.lineno : '')); const t = document.getElementById('errToast'); if (t && window.__emberBooted) { t.textContent = (document.documentElement.lang === 'zh-CN' ? '出错了,已记录。暂停菜单里可复制诊断信息。' : 'Something broke and was logged. Copy diagnostics from the pause menu.'); t.style.display = 'block'; clearTimeout(t._h); t._h = setTimeout(function () { t.style.display = 'none'; }, 6000); } });
+  window.addEventListener('unhandledrejection', function (e) { window.__emberLog('promise', e.reason && (e.reason.message || e.reason)); });
+  (function () {
+    var c = document.createElement('canvas'); var gl = null;
+    try { gl = c.getContext('webgl2'); } catch (err) { gl = null; }
+    if (!gl) { window.__emberNoWebGL = true; window.__emberFatal('This browser cannot run Lantern Dao', 'WebGL 2 is not available here. Try a current Chrome, Edge, Firefox or Safari, and make sure hardware acceleration is switched on. / 当前浏览器没有 WebGL 2,请换用新版 Chrome / Edge / Firefox / Safari,并确认已开启硬件加速。'); }
+  })();
+  setTimeout(function () {
+    if (!window.__emberBooted && !window.__emberNoWebGL) window.__emberFatal('Still loading…', 'The game engine (three.js from cdn.jsdelivr.net) has not loaded after 20 seconds. Check your connection or a blocked CDN, then reload. The single-file download of Lantern Dao plays offline. / 游戏引擎(three.js,来自 cdn.jsdelivr.net)20 秒内没加载完,可能是网络或 CDN 被拦。请检查网络后重载;单文件版可离线游玩。');
+  }, 20000);
+</script>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.184.0/examples/jsm/"
+  }
+}
+</script>
+<script type="module" src="./main.js"></script>
+</body>
+</html>
