@@ -1990,9 +1990,9 @@ function buildWorld() {
   pickupSets.shard = new DynSet(kit, 'Shard', 200, scene, { cast: false, glowKey: 'ShardCrystal' });
   pickupSets.heart = new DynSet(kit, 'Heart', 40, scene, { cast: false, glowKey: 'HeartGlow' });
   craneSet = new DynSet(kit, 'Crane', 8, scene, { cast: false, outline: 0 });
-  jingweiSet = new DynSet(kit, 'Jingwei', 4, scene, { cast: false, outline: 0 });
+  jingweiSet = new DynSet(kit, 'Jingwei', 8, scene, { cast: false, outline: 0 });
   dangkangSet = new DynSet(kit, 'Dangkang', 2, scene, { cast: true, outline: 0 });
-  FX.jingwei = []; { const jw = (world.landmarks || []).find((l) => l.kind === 'jingwei'); const D = DISTRICTS[2]; const from = jw ? { x: jw.x, z: jw.z } : { x: D.cx + 18, z: D.cz - 18 }; const fl = Math.hypot(from.x, from.z) || 1, to = { x: from.x / fl * (ISLAND_R + 9), z: from.z / fl * (ISLAND_R + 9) }; /* 常衔西山之木石,以堙于东海: out over the cloud sea and back */ for (let i = 0; i < 3; i++) FX.jingwei.push({ from, to, t: i / 3, dir: 1, h: 6 + i * 0.8, ph: i * 2.1 }); }
+  FX.jingwei = []; { const jw = (world.landmarks || []).find((l) => l.kind === 'jingwei'); const D = DISTRICTS[2]; const from = jw ? { x: jw.x, z: jw.z } : { x: D.cx + 18, z: D.cz - 18 }; const fl = Math.hypot(from.x, from.z) || 1, to = { x: from.x / fl * (ISLAND_R + 9), z: from.z / fl * (ISLAND_R + 9) }; /* 常衔西山之木石,以堙于东海: out over the cloud sea and back */ const nj = 3 + Math.min(4, META.jingweiStones || 0); for (let i = 0; i < nj; i++) FX.jingwei.push({ from, to, t: i / nj, dir: 1, h: 6 + (i % 4) * 0.8, ph: i * 2.1 }); }
   FX.cranes = []; for (let i = 0; i < 6; i++) FX.cranes.push({ a: i / 6 * Math.PI * 2, r: 10 + (i % 3) * 4, h: 7 + (i % 2) * 1.5, spd: 0.12 + (i % 3) * 0.02, ph: i * 1.3 }); FX.craneC = { x: 0, z: 0 };
   boltSet = new DynSet(kit, 'Ember', 200, scene, { cast: false, glowKey: 'Bolt', glowMat: new THREE.MeshBasicMaterial({ color: 0xffb060, toneMapped: false }) });
   spitSet = new DynSet(kit, 'Ember', 120, scene, { cast: false, glowKey: 'Spit', glowMat: new THREE.MeshBasicMaterial({ color: 0xff5a2a, toneMapped: false }) });
@@ -2451,7 +2451,7 @@ function onAction(a) {
     case 'dash': tryDash(); break;
     case 'nova': tryNova(); break;
     case 'swap': P.weapon = (P.weapon + 1) % WEAPONS.length; P.attackT = Math.min(P.attackT, 0.2); refreshWeaponCard(); AUDIO.sfx('ui'); break;
-    case 'forge': if (nearForge()) openForge(); else if (nearJingweiPile() && !S.jwQuest) startJingweiErrand(); else if (nearDitai()) playDitai(); else { const ns = nearShrine(); if (ns && ns.state === 'done' && !S.shrineActive) travelVein(ns); else if (!ns && nearWellVein()) travelVein(null); else lightShrine(ns); } break;
+    case 'forge': if (nearForge()) openForge(); else if (nearJingweiPile() && !S.jwQuest) startJingweiErrand(); else if (nearDitai()) playDitai(); else if (nearWuluo()) prayWuluo(); else { const ns = nearShrine(); if (ns && ns.state === 'done' && !S.shrineActive) travelVein(ns); else if (!ns && nearWellVein()) travelVein(null); else lightShrine(ns); } break;
     case 'heavy': tryHeavy(); break;
     case 'auto': P.auto = !P.auto; refreshAutoBtn(); AUDIO.sfx('ui'); break;
     case 'pause': togglePause(); break;
@@ -2623,7 +2623,7 @@ function showBanner(text, secs = 4) { const b = $('#banner'); b.textContent = tr
 // =====================================================================
 function startRun() {
   P = newPlayer();
-  S.phase = 'run'; S.paused = false; S.modal = null; S.t = 0; S.endless = false; S.tribK = 0; S.tribWarned = false; S.tide = null; S.omens = {}; S.omenK = {}; S.omenCd = {}; S.omenClock = 0; S.omenTick = 0; S.dangkang = null; S.fusangLm = null; S.fusangSeen = false; S.fusangT = 0; S.jwQuest = null; S.jwDone = 0; S.danceOn = false; S.tenSuns = false; S.devourSeen = false; S.qiCd = 0; S.cursedT = 0; S.curseSeen = false;
+  S.phase = 'run'; S.paused = false; S.modal = null; S.t = 0; S.endless = false; S.tribK = 0; S.tribWarned = false; S.tide = null; S.omens = {}; S.omenK = {}; S.omenCd = {}; S.omenClock = 0; S.omenTick = 0; S.dangkang = null; S.fusangLm = null; S.fusangSeen = false; S.fusangT = 0; S.jwQuest = null; S.jwDone = 0; S.danceOn = false; S.tenSuns = false; S.devourSeen = false; S.qiCd = 0; S.cursedT = 0; S.curseSeen = false; S.wuluoCd = 0;
   S.recorded = false;
   S.enemies.length = 0; S.pickups.length = 0; S.projectiles.length = 0; S.eprojectiles.length = 0; S.burns.length = 0; S.timers.length = 0;
   for (const m of S.slashes) scene.remove(m); S.slashes.length = 0;
@@ -2745,6 +2745,20 @@ function startJingweiErrand() {
 }
 // 帝台之棋 (高前之山 / 中次七经): 五色而文,其状如鹑卵. Five grains buys a cast of the stones; the answer comes as fortune, great fortune, or ill omen
 const DITAI = { x: -5.6, z: -3.4 };
+const WULUO = { x: -2.6, z: 2.4 };
+function nearWuluo() { return S.phase === 'run' && Math.hypot(P.x - WULUO.x, P.z - WULUO.z) < 3.2; }
+function prayWuluo() {
+  // 其神状人面而豹文,小要而白齿 - the keeper of the secret capital grants twenty breaths of peace, at a price, once every two minutes
+  const zh = SET.lang === 'zh';
+  if ((S.wuluoCd || 0) > 0) { showBanner(zh ? '武罗 · 神不再应,稍候' : 'WULUO  ·  the god does not answer twice so soon', 2.5); return; }
+  if (P.shards < 8) { showBanner(zh ? '武罗之祝 · 需 8 丹粟' : "WULUO'S BLESSING  ·  eight cinnabar grains", 2.5); AUDIO.sfx('ui'); return; }
+  P.shards -= 8; S.wuluoCd = 120; S.stats.wuluo = (S.stats.wuluo || 0) + 1;
+  S.omens.calm = Math.max(S.omens.calm || 0, 20); S.omenCd.calm = Math.max(S.omenCd.calm || 0, 60); S.stats.omens = (S.stats.omens || 0) + 1;
+  META.omens = META.omens || {}; if (!META.omens.calm) { META.omens.calm = 1; saveMeta(); }
+  spawnRing(WULUO.x, WULUO.z, 12, 0xf0d8c8, 1.2, 0.1); burstParticles(WULUO.x, 1.5, WULUO.z, 60, [1, 0.8, 0.7], 6, 0.5, 1.0, -1); AUDIO.sfx('district'); AUDIO.sfx('win', 0.2);
+  for (const e of S.enemies) if (!e.dying && Math.hypot(e.x - WULUO.x, e.z - WULUO.z) < 12) { const d = Math.hypot(e.x - WULUO.x, e.z - WULUO.z) || 1; e.kx += (e.x - WULUO.x) / d * 14; e.kz += (e.z - WULUO.z) / d * 14; e.stun = Math.max(e.stun || 0, 1.2); }
+  showBanner(zh ? '武罗司之 · 密都安宁二十息,妖邪却步' : 'WULUO KEEPS THE CAPITAL  ·  twenty breaths of peace; the beasts fall back', 4.5);
+}
 function nearDitai() { return S.phase === 'run' && Math.hypot(P.x - DITAI.x, P.z - DITAI.z) < 3.4; }
 function playDitai() {
   const zh = SET.lang === 'zh';
@@ -3323,14 +3337,15 @@ function updateEnemies(dt) {
     const e = S.enemies[i];
     if (e.dead) { S.enemies.splice(i, 1); continue; }
     if (e.dying) { e.dying -= dt; if (e.dying <= 0) { e.dead = true; S.enemies.splice(i, 1); } continue; }
-    e.spawnT = Math.max(0, e.spawnT - dt);
+    e.spawnT = Math.max(0, e.spawnT - dt); if (e.hasteT > 0) e.hasteT -= dt;
+    if (e.type === 'brute') { e.howlT = (e.howlT === undefined ? 1.5 : e.howlT) - dt; if (e.howlT <= 0) { e.howlT = 8; let n = 0; for (const o of S.enemies) if (o !== e && !o.dying && o.type !== 'brute' && Math.hypot(o.x - e.x, o.z - e.z) < 14) { o.hasteT = 6; n++; } if (n) { spawnRing(e.x, e.z, 14, 0xc8b090, 0.8, 0.06); if (Math.hypot(e.x - P.x, e.z - P.z) < 30) AUDIO.sfx('roar', 2); } } }   // 音如獋狗: it howls every eight breaths, and the pack around it quickens
     e.flash = Math.max(0, e.flash - dt * 6);
     e.stun = Math.max(0, e.stun - dt);
     e.atkCd -= dt; e.bob += dt * 6;
     const dx = px - e.x, dz = pz - e.z;
     const d = Math.hypot(dx, dz) || 0.001;
     const nx = dx / d, nz = dz / d;
-    let sp = e.t.speed * (0.9 + 0.1 * Math.sin(e.bob)) * (1 + minute() * 0.02) * DIFF().speed;
+    let sp = e.t.speed * (0.9 + 0.1 * Math.sin(e.bob)) * (1 + minute() * 0.02) * DIFF().speed * (e.hasteT > 0 ? 1.25 : 1);   // 穷奇嗥过的妖邪跑得快
     let mx = nx, mz = nz;
     if (e.t.ranged) {
       if (d < 7) { mx = -nx; mz = -nz; sp *= 0.8; } else if (d < 10) { mx = nz; mz = -nx; sp *= 0.5; }
@@ -3691,7 +3706,7 @@ function updatePlayer(dt) {
   P.dashCd = Math.max(0, P.dashCd - dt); P.heavyCd = Math.max(0, P.heavyCd - dt); P.novaCd = Math.max(0, P.novaCd - dt);
   P.swing = Math.max(0, P.swing - dt);
   if (P.regen > 0 && !P.noRegen) P.hp = Math.min(P.maxHp, P.hp + P.regen * dt * healMul());
-  if (S.cursedT > 0) S.cursedT -= dt; if (S.qiCd > 0) S.qiCd -= dt;
+  if (S.cursedT > 0) S.cursedT -= dt; if (S.qiCd > 0) S.qiCd -= dt; if (S.wuluoCd > 0) S.wuluoCd -= dt;
   const mv = moveVector();
   let sp = moveSpeed();
   let dx = mv.x, dz = mv.z;
@@ -3740,7 +3755,7 @@ function updatePlayer(dt) {
   FX.playerRing.position.set(P.x, 0.03, P.z);
   FX.playerRing.material.opacity = 0.35 + 0.25 * Math.sin(S.wall * 4);
   // forge hint
-  { const jw = !nearForge() && !S.jwQuest && nearJingweiPile(); const di = !nearForge() && !jw && nearDitai(); $('#forgeHint').classList.toggle('show', nearForge() || jw || di); if (jw) $('#forgeHint').innerHTML = `<b>F</b> ${SET.lang === 'zh' ? '衔石' : 'Take a stone'}`; else if (di) $('#forgeHint').innerHTML = `<b>F</b> ${SET.lang === 'zh' ? '帝台之棋 · 5 丹粟' : 'Cast the Ditai stones · 5 grains'}`; else if (nearForge()) $('#forgeHint').innerHTML = `<b>F</b> ${tr('Enter forge')}`; }
+  { const jw = !nearForge() && !S.jwQuest && nearJingweiPile(); const di = !nearForge() && !jw && nearDitai(); const wu = !nearForge() && !jw && !di && nearWuluo(); $('#forgeHint').classList.toggle('show', nearForge() || jw || di || wu); if (wu) $('#forgeHint').innerHTML = `<b>F</b> ${SET.lang === 'zh' ? '武罗之祝 · 8 丹粟' : "Wuluo's blessing · 8 grains"}`; else if (jw) $('#forgeHint').innerHTML = `<b>F</b> ${SET.lang === 'zh' ? '衔石' : 'Take a stone'}`; else if (di) $('#forgeHint').innerHTML = `<b>F</b> ${SET.lang === 'zh' ? '帝台之棋 · 5 丹粟' : 'Cast the Ditai stones · 5 grains'}`; else if (nearForge()) $('#forgeHint').innerHTML = `<b>F</b> ${tr('Enter forge')}`; }
   FX.forgeRing.material.opacity = nearForge() ? 0.6 : 0.25;
 }
 
@@ -4092,7 +4107,7 @@ function autopilot(dt) {
 // debug / capture hooks (used by the verification script)
 // =====================================================================
 window.__emberlight = {
-  S, P: () => P, W, world: () => world, startRun, endRun, spawnBoss, triggerOmen, omens: () => S.omens, playDitai, nearDitai, DITAI, dangkang: () => S.dangkang, startJingweiErrand, jwQuest: () => S.jwQuest, spawnEnemy, spawnAround, setWeather: (tod, wx) => { W.tod = tod; W.wx = wx; W.auto = false; refreshWeatherButtons(); },
+  S, P: () => P, W, world: () => world, startRun, endRun, spawnBoss, triggerOmen, omens: () => S.omens, playDitai, nearDitai, DITAI, prayWuluo, nearWuluo, WULUO, dangkang: () => S.dangkang, startJingweiErrand, jwQuest: () => S.jwQuest, spawnEnemy, spawnAround, setWeather: (tod, wx) => { W.tod = tod; W.wx = wx; W.auto = false; refreshWeatherButtons(); },
   cheat: (o) => Object.assign(P, o), META, recordRun, SET, applyLang, applyQuality, applyCues, gainXp, AUDIO, camDist: (v) => { camDist = v; }, PAD, pollGamepad, lightShrine, nearShrine, shrines: () => S.shrines, DIFFS, rollTalents, TALENTS, WEAPONS, spawnMini, MINIS, minis: () => S.minis, hurtMini, killMini, GUIDE, ANIM, clips: () => kit.clips.map((c) => c.name + ':' + c.duration.toFixed(2)), post: () => ({ ao: gtaoPass && gtaoPass.enabled, bloom: bloomPass && bloomPass.enabled, passes: composer && composer.passes.length }),
   project: (x, y, z) => { const v = new THREE.Vector3(x, y, z).project(camera); return { sx: (v.x * 0.5 + 0.5) * window.innerWidth, sy: (-v.y * 0.5 + 0.5) * window.innerHeight }; },
   slashes: () => S.slashes.map((m) => ({ ry: m.rotation.y, arc: m.userData.arc })), giveShards: (n) => { P.shards += n; }, teleport: (x, z) => { P.x = x; P.z = z; }, cranes: () => craneSet ? { count: craneSet.count, body: !!craneSet.body, tris: craneSet.body ? craneSet.body.geometry.attributes.position.count / 3 : 0 } : null,
