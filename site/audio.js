@@ -128,6 +128,13 @@ const SFX = {
   thunder() { burst(0.12, 0.7, 'highpass', 3000, 700, 1, ambBus); burst(2.2, 0.9, 'lowpass', 700, 40, 0.3, ambBus); setTimeout(() => burst(1.4, 0.5, 'lowpass', 300, 40, 0.3, ambBus), 300); },
   win() { bell(392, 0.3, 3.2); [0, 1, 2, 3, 4, 5].forEach((d, i) => setTimeout(() => pluck(pnote(d, 1), 0.22, 1.3, sfxBus), 150 + i * 150)); },
   lose() { [4, 3, 1, 0].forEach((d, i) => setTimeout(() => xiao(pnote(d, 1), 1.4, 0.16, sfxBus), i * 420)); },
+  // ---- Shanhaijing creatures
+  qique() { for (let i = 0; i < 3; i++) setTimeout(() => tone('sine', 2600 + i * 300, 3400 + i * 200, 0.07, 0.09), i * 55); },                                   // 鬿雀: a high three-note trill
+  shangao() { [0, 70, 130].forEach((ms, i) => setTimeout(() => burst(0.06, 0.28, 'bandpass', 700 - i * 120, 350, 2.5), ms)); tone('square', 210, 150, 0.14, 0.05); },   // 山膏善詈: spat curses
+  mingshe() { tone('sine', 1975, 1975, 0.5, 0.1); tone('sine', 2960, 2960, 0.35, 0.05); tone('sine', 5270, 5270, 0.22, 0.03); },                                  // 鸣蛇其音如磬: stone-chime overtones
+  bifang() { tone('sawtooth', 900, 1500, 0.22, 0.05); tone('triangle', 1400, 700, 0.3, 0.08, sfxBus, 0.03); burst(0.25, 0.12, 'bandpass', 1800, 900, 3); },        // 毕方: a crane's cry
+  foxcry() { tone('sine', 520, 780, 0.35, 0.12, sfxBus, 0.08); setTimeout(() => tone('sine', 700, 430, 0.5, 0.12, sfxBus, 0.05), 380); },                         // 九尾狐 其音如婴儿
+  axe() { burst(0.05, 0.9, 'highpass', 5000, 1500, 1); tone('triangle', 2400, 600, 0.18, 0.25); tone('square', 95, 40, 0.5, 0.35); burst(0.6, 0.6, 'lowpass', 800, 60, 0.5); },   // 刑天干戚: shield clang + axe thud
 };
 let lastAt = {};
 export function sfx(name, minGap = 0.03) {
@@ -165,6 +172,8 @@ const CHORDS_GONG = [[0, 3, 6, 9], [1, 4, 8, 10], [3, 6, 9, 11], [0, 4, 6, 8]];
 const CHORDS_YU = [[-1, 1, 3, 4], [-1, 2, 4, 6], [-3, -1, 1, 4], [-1, 0, 3, 6]];
 let padOsc = [], padFilter = null, chordIdx = 0, tension = 0, beat = 0;
 let bassGain = null, arpGain = null, layerTargets = { zheng: 0, xiao: 0, bass: 0, arp: 0 };
+let dance = false;   // 帝江 "是识歌舞": while it is on the field the music falls into a 3/4 dance step
+export function setDance(on) { dance = !!on; }
 function chordSet() { return tension >= 0.45 ? CHORDS_YU : CHORDS_GONG; }
 function startMusic() {
   padFilter = ctx.createBiquadFilter(); padFilter.type = 'lowpass'; padFilter.frequency.value = 520; padFilter.Q.value = 0.5;
@@ -196,6 +205,7 @@ function startMusic() {
     if (!ctx || !enabled) return;
     beat++;
     const ch = chordSet()[chordIdx];
+    if (dance) { const step = beat % 3; if (step === 0) { tone('sine', 110, 70, 0.25, 0.2, musicBus); burst(0.08, 0.16, 'bandpass', 1500, 400, 1, musicBus); } else burst(0.05, 0.08, 'highpass', 4000, 2500, 1, musicBus); pluck(pnote(ch[step % ch.length], step === 0 ? 0 : 1), 0.9, 0.4); }
     // guzheng phrase: sparse in calm, denser under threat
     const density = tension >= 0.9 ? 0.25 : tension >= 0.45 ? 0.45 : 0.55;
     if (Math.random() < density && layerTargets.zheng > 0) pluck(pnote(ch[Math.floor(Math.random() * ch.length)] + (Math.random() < 0.3 ? 1 : 0), Math.random() < 0.35 ? 2 : 1), 1, 0.9 + Math.random() * 0.6);
@@ -207,7 +217,7 @@ function startMusic() {
   setChord(0);
   musicTimer = setInterval(() => setChord((chordIdx + 1) % 4), 8000);
 }
-export function layerState() { return Object.assign({}, layerTargets, { tension, mode: tension >= 0.45 ? 'yu' : 'gong' }); }
+export function layerState() { return Object.assign({}, layerTargets, { tension, mode: tension >= 0.45 ? 'yu' : 'gong', meter: dance ? '3/4' : '4/4' }); }
 function setChord(i) {
   chordIdx = i;
   const t = ctx.currentTime;

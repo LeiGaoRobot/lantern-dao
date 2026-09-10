@@ -301,6 +301,10 @@
   .loregrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .lore { border: 1px solid var(--lineP); border-radius: 6px; padding: 8px 10px; font-size: 12px; opacity: .6; }
   .lore.on { opacity: 1; border-color: rgba(156,123,36,.45); background-color: rgba(217,176,74,.08); }
+  .lore { position: relative; }
+  body.zh .lore { padding-right: 30px; min-height: 84px; }
+  .lore s { display: none; }
+  body.zh .lore s { display: block; position: absolute; right: 8px; top: 9px; writing-mode: vertical-rl; text-decoration: none; font-size: 10px; letter-spacing: .18em; color: var(--cinnabar); opacity: .8; border-left: 1px solid rgba(160,60,40,.35); padding-left: 3px; font-family: "Noto Serif SC", "STSong", "SimSun", serif; }
   .lore b { display: block; color: var(--cinnabar); font-size: 14px; }
   .lore i { display: block; color: var(--mutedP); font-style: normal; font-size: 11px; letter-spacing: .04em; margin-top: 2px; }
   .lore q { display: block; margin-top: 5px; color: var(--inkP); quotes: none; font-family: "Noto Serif SC", "STSong", "SimSun", Fraunces, serif; line-height: 1.5; }
@@ -401,10 +405,10 @@
 
 <div id="about" class="overlay"><div class="center"><div class="modal">
   <h2>About Lantern Dao</h2>
-  <p>A small survivors-like set in a valley that keeps its own weather. Every building, tree, ruin and creature was modelled headlessly in <b>Blender</b> from primitives and shipped as one 1.8&nbsp;MB kit; the world, the crowds and the light are assembled at runtime in <b>three.js</b>.</p>
-  <p><b>The loop.</b> Demons born of sha pour in from the mist. Cut them down, gather the spirit stones they drop, and choose a technique at every breakthrough. Spirit crystals buy permanent refinements at the refinery in the Gate Market. Thirty seconds before the eighth minute the sky closes in; then the Tribulation Lord descends. Hold out ten minutes and the clouds part.</p>
-  <p><b>Districts.</b> The Hearth, The Wildwood, Mossfall Ruins, Cinder Barrow, Silvermere Shore. Each favours different enemies.</p>
-  <p><b>Lantern Dao</b> is the xianxia re-skin of <b>Emberlight</b>, itself inspired by 歸藏's GPT-6 Astra + Blender + Godot original. Every building, tree and demon was modelled headlessly in Blender 5.2 from primitives; the valley, the crowds, the weather and the tribulation run in three.js r184, and every sound is synthesised in WebAudio.</p>
+  <p>A hidden valley that folds the <i>Classic of Mountains and Seas</i> into one island. Every building, tree and creature was modelled headlessly in <b>Blender</b> from primitives and shipped as one 2&nbsp;MB kit; the world, the crowds and the light are assembled at runtime in <b>three.js</b>.</p>
+  <p><b>Mountains and seas.</b> A mountain in each quarter: Kunlun to the north-west (langgan trees, the Weak Water, nine gates watched by the Kaiming beast), Fajiu to the north-east (zhe trees, Jingwei carrying stones), Tanggu to the south-east (the Fusang tree and its ten suns), Zhaoyao to the south-west (cassia, migu, the phoenix of Danxue). Every demon, elite and Xingtian himself has a chapter; and whatever the book says happens <i>when it is seen</i> happens here: Mingshe brings drought, Bifang strange fire, Fei the plague, Dangkang a harvest, Fenghuang peace.</p>
+  <p><b>The loop.</b> Beasts pour in from the mist. Cut them down, gather the langgan jade they drop, and choose a technique at every breakthrough. Cinnabar grains buy permanent refinements at the forge in the Qingyao market. At seven and a half minutes Zhulong closes its eyes; at eight Xingtian comes, dancing with shield and axe. Keep the lamp for ten minutes and the endless road opens.</p>
+  <p><b>Lantern Dao · Shanhai</b> is the re-skin of <b>Emberlight</b>, itself inspired by 歸藏's GPT-6 Astra + Blender + Godot original. Quotations are from the received text of the <i>Shanhaijing</i>; later commentaries and derived images are not used.</p>
   <div class="actions"><button class="btn" id="aboutClose">Back</button></div>
 </div></div></div>
 

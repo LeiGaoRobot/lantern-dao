@@ -9,7 +9,7 @@ import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
 import { Kit, DynSet, buildGround, generateMap, districtAt, DISTRICTS, ROADS, ISLAND_R, PLAY_R, collideStatic, Grid, setGlow, glowMat, MATS, treeUniforms, mulberry32, vnoise } from './world.js?v=39';
-import * as AUDIO from './audio.js?v=33';
+import * as AUDIO from './audio.js?v=34';
 
 const $ = (s) => document.querySelector(s);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -296,7 +296,7 @@ const ZH = {
   'Ten minutes, and the valley is still here. Keep going — it only gets wilder.': '十分钟过去,天劫已渡。继续吧 —— 问道无尽,只会更凶险。',
   'You kept the light for': '你守住灵灯', 'Go endless  →': '问道无尽  →', 'Try again': '再来一局', 'Back to title': '返回',
   'Time survived': '守灯时长', 'Defeated': '斩妖', 'Elites': '精英', 'Damage dealt': '造成伤害', 'Forge shards': '丹粟',
-  'Rested': '调息完毕', 'Unlocked': '机缘', 'Shrines lit': '点亮法阵', ' shrines': ' 座法阵', 'dawns': '次渡劫',
+  'Rested': '调息完毕', 'Unlocked': '机缘', 'Shrines lit': '点亮法阵', ' shrines': ' 座法阵', 'dawns': '次过山',
   'Hold the shrine for 45 seconds.': '守住法阵 45 秒。', 'THE SHRINE GUTTERS OUT  ·  You strayed too far.': '法阵黯淡  ·  你走得太远。', 'WARD GAINED': '习得护体功法', 'SHRINE': '灵脉法阵', '· too far!': '· 太远了!',
   'Wolfsbane': '天狗·御凶', 'Wisps no longer hunt in packs and hit for half.': '鬿雀不再成群,伤害减半。', 'Stonewatch': '猼訑·不畏', 'Your attacks shatter spitter bolts; the rest sting 30% less.': '你的攻击能击碎毕方火弹,余下伤害 −30%。',
   'Ashwalker': '鸓鸟·御火', 'Burning ground cannot hurt you; +25% damage to cinders and brutes.': '燃烧地面对你无害;对山膏与穷奇伤害 +25%。', 'Tidewalker': '迷榖·不迷', 'Move 12% faster and dash recovers 25% sooner.': '移速 +12%,踏云步冷却 −25%。',
@@ -349,7 +349,7 @@ const ZH = {
   "Smith's tithe": '炼器师的份例', 'Defeat the Ash Warden': '伏诛刑天', 'Every run starts with 10 forge shards': '每局开局 10 丹粟',
   'Cinder in the hand': '掌中符火', 'Defeat 3000 creatures in total': '累计斩妖 3000', 'Runs start with the Cinder Bolt, already forged once': '开局持有炼过一次的符箓',
   'Locked': '未得机缘', 'longest run': '最长守灯', 'creatures defeated': '累计斩妖', 'wardens felled': '伏诛刑天', 'runs': '局数', 'Best runs': '最佳战绩', 'No runs yet.': '还没有记录。',
-  'Dawn': '渡劫', 'Warden slain': '刑天已诛', 'What the valley remembers of you. Kept on this device.': '灵谷对你的记忆。只存在本机。',
+  'Dawn': '过山', 'Warden slain': '刑天已诛', 'What the valley remembers of you. Kept on this device.': '灵谷对你的记忆。只存在本机。',
 };
 // English display layer: keys stay the Emberlight originals (saves, MINIS/bigs, ZH lookups all hang off them)
 const EN = {
@@ -410,6 +410,10 @@ const HTML_ZH = {
   '#weather .label': '活着的灵谷', '#swapBtn': '<b>Q</b> 换法宝', '#forgeHint': '<b>F</b> 进入炼器坊', '#pauseBtn': '暂停',
   '#dashText b': '空格', '#settingsTitle': '设置', '#diffLabel': '难度', '#weaponLabel': '起手法宝', '#shrineHint': '<b>F</b> 布下法阵', '#setQuality .k': '画质', '#setShake .k': '屏幕抖动', '#setNumbers .k': '伤害数字', '#setMusic .k': '音乐', '#setSfx .k': '音效', '#setLang .k': '语言 / Language', '#setCues .k': '色弱辅助(形状与色差)', '#deathReviewLabel': '复盘',
   '#about h2': '关于《灯下问道》',
+  '#about p:nth-of-type(1)': '一座把《五藏山经》压成一岛的灵谷。每栋屋、每棵树、每只异兽都在 <b>Blender</b> 里用基本体无头建模,打包成一个 2 MB 的物件库;世界、妖群与光影在 <b>three.js</b> 里实时拼装。',
+  '#about p:nth-of-type(2)': '<b>山海。</b>四方各一座山:西北昆仑(琅玕树、弱水、九门开明兽)、东北发鸠(柘木、精卫衔石)、东南汤谷(扶桑十日)、西南招摇(桂树、迷榖、丹穴凤皇)。五妖、四精英与刑天皆有出处;书里凡说"见则"的,在这里都会应验——鸣蛇大旱、毕方讹火、蜚生大疫、当康大穰、凤皇安宁。',
+  '#about p:nth-of-type(3)': '<b>一局。</b>异兽自雾中涌来。斩之,拾其琅玕,每次突破择一门功法;丹粟在青要坊市炼器。七分半烛龙瞑目,八分刑天至,操干戚以舞。守过十分钟,便可问道无尽。',
+  '#about p:nth-of-type(4)': '《灯下问道·山海》是 <b>Emberlight</b> 的换皮,后者受歸藏 GPT-6 Astra + Blender + Godot 原作启发。原文引自《山海经》通行本(繁体照录);后世注疏与衍生形象一律不采。',
 };
 const HTML_EN = {};
 function applyLang() {
@@ -532,7 +536,7 @@ function renderArchive() {
   const zhL = SET.lang === 'zh';
   h += `<div class="sub" style="margin:16px 0 6px">${tr('Bestiary')}</div><div class="loregrid">` + LORE.map((L) => {
     const on = ['wolfking', 'sentinel', 'salamander', 'maw'].includes(L.key) ? !!best[L.key] : L.key === 'boss' ? META.bossKills > 0 : L.omen ? !!(META.omens && META.omens[L.omen]) : L.seen ? !!(META.seen && META.seen[L.seen]) : META.totalKills > 0;
-    return `<div class="lore ${on ? 'on' : ''}"><b>${on ? (zhL ? L.zh : L.en) : '???'}</b><i>${zhL ? L.src : L.srcEn}</i>${on ? `<q>${zhL ? L.quote : L.quoteEn}</q>` : ''}</div>`;
+    const vol = zhL ? L.src.split(' ')[0].split('·').pop() : ''; return `<div class="lore ${on ? 'on' : ''}">${vol ? `<s>${vol}</s>` : ''}<b>${on ? (zhL ? L.zh : L.en) : '???'}</b><i>${zhL ? L.src : L.srcEn}</i>${on ? `<q>${zhL ? L.quote : L.quoteEn}</q>` : ''}</div>`;
   }).join('') + '</div>';
   h += `<div class="sub" style="margin:16px 0 6px">${tr('Best runs')}</div>`;
   h += META.runs.length ? '<table class="runs">' + META.runs.map((r) => `<tr><td>${fmtTime(r.time)}</td><td>${SET.lang === 'zh' ? DIFFS[r.diff || 'standard'].zh : DIFFS[r.diff || 'standard'].name}</td><td>${r.kills} ${tr('defeated')}</td><td>${tr('Level')} ${r.level}</td><td>${r.won ? tr('Dawn') : (r.boss ? tr('Warden slain') : '—')}${r.shrines ? ` · ${r.shrines}${tr(' shrines')}` : ''}</td><td>${r.date}</td></tr>`).join('') + '</table>' : `<div class="sub">${tr('No runs yet.')}</div>`;
@@ -1232,7 +1236,7 @@ function startRun() {
   $('#title').classList.remove('show'); $('#end').classList.remove('show'); $('#pause').classList.remove('show');
   document.body.classList.remove('title');
   $('#boss').classList.remove('show');
-  AUDIO.setTension(0); AUDIO.musicVolume(SET.music); AUDIO.sfxVolume(SET.sfx);
+  AUDIO.setTension(0); AUDIO.setDance(false); AUDIO.musicVolume(SET.music); AUDIO.sfxVolume(SET.sfx);
   showBanner(`${tr('THE HEARTH')}  ·  ${tr('Collect embers. Find the forge. Survive 10 minutes.')}`, 6);
   S.discovered.add('hearth');
 }
@@ -1589,6 +1593,7 @@ function updateProjectiles(dt) {
     if (p.dead || p.life <= 0) { burstParticles(p.x, 0.8, p.z, 5, [1, 0.35, 0.15], 2, 0.3, 0.3); S.eprojectiles.splice(i, 1); }
   }
 }
+const CREATURE_SFX = { wisp: 'qique', cinder: 'shangao', crawler: 'mingshe', spitter: 'bifang', spit: 'bifang' };
 function hurtPlayer(raw, src = 'other') {
   if (P.invuln > 0 || P.dashT > 0 || S.phase !== 'run') return;
   let scaled = raw * DIFF().dmg;
@@ -1603,7 +1608,7 @@ function hurtPlayer(raw, src = 'other') {
   showNumber(P.x, 1.6, P.z, '-' + dmg, 'player');
   $('#hurt').style.opacity = '1'; setTimeout(() => { $('#hurt').style.opacity = '0'; }, 120);
   camShake.amp = Math.max(camShake.amp, 0.3); camShake.t = 0.25;
-  AUDIO.sfx('hurt', 0.1);
+  AUDIO.sfx('hurt', 0.1); if (CREATURE_SFX[src]) AUDIO.sfx(CREATURE_SFX[src], 0.35);
   burstParticles(P.x, 0.8, P.z, 8, [1, 0.4, 0.3], 3, 0.3, 0.4);
   if (P.hp <= 0) { P.hp = 0; endRun(false); }
 }
@@ -1852,7 +1857,7 @@ function updateEnemies(dt) {
     if (e.t.ranged) {
       if (d < 7) { mx = -nx; mz = -nz; sp *= 0.8; } else if (d < 10) { mx = nz; mz = -nx; sp *= 0.5; }
       e.shootCd -= dt;
-      if (e.shootCd <= 0 && d < 12) { e.shootCd = 3.0 + Math.random() * 1.2; const v = 9; S.eprojectiles.push({ x: e.x + nx * 0.6, z: e.z + nz * 0.6, vx: nx * v, vz: nz * v, life: 1.9, dmg: e.t.dmg }); AUDIO.sfx('spit', 0.15); }
+      if (e.shootCd <= 0 && d < 12) { e.shootCd = 3.0 + Math.random() * 1.2; AUDIO.sfx('bifang', 0.5); const v = 9; S.eprojectiles.push({ x: e.x + nx * 0.6, z: e.z + nz * 0.6, vx: nx * v, vz: nz * v, life: 1.9, dmg: e.t.dmg }); AUDIO.sfx('spit', 0.15); }
     }
     if (e.type === 'brute' && d < 9) { const st = Math.sin(e.bob * 0.6); if (st > 0.98 && !e.stomped) { e.stomped = true; camShake.amp = Math.max(camShake.amp, 0.12); camShake.t = 0.12; burstParticles(e.x, 0.1, e.z, 6, [0.5, 0.45, 0.4], 2, 0.3, 0.4); } else if (st < 0.9) e.stomped = false; }
     if (e.t.lunge) {
@@ -1898,6 +1903,7 @@ function killEnemy(e) {
   S.stats.kills++;
   if (e.t.elite) { S.stats.elites++; camShake.amp = Math.max(camShake.amp, 0.35); camShake.t = 0.3; }
   AUDIO.sfx('kill', 0.06);
+  if (e.type === 'crawler') AUDIO.sfx('mingshe', 0.45); else if (e.type === 'wisp' && Math.random() < 0.3) AUDIO.sfx('qique', 0.4); else if (e.type === 'cinder' && Math.random() < 0.4) AUDIO.sfx('shangao', 0.5);
   burstParticles(e.x, 0.5, e.z, e.t.elite ? 60 : 14, [0.25, 0.2, 0.28], e.t.elite ? 6 : 3.5, 0.5, 0.7);
   burstParticles(e.x, 0.6, e.z, e.t.elite ? 30 : 6, [1, 0.5, 0.15], 3, 0.35, 0.5);
   // drops
@@ -2006,7 +2012,7 @@ function spawnMini(distKey) {
   for (const k in R.anim.actions) if (!['idle', 'walk'].includes(k)) R.anim.actions[k].stop();
   setBase(R.anim, 0);
   m.rigKey = distKey;
-  showBanner(tr(d.name) + '  ·  ' + tr('wakes'), 4); AUDIO.sfx('roar');
+  showBanner(tr(d.name) + '  ·  ' + tr('wakes'), 4); AUDIO.sfx(d.key === 'wolfking' ? 'foxcry' : 'roar'); if (d.key === 'maw') AUDIO.setDance(true);
   spawnRing(x, z, 6, 0xc48aff, 0.9, 0.08); burstParticles(x, 1, z, 60, [0.75, 0.5, 1], 6, 0.5, 1.0);
   $('#mini').classList.add('show'); $('#mini .name').textContent = tr(d.name);
   return m;
@@ -2020,7 +2026,7 @@ function hurtMini(m, dmg, crit = false) {
   if (m.hp <= 0) killMini(m);
 }
 function killMini(m) {
-  m.dead = true; S.minis.splice(S.minis.indexOf(m), 1);
+  m.dead = true; S.minis.splice(S.minis.indexOf(m), 1); if (m.key === 'maw') AUDIO.setDance(false);
   S.miniDone = S.miniDone || {}; S.miniDone[m.key] = true;
   S.stats.elites++; S.stats.kills++; S.stats.minis = (S.stats.minis || 0) + 1;
   META.bestiary = META.bestiary || {}; if (!META.bestiary[m.key]) { META.bestiary[m.key] = new Date().toISOString().slice(0, 10); saveMeta(); showBanner(tr('FIRST KILL') + ' · ' + tr(m.def.name), 5); }
@@ -2090,7 +2096,7 @@ function resolveMiniMove(m, nx, nz, d) {
   const mv = m.move; m.phase = 'chase';
   if (mv === 'pounce') { m.phase = 'dash'; m.pt = 0.45; m.dashSp = 22; m.dx = nx; m.dz = nz; AUDIO.sfx('dash'); }
   else if (mv === 'flame') { m.phase = 'dash'; m.pt = 0.75; m.dashSp = 13; m.dx = nx; m.dz = nz; AUDIO.sfx('dash'); }
-  else if (mv === 'howl') { for (let k = 0; k < 4; k++) { const a = k / 4 * Math.PI * 2; spawnEnemy('wisp', m.x + Math.cos(a) * 2.5, m.z + Math.sin(a) * 2.5); } m.buffT = 6; AUDIO.sfx('roar'); spawnRing(m.x, m.z, 7, 0xffd08a, 0.6, 0.08); }
+  else if (mv === 'howl') { for (let k = 0; k < 4; k++) { const a = k / 4 * Math.PI * 2; spawnEnemy('wisp', m.x + Math.cos(a) * 2.5, m.z + Math.sin(a) * 2.5); } m.buffT = 6; AUDIO.sfx('foxcry'); spawnRing(m.x, m.z, 7, 0xffd08a, 0.6, 0.08); }
   else if (mv === 'slam') { if (d < 4.5 + P.r) hurtPlayer(30, 'mini'); for (const e of S.enemies) { const ed = Math.hypot(e.x - m.x, e.z - m.z); if (ed < 4.5) { e.kx += (e.x - m.x) / ed * 8; e.kz += (e.z - m.z) / ed * 8; } } spawnRing(m.x, m.z, 4.5, 0xff6a3d, 0.5, 0.1); burstParticles(m.x, 0.5, m.z, 60, [0.6, 0.6, 0.55], 7, 0.5, 0.8); camShake.amp = 0.5; camShake.t = 0.4; AUDIO.sfx('slam'); }
   else if (mv === 'shards') { for (let k = 0; k < 8; k++) { const a = k / 8 * Math.PI * 2; S.eprojectiles.push({ x: m.x + Math.sin(a) * 1.2, z: m.z + Math.cos(a) * 1.2, vx: Math.sin(a) * 9, vz: Math.cos(a) * 9, life: 1.8, dmg: 10 }); } AUDIO.sfx('spit'); }
   else if (mv === 'spit') { for (let k = -1; k <= 1; k++) { const a = Math.atan2(nx, nz) + k * 0.28; S.eprojectiles.push({ x: m.x + Math.sin(a) * 1.2, z: m.z + Math.cos(a) * 1.2, vx: Math.sin(a) * 10, vz: Math.cos(a) * 10, life: 1.8, dmg: 12 }); } AUDIO.sfx('spit'); }
@@ -2128,7 +2134,7 @@ function updateBoss(dt) {
         strikeBolt(b.x, b.z); W.lightning = Math.max(W.lightning, 0.9); AUDIO.sfx('thunder');
         if (b.phase2) for (let i = 0; i < 3; i++) { const a = b.face + (i - 1) * 1.1, sx = b.x + Math.sin(a) * 3.2, sz = b.z + Math.cos(a) * 3.2; S.burns.push({ x: sx, z: sz, t: 4, hostile: true }); S.timers.push({ t: 0.12 + i * 0.1, fn: () => strikeBolt(sx, sz) }); }
         for (const e of S.enemies) { const ed = Math.hypot(e.x - b.x, e.z - b.z); if (ed < R) { e.kx += (e.x - b.x) / ed * 10; e.kz += (e.z - b.z) / ed * 10; } }
-        camShake.amp = 0.7; camShake.t = 0.5; AUDIO.sfx('slam');
+        camShake.amp = 0.7; camShake.t = 0.5; AUDIO.sfx('slam'); AUDIO.sfx('axe');
       }
       break;
     }
