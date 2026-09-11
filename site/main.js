@@ -1039,6 +1039,7 @@ function toggleAutoWx() { W.auto = !W.auto; W.wxTimer = 30; refreshWeatherButton
 const KEYMAP = { KeyW: 'up', KeyS: 'down', KeyA: 'left', KeyD: 'right', ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right', Space: 'dash', KeyE: 'nova', KeyQ: 'swap', KeyF: 'forge', KeyJ: 'attack', KeyK: 'heavy', Tab: 'auto', Escape: 'pause', KeyT: 'tod', KeyR: 'wx', KeyY: 'autowx', F4: 'hideui', Digit1: 'c1', Digit2: 'c2', Digit3: 'c3', Digit4: 'c4', KeyM: 'mute' };
 const KEYMAP2 = { w: 'up', s: 'down', a: 'left', d: 'right', arrowup: 'up', arrowdown: 'down', arrowleft: 'left', arrowright: 'right', ' ': 'dash', e: 'nova', q: 'swap', f: 'forge', j: 'attack', k: 'heavy', tab: 'auto', escape: 'pause', t: 'tod', r: 'wx', y: 'autowx', f4: 'hideui', 1: 'c1', 2: 'c2', 3: 'c3', 4: 'c4', m: 'mute' };
 window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') for (const sel of ['#archive', '#about']) if ($(sel).classList.contains('show')) { $(sel).classList.remove('show'); return; }   // Escape closes the archive / about panels before anything else
   const a = KEYMAP[e.code] || KEYMAP2[String(e.key).toLowerCase()];
   if (!a) return;
   if (['auto', 'dash', 'hideui', 'tod', 'wx', 'autowx'].includes(a)) e.preventDefault();
@@ -1159,6 +1160,8 @@ $('#aboutBtn').addEventListener('click', () => { $('#about').classList.add('show
 $('#aboutClose').addEventListener('click', () => { $('#about').classList.remove('show'); });
 $('#archiveBtn').addEventListener('click', () => { renderArchive(); $('#archive').classList.add('show'); });
 $('#archiveClose').addEventListener('click', () => { $('#archive').classList.remove('show'); });
+// clicking the dimmed backdrop (not the panel) closes the archive / about overlays, and so does Escape (see the keydown listener)
+for (const sel of ['#about', '#archive']) $(sel + ' .center').addEventListener('click', (e) => { if (e.target === e.currentTarget) $(sel).classList.remove('show'); });
 $('#autoBtn').addEventListener('click', () => onAction('auto'));
 $('#swapBtn').addEventListener('click', () => onAction('swap'));
 $('#todBtn').addEventListener('click', () => onAction('tod'));

@@ -141,6 +141,7 @@
   .tiny { font-size: 10px; letter-spacing: .2em; color: var(--muted); text-transform: uppercase; margin-top: 18px; }
   .center { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(12, 8, 20, .55); backdrop-filter: blur(4px); }
   .modal { background: var(--panel2); border: 1px solid var(--line); border-radius: 18px; padding: 28px 30px; width: min(560px, 92vw); box-shadow: 0 30px 80px rgba(0,0,0,.5); }
+  .modal { max-height: 92vh; overflow-y: auto; overscroll-behavior: contain; }   /* long panels (archive with the atlas) scroll inside the viewport */
   .modal h2 { font-family: Fraunces, Georgia, serif; font-weight: 600; font-size: 30px; margin: 0 0 6px; color: var(--gold); }
   .modal .sub { color: var(--muted); font-size: 13px; margin-bottom: 18px; }
   .choice { display: block; width: 100%; text-align: left; background: rgba(255,255,255,.05); border: 1px solid var(--line); color: var(--ink); border-radius: 12px; padding: 12px 16px; margin-top: 10px; font: inherit; cursor: pointer; }
