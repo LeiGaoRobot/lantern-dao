@@ -3139,8 +3139,16 @@ function rollTalents() {
   return out;
 }
 function openLevelUp() {
-  S.modal = 'levelup'; S.paused = true;
   luOptions = rollTalents();
+  if (!luOptions.length) {
+    // every technique already learned (around level 54): no modal to get stuck in - the breakthrough ripens into a small flat reward instead
+    P.maxHp += 10; P.hp = Math.min(P.maxHp, P.hp + 25); P.shards += 3; P.animOnce = 'cheer';
+    showBanner(SET.lang === 'zh' ? `${realmName(P.level)} · 功法已尽,道果自成:命火 +10,丹粟 +3` : `${tr('Level')} ${P.level} · every technique learned: +10 fire, +3 grains`, 3.5); AUDIO.sfx('levelup');
+    burstParticles(P.x, 0.8, P.z, 30, [0.55, 0.95, 0.85], 4, 0.4, 0.6, -2);
+    if (P.xp >= P.xpNext) S.timers.push({ t: 0.3, fn: () => gainXp(0) });
+    return;
+  }
+  S.modal = 'levelup'; S.paused = true;
   const isPath = !!(luOptions[0] && luOptions[0].path);
   $('#luSub').textContent = `${tr(isPath ? 'A path is chosen once. It shapes the rest of the run.' : 'Choose a talent. Your run is paused.')}  [ ${luOptions.map((_, i) => i + 1).join(' / ')} ]`;
   $('#luTitle').textContent = isPath ? (SET.lang === 'zh' ? '筑基 · 择一道途' : 'Foundation Establishment · choose a path') : SET.lang === 'zh' ? `境界突破 · ${realmName(P.level)}。${tr(LEVEL_NAMES[Math.min(LEVEL_NAMES.length - 1, P.level - 2)])}` : `${tr('Level')} ${pad2(P.level)}. ${tr(LEVEL_NAMES[Math.min(LEVEL_NAMES.length - 1, P.level - 2)])}`;
