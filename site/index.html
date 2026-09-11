@@ -190,6 +190,8 @@
   .atlas .pl.on { opacity: 1; color: var(--cinnabar, #b8452e); border-color: rgba(184,69,46,.4); background: rgba(184,69,46,.06); }
   body.zh .atlas .pl { font-family: "Noto Serif SC", "STSong", "SimSun", serif; letter-spacing: .08em; }
   @media (max-width: 640px) { .atlas { grid-template-columns: repeat(3, 1fr); } }
+  #wcard .sub2 { font-size: 11px; opacity: .8; margin-top: 2px; letter-spacing: .06em; }
+  #wcard .sub2:empty { display: none; }
   .buildlist { display: flex; flex-wrap: wrap; gap: 6px; }
   .bchip { border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; font-size: 12px; opacity: .9; }
   .bchip.w { color: var(--cinnabar, #b8452e); border-color: rgba(184,69,46,.45); font-weight: 600; }
@@ -366,7 +368,7 @@
   </div>
 
   <div id="weapon" class="hud">
-    <div id="wcard"><div class="name" id="wName">EMBER CRESCENT</div><div class="keys"><b>LMB / J</b> Attack &nbsp; <b>RMB / K</b> Heavy</div></div>
+    <div id="wcard"><div class="name" id="wName">EMBER CRESCENT</div><div class="sub2" id="wSub"></div><div class="keys"><b>LMB / J</b> Attack &nbsp; <b>RMB / K</b> Heavy</div></div>
     <button class="pill" id="swapBtn"><b>Q</b> Swap artefact</button>
   </div>
 

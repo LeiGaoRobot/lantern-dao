@@ -331,6 +331,7 @@ const ZH = {
   'Demon heart': '魔心', 'Pass the tribulation on Tribulation difficulty': '在劫难档渡过天劫', 'A fourth path at Foundation: the Demon Path': '筑基时多一条道途:魔修;开放常羊档',
   'Demon Path': '魔修', 'Damage +40%, max health −25%, heal 3% of all damage dealt.': '伤害 +40%,最大命火 −25%,造成伤害的 3% 转为命火。',
   'Needs Nascent Soul': '需元婴', 'Perfected: this artefact deals +25% damage': '化境:此法宝伤害 +25%',
+  'Second artefact: it strikes on its own at 60% damage, a little slower.': '副法宝:自行出手,伤害六成,出手稍慢。', 'A second artefact fights beside your first. Chosen once.': '副法宝与主法宝同时出手,只选一次。',
   'Keystone': '本命功法', 'Rare': '秘传', 'Path': '道途', 'Needs Golden Core': '需金丹境', 'A path is chosen once. It shapes the rest of the run.': '道途只能择一次,决定此后的修行方向。',
   'Sword Path': '剑修', 'Attack 15% faster, crit +10%, damage +10%.': '攻速 +15%,会心 +10%,伤害 +10%。',
   'Talisman Path': '符修', 'Spirit burst recharges 30% faster, projectiles pierce one more, burning ground +50%, burst radius +15%.': '灵光爆冷却 −30%,飞行法宝多穿透一个,燃烧地面 +50%,范围 +15%。',
@@ -1087,7 +1088,7 @@ function onAction(a) {
   switch (a) {
     case 'dash': tryDash(); break;
     case 'nova': tryNova(); break;
-    case 'swap': P.weapon = (P.weapon + 1) % WEAPONS.length; P.attackT = Math.min(P.attackT, 0.2); refreshWeaponCard(); AUDIO.sfx('ui'); break;
+    case 'swap': { do { P.weapon = (P.weapon + 1) % WEAPONS.length; } while (P.weapon === P.weapon2); }   /* Q cycles the main artefact past the second one */ P.attackT = Math.min(P.attackT, 0.2); refreshWeaponCard(); AUDIO.sfx('ui'); break;
     case 'forge': if (nearForge()) openForge(); else if (nearJingweiPile() && !S.jwQuest) startJingweiErrand(); else if (nearDitai()) playDitai(); else if (nearWuluo()) prayWuluo(); else { const ns = nearShrine(); if (ns && ns.state === 'done' && !S.shrineActive) travelVein(ns); else if (!ns && nearWellVein()) travelVein(null); else lightShrine(ns); } break;
     case 'heavy': tryHeavy(); break;
     case 'auto': P.auto = !P.auto; refreshAutoBtn(); AUDIO.sfx('ui'); break;
@@ -1244,6 +1245,7 @@ function refreshAutoBtn() { const b = $('#autoBtn'); b.innerHTML = `<b>Tab</b> $
 function refreshWeaponCard() {
   const w = WEAPONS[P.weapon];
   $('#wName').textContent = tr(w.name) + (P.weaponRank[w.key] ? '  ' + '★'.repeat(P.weaponRank[w.key]) : '');
+  { const s = $('#wSub'); if (s) { const w2 = P.weapon2 !== undefined ? WEAPONS[P.weapon2] : null; s.textContent = w2 ? (SET.lang === 'zh' ? '副 · ' : 'Second · ') + tr(w2.name) + (P.weaponRank[w2.key] ? ' ' + '★'.repeat(P.weaponRank[w2.key]) : '') : ''; } }
   const zh = SET.lang === 'zh';
   $('#wcard .keys').innerHTML = w.type === 'orbit' ? `<b>${tr('Passive')}</b> ${tr('Orbits')} &nbsp; <b>${zh ? '右键' : 'RMB'} / K</b> ${tr('Heavy')}` : `<b>${zh ? '左键' : 'LMB'} / J</b> ${tr('Attack')} &nbsp; <b>${zh ? '右键' : 'RMB'} / K</b> ${tr('Heavy')}`;
 }
@@ -1259,6 +1261,7 @@ function buildRows() {
   const zh = SET.lang === 'zh'; const chip = (t, cls = '') => `<span class="bchip ${cls}">${t}</span>`;
   const w = WEAPONS[P.weapon]; const rank = P.weaponRank[w.key] || 0;
   let h = chip(tr(w.name) + (rank ? ' ' + '★'.repeat(rank) : ''), 'w');
+  if (P.weapon2 !== undefined) h += chip((zh ? '副 · ' : 'Second · ') + tr(WEAPONS[P.weapon2].name), 'w');
   if (P.path) h += chip(tr({ sword: 'Sword Path', talisman: 'Talisman Path', body: 'Body Path', demon: 'Demon Path' }[P.path] || P.path), 'p');
   for (const t of TALENTS) { const n = P.talents[t.key] || 0; if (n) h += chip(tr(t.name) + (t.max > 1 ? ` ×${n}` : ''), t.keystone ? 'k' : t.late ? 'l' : t.rare ? 'r' : ''); }
   if (P.wards) for (const k in P.wards) { const wd = Object.values(WARDS).find((x) => x.key === k); if (wd) h += chip(tr(wd.name), 'wd'); }
@@ -1575,6 +1578,15 @@ function nearestEnemy(range) {
   for (const b of bigs()) { if (b.burrowed) continue; const d2 = (b.x - P.x) ** 2 + (b.z - P.z) ** 2; if (d2 < bd) { bd = d2; best = b; } }
   return best;
 }
+function fireSecondary(dt) {
+  if (P.weapon2 === undefined || P.weapon2 === P.weapon) return;
+  const w = WEAPONS[P.weapon2]; if (!w || w.type === 'orbit') return;
+  P.attackT2 = (P.attackT2 || 0) - dt; if (P.attackT2 > 0) return;
+  const target = nearestEnemy(w.type === 'melee' ? w.range * P.areaMult + 1.5 : w.range); if (!target) return;
+  P.attackT2 = w.rate * 1.5 / P.speedTalent;
+  const ang = Math.atan2(target.x - P.x, target.z - P.z);
+  if (w.type === 'melee') meleeSwing(w, ang, 0.6, false); else fireProjectiles(w, ang, 0.6);
+}
 function fireWeapon(dt) {
   const w = WEAPONS[P.weapon];
   const rate = w.rate / P.speedTalent;
@@ -1604,18 +1616,19 @@ function fireWeapon(dt) {
       }
     }
     if (w.key === 'crescent' && P.weaponRank.crescent >= 2) S.timers.push({ t: 0.16, fn: () => { if (S.phase === 'run') { P.swing = 0.18; meleeSwing(w, ang + Math.PI * 0.35, 0.65, false); } } });
-  } else {
-    const wr = P.weaponRank[w.key] || 0;
-    const n = w.key === 'bolt' ? 1 + P.extraBolts + (wr >= 2 ? 1 : 0) : (wr >= 2 ? 3 : 1);
-    for (let i = 0; i < n; i++) {
-      const spread = n > 1 ? (i - (n - 1) / 2) * (w.key === 'bow' ? 0.22 : 0.16) : 0;
-      const a = ang + spread;
-      const pierce = (w.key === 'bow' && wr >= 4) ? 99 : w.pierce + (w.key === 'bolt' ? (wr >= 1 ? 1 : 0) : (wr >= 1 ? 2 : 0)) + (P.pathPierce || 0);
-      S.projectiles.push({ x: P.x + Math.sin(a) * 0.6, z: P.z + Math.cos(a) * 0.6, y: 0.9, vx: Math.sin(a) * w.speed, vz: Math.cos(a) * w.speed, life: w.range / w.speed, dmg: wdmg(w) * dmgMult() * (w.key === 'bolt' ? (P.boltMult || 1) : 1), pierce, burst: w.key === 'bolt' && wr >= 3, chain: w.key === 'bolt' && wr >= 4, critPlus: (w.key === 'bow' && wr >= 4) ? 0.25 : 0, scorch: w.key === 'bow' && wr >= 3, heavy: !!w.heavyBolt, hit: new Set() });
-    }
-    AUDIO.sfx(({ crescent: 'sword', bolt: 'talisman', lantern: 'pearl', bow: 'bow', chain: 'cord' })[w.key] || 'swing', 0.05);
-    spawnParticle(P.x + Math.sin(ang) * 0.7, 0.9, P.z + Math.cos(ang) * 0.7, 0, 0.5, 0, 1, 0.7, 0.3, 0.6, 0.15, 0);
+  } else fireProjectiles(w, ang, 1);
+}
+function fireProjectiles(w, ang, scale) {
+  const wr = P.weaponRank[w.key] || 0;
+  const n = w.key === 'bolt' ? 1 + P.extraBolts + (wr >= 2 ? 1 : 0) : (wr >= 2 ? 3 : 1);
+  for (let i = 0; i < n; i++) {
+    const spread = n > 1 ? (i - (n - 1) / 2) * (w.key === 'bow' ? 0.22 : 0.16) : 0;
+    const a = ang + spread;
+    const pierce = (w.key === 'bow' && wr >= 4) ? 99 : w.pierce + (w.key === 'bolt' ? (wr >= 1 ? 1 : 0) : (wr >= 1 ? 2 : 0)) + (P.pathPierce || 0);
+    S.projectiles.push({ x: P.x + Math.sin(a) * 0.6, z: P.z + Math.cos(a) * 0.6, y: 0.9, vx: Math.sin(a) * w.speed, vz: Math.cos(a) * w.speed, life: w.range / w.speed, dmg: wdmg(w) * dmgMult() * scale * (w.key === 'bolt' ? (P.boltMult || 1) : 1), pierce, burst: w.key === 'bolt' && wr >= 3, chain: w.key === 'bolt' && wr >= 4, critPlus: (w.key === 'bow' && wr >= 4) ? 0.25 : 0, scorch: w.key === 'bow' && wr >= 3, heavy: !!w.heavyBolt, hit: new Set() });
   }
+  AUDIO.sfx(({ crescent: 'sword', bolt: 'talisman', lantern: 'pearl', bow: 'bow', chain: 'cord' })[w.key] || 'swing', 0.05);
+  spawnParticle(P.x + Math.sin(ang) * 0.7, 0.9, P.z + Math.cos(ang) * 0.7, 0, 0.5, 0, 1, 0.7, 0.3, 0.6, 0.15, 0);
 }
 function meleeSwing(w, ang, dmgScale, primary) {
   {
@@ -1755,6 +1768,7 @@ function gainXp(n) {
 // =====================================================================
 let luOptions = [];
 function rollTalents() {
+  if (P.level >= 13 && P.weapon2 === undefined && !P.subOffered) { P.subOffered = true; const opts = WEAPONS.map((w, i) => ({ key: 'sub_' + w.key, sub: true, max: 1, name: w.name, desc: 'Second artefact: it strikes on its own at 60% damage, a little slower.', apply: (p) => { p.weapon2 = i; } })).filter((o, i) => i !== P.weapon && WEAPONS[i].type !== 'orbit'); if (opts.length) return opts; }
   if (P.level >= 10 && !P.path && !P.pathOffered) { P.pathOffered = true; return PATHS.filter((p) => !p.unlock || unlocked(p.unlock)); }
   const availAll = TALENTS.filter((t) => (P.talents[t.key] || 0) < t.max
     && !(t.key === 'twin' && P.weapon !== 1 && Math.random() < 0.5)
@@ -1787,9 +1801,9 @@ function openLevelUp() {
     return;
   }
   S.modal = 'levelup'; S.paused = true;
-  const isPath = !!(luOptions[0] && luOptions[0].path);
-  $('#luSub').textContent = `${tr(isPath ? 'A path is chosen once. It shapes the rest of the run.' : 'Choose a talent. Your run is paused.')}  [ ${luOptions.map((_, i) => i + 1).join(' / ')} ]`;
-  $('#luTitle').textContent = isPath ? (SET.lang === 'zh' ? '筑基 · 择一道途' : 'Foundation Establishment · choose a path') : SET.lang === 'zh' ? `境界突破 · ${realmName(P.level)}。${tr(LEVEL_NAMES[Math.min(LEVEL_NAMES.length - 1, P.level - 2)])}` : `${tr('Level')} ${pad2(P.level)}. ${tr(LEVEL_NAMES[Math.min(LEVEL_NAMES.length - 1, P.level - 2)])}`;
+  const isPath = !!(luOptions[0] && luOptions[0].path); const isSub = !!(luOptions[0] && luOptions[0].sub);
+  $('#luSub').textContent = `${tr(isSub ? 'A second artefact fights beside your first. Chosen once.' : isPath ? 'A path is chosen once. It shapes the rest of the run.' : 'Choose a talent. Your run is paused.')}  [ ${luOptions.map((_, i) => i + 1).join(' / ')} ]`;
+  $('#luTitle').textContent = isSub ? (SET.lang === 'zh' ? '金丹 · 择副法宝' : 'Golden Core · choose a second artefact') : isPath ? (SET.lang === 'zh' ? '筑基 · 择一道途' : 'Foundation Establishment · choose a path') : SET.lang === 'zh' ? `境界突破 · ${realmName(P.level)}。${tr(LEVEL_NAMES[Math.min(LEVEL_NAMES.length - 1, P.level - 2)])}` : `${tr('Level')} ${pad2(P.level)}. ${tr(LEVEL_NAMES[Math.min(LEVEL_NAMES.length - 1, P.level - 2)])}`;
   const box = $('#luChoices'); box.innerHTML = '';
   luOptions.forEach((t, i) => {
     const b = document.createElement('button'); b.className = 'choice' + (t.keystone || t.path ? ' keystone' : (t.rare ? ' rare' : ''));
@@ -1806,7 +1820,7 @@ function openLevelUp() {
 function pickTalent(i) {
   const t = luOptions[i]; if (!t) return;
   P.talents[t.key] = (P.talents[t.key] || 0) + 1;
-  t.apply(P); P.animOnce = 'cheer';
+  t.apply(P); P.animOnce = 'cheer'; if (t.sub) refreshWeaponCard();
   $('#levelup').classList.remove('show'); S.modal = null; S.paused = false;
   AUDIO.sfx('ui');
   burstParticles(P.x, 0.8, P.z, 30, [0.55, 0.95, 0.85], 4, 0.4, 0.6, -2);
@@ -2438,7 +2452,7 @@ function updatePlayer(dt) {
   updateAim();
   if (S.mouse.down || S.keys.attack || !P.auto || (PAD.on && PAD.aiming)) P.facing = Math.atan2(S.aim.x - P.x, S.aim.z - P.z);
   else if (mv.len > 0 && P.attackT > 0.1) P.facing = Math.atan2(dx, dz);
-  fireWeapon(dt);
+  fireWeapon(dt); fireSecondary(dt);
   updateOrbs(dt);
   // district discovery
   const D = districtAt(P.x, P.z);
@@ -2824,7 +2838,7 @@ function autopilot(dt) {
 // debug / capture hooks (used by the verification script)
 // =====================================================================
 window.__emberlight = {
-  S, P: () => P, W, world: () => world, startRun, endRun, spawnBoss, triggerOmen, omens: () => S.omens, playDitai, nearDitai, DITAI, prayWuluo, nearWuluo, WULUO, PLACES, visitPlace, hurtBig, realmTier, realmLamp, lampI: () => lampLight.intensity, WX_BIAS, wdmg, saveRun, loadRunSnap, resumeRun, clearRun, ringColor: () => FX.playerRing.material.color.getHexString(), dangkang: () => S.dangkang, startJingweiErrand, jwQuest: () => S.jwQuest, spawnEnemy, spawnAround, setWeather: (tod, wx) => { W.tod = tod; W.wx = wx; W.auto = false; refreshWeatherButtons(); },
+  S, P: () => P, W, world: () => world, startRun, endRun, spawnBoss, triggerOmen, omens: () => S.omens, playDitai, nearDitai, DITAI, prayWuluo, nearWuluo, WULUO, PLACES, visitPlace, hurtBig, realmTier, realmLamp, lampI: () => lampLight.intensity, WX_BIAS, wdmg, fireSecondary, saveRun, loadRunSnap, resumeRun, clearRun, ringColor: () => FX.playerRing.material.color.getHexString(), dangkang: () => S.dangkang, startJingweiErrand, jwQuest: () => S.jwQuest, spawnEnemy, spawnAround, setWeather: (tod, wx) => { W.tod = tod; W.wx = wx; W.auto = false; refreshWeatherButtons(); },
   cheat: (o) => Object.assign(P, o), META, recordRun, SET, applyLang, applyQuality, applyCues, gainXp, AUDIO, camDist: (v) => { camDist = v; }, PAD, pollGamepad, lightShrine, nearShrine, shrines: () => S.shrines, DIFFS, rollTalents, TALENTS, WEAPONS, spawnMini, MINIS, minis: () => S.minis, hurtMini, killMini, GUIDE, ANIM, clips: () => kit.clips.map((c) => c.name + ':' + c.duration.toFixed(2)), post: () => ({ ao: gtaoPass && gtaoPass.enabled, bloom: bloomPass && bloomPass.enabled, passes: composer && composer.passes.length }),
   project: (x, y, z) => { const v = new THREE.Vector3(x, y, z).project(camera); return { sx: (v.x * 0.5 + 0.5) * window.innerWidth, sy: (-v.y * 0.5 + 0.5) * window.innerHeight }; },
   slashes: () => S.slashes.map((m) => ({ ry: m.rotation.y, arc: m.userData.arc })), giveShards: (n) => { P.shards += n; }, teleport: (x, z) => { P.x = x; P.z = z; }, cranes: () => craneSet ? { count: craneSet.count, body: !!craneSet.body, tris: craneSet.body ? craneSet.body.geometry.attributes.position.count / 3 : 0 } : null,
