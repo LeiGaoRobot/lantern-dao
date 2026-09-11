@@ -2636,7 +2636,7 @@ function togglePause() {
   }
 }
 function statRows() {
-  return `<div>${tr('Time survived')} <b>${fmtTime(S.t)}</b></div><div>${tr('Level')} <b>${SET.lang === 'zh' ? realmName(P.level) : P.level}</b></div><div>${tr('Defeated')} <b>${S.stats.kills}</b></div><div>${tr('Elites')} <b>${S.stats.elites}</b></div><div>${tr('Damage dealt')} <b>${Math.round(S.stats.dmgDealt)}</b></div><div>${tr('Forge shards')} <b>${P.shards}</b></div><div>${tr('Shrines lit')} <b>${S.stats.shrines || 0} / 4</b></div><div>${tr('Elites felled')} <b>${S.stats.minis || 0} / 4</b></div><div>${tr('Omens')} <b>${S.stats.omens || 0}${S.stats.dangkang ? ' · ' + tr('Dangkang') + ' ' + S.stats.dangkang : ''}</b></div>`;
+  return `<div>${tr('Time survived')} <b>${fmtTime(S.t)}</b></div><div>${tr('Level')} <b>${SET.lang === 'zh' ? realmName(P.level) : P.level}</b></div><div>${tr('Defeated')} <b>${S.stats.kills}</b></div><div>${tr('Elites')} <b>${S.stats.elites}</b></div><div>${tr('Damage dealt')} <b>${Math.round(S.stats.dmgDealt)}</b></div><div>${tr('Forge shards')} <b>${P.shards}</b></div><div>${tr('Shrines lit')} <b>${S.stats.shrines || 0} / 4</b></div><div>${tr('Elites felled')} <b>${S.stats.minis || 0}${S.endless ? '' : ' / 4'}</b></div><div>${tr('Omens')} <b>${S.stats.omens || 0}${S.stats.dangkang ? ' · ' + tr('Dangkang') + ' ' + S.stats.dangkang : ''}</b></div><div>${tr('Atlas')} <b>${S.stats.places || 0} / ${PLACES.length}</b></div>`;
 }
 function showBanner(text, secs = 4) { const b = $('#banner'); b.textContent = tr(text); b.classList.add('show'); S.bannerT = secs; }
 
@@ -2645,7 +2645,7 @@ function showBanner(text, secs = 4) { const b = $('#banner'); b.textContent = tr
 // =====================================================================
 function startRun() {
   P = newPlayer();
-  S.phase = 'run'; S.paused = false; S.modal = null; S.t = 0; S.endless = false; S.tribK = 0; S.tribWarned = false; S.tide = null; S.omens = {}; S.omenK = {}; S.omenCd = {}; S.omenClock = 0; S.omenTick = 0; S.dangkang = null; S.fusangLm = null; S.fusangSeen = false; S.fusangT = 0; S.jwQuest = null; S.jwDone = 0; S.danceOn = false; S.tenSuns = false; S.devourSeen = false; S.qiCd = 0; S.cursedT = 0; S.curseSeen = false; S.wuluoCd = 0; S.placesSeen = {};
+  S.phase = 'run'; S.paused = false; S.modal = null; S.t = 0; S.endless = false; S.tribK = 0; S.tribWarned = false; S.tide = null; S.omens = {}; S.omenK = {}; S.omenCd = {}; S.omenClock = 0; S.omenTick = 0; S.dangkang = null; S.fusangLm = null; S.fusangSeen = false; S.fusangT = 0; S.jwQuest = null; S.jwDone = 0; S.danceOn = false; S.tenSuns = false; S.devourSeen = false; S.qiCd = 0; S.cursedT = 0; S.curseSeen = false; S.wuluoCd = 0; S.placesSeen = {}; S.eliteWave = 0;
   S.recorded = false;
   S.enemies.length = 0; S.pickups.length = 0; S.projectiles.length = 0; S.eprojectiles.length = 0; S.burns.length = 0; S.timers.length = 0;
   for (const m of S.slashes) scene.remove(m); S.slashes.length = 0;
@@ -3363,6 +3363,8 @@ function updateSpawner(dt) {
   S.tribK = lerp(S.tribK, tribTarget, 1 - Math.pow(0.001, dt / 8));
   if (!S.bossSpawned && S.t >= BOSS_AT_FN() && !S.endless) spawnBoss();
   if (S.endless && !S.boss && S.t > BOSS_AT_FN() && (S.t - BOSS_AT_FN()) % 240 < dt) spawnBoss();
+  // 无尽·异兽复出: every 240 s after the lord, the four district elites may walk the mountains again, a little tougher each time
+  if (S.endless && S.t > BOSS_AT_FN() && (S.t - BOSS_AT_FN()) % 240 < dt) { S.miniDone = {}; S.eliteWave = (S.eliteWave || 0) + 1; showBanner(SET.lang === 'zh' ? '异兽复出 · 四山精英再临' : 'THE BEASTS RETURN  ·  the four elites walk again', 4); }
 }
 function updateEnemies(dt) {
   enemyGrid.clear();
@@ -3542,7 +3544,7 @@ function spawnMini(distKey) {
   const a = Math.random() * Math.PI * 2;
   let x = P.x + Math.cos(a) * 18, z = P.z + Math.sin(a) * 18;
   const r = Math.hypot(x, z); if (r > PLAY_R - 4) { x *= (PLAY_R - 4) / r; z *= (PLAY_R - 4) / r; }
-  const hp = (d.hp + minute() * 90) * DIFF().hp * (S.endless ? 1.4 : 1);
+  const hp = (d.hp + minute() * 90) * DIFF().hp * (S.endless ? 1.4 : 1) * (1 + 0.25 * (S.eliteWave || 0));
   const m = { mini: true, key: d.key, def: d, x, z, r: d.r, hp, maxHp: hp, face: 0, flash: 0, kx: 0, kz: 0, t: { mass: 12, dmg: d.dmg }, atkCd: 1, moveCd: 3.5, moveIdx: 0, phase: 'chase', pt: 0, burrowed: false, speedMul: 1, buffT: 0, dead: false, animOnce: 'special', bob: 0 };
   S.minis.push(m);
   if (d.key === 'salamander') S.timers.push({ t: 4, fn: () => triggerOmen('plague') });   // after the elite's own banner
