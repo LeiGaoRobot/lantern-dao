@@ -2363,10 +2363,11 @@ function weatherTarget() {
   // omens: drought bakes the sky yellow and dries the ground; plague sickens it green and thickens the fog; the phoenix warms it
   if (kd > 0.01) { o.sky.lerp(OMEN_COL.droughtSky, kd * 0.45); o.fog.lerp(OMEN_COL.droughtFog, kd * 0.4); o.sunC.lerp(OMEN_COL.droughtSun, kd * 0.7); o.hemiSky.lerp(OMEN_COL.droughtSky, kd * 0.6); o.hemiGround.lerp(OMEN_COL.droughtGround, kd * 0.6); o.sunI *= 1 + kd * 0.35; o.hemiI *= 1 - kd * 0.1; o.wet *= 1 - kd; o.rain *= 1 - kd; o.snow *= 1 - kd; o.cloud *= 1 - kd * 0.7; o.fogFar *= 1 + kd * 0.3; o.exposure *= 1 + kd * 0.08; }
   if (kp > 0.01) { o.sky.lerp(OMEN_COL.plagueSky, kp * 0.45); o.fog.lerp(OMEN_COL.plagueFog, kp * 0.5); o.sunC.lerp(OMEN_COL.plagueSun, kp * 0.7); o.hemiSky.lerp(OMEN_COL.plagueSky, kp * 0.7); o.hemiGround.lerp(OMEN_COL.plagueGround, kp * 0.6); o.hemiI *= 1 - kp * 0.2; o.sunI *= 1 - kp * 0.25; o.fogNear *= 1 - kp * 0.35; o.fogFar *= 1 - kp * 0.35; o.exposure *= 1 - kp * 0.08; }
+  if (S.endless && S.eliteWave) { const ke = Math.min(0.6, S.eliteWave * 0.15); o.sky.lerp(OMEN_COL.eraSky, ke); o.fog.lerp(OMEN_COL.eraSky, ke * 0.6); o.hemiSky.lerp(OMEN_COL.eraSky, ke * 0.5); }   /* 山海异象: endless deepens to cinnabar wave by wave */
   if (kc > 0.01) { o.sky.lerp(OMEN_COL.calmSky, kc * 0.3); o.fog.lerp(OMEN_COL.calmFog, kc * 0.25); o.sunC.lerp(OMEN_COL.calmSun, kc * 0.6); o.hemiSky.lerp(OMEN_COL.calmSky, kc * 0.5); o.hemiI *= 1 + kc * 0.1; }
   return o;
 }
-const OMEN_COL = { droughtSky: C('#e9d9a6'), droughtFog: C('#e6d7a8'), droughtSun: C('#ffd070'), droughtGround: C('#8a7a4a'), plagueSky: C('#7f8f66'), plagueFog: C('#8d9a70'), plagueSun: C('#b8c88a'), plagueGround: C('#3e4a30'), calmSky: C('#f2d9c8'), calmFog: C('#efd6c6'), calmSun: C('#ffd8c0') };
+const OMEN_COL = { droughtSky: C('#e9d9a6'), droughtFog: C('#e6d7a8'), droughtSun: C('#ffd070'), droughtGround: C('#8a7a4a'), plagueSky: C('#7f8f66'), plagueFog: C('#8d9a70'), plagueSun: C('#b8c88a'), plagueGround: C('#3e4a30'), calmSky: C('#f2d9c8'), calmFog: C('#efd6c6'), calmSun: C('#ffd8c0'), eraSky: C('#5a1a2a') };
 function applyWeatherInstant() { W.tgt = weatherTarget(); W.cur = weatherTarget(); applyWeather(); }
 function lerpColor(a, b, t) { a.lerp(b, t); }
 function updateWeather(dt) {
@@ -2486,7 +2487,7 @@ window.addEventListener('keydown', (e) => {
 });
 window.addEventListener('keyup', (e) => { const a = KEYMAP[e.code] || KEYMAP2[String(e.key).toLowerCase()]; if (a) S.keys[a] = false; });
 window.addEventListener('blur', () => { S.keys = {}; S.mouse.down = S.mouse.rdown = false; });
-document.addEventListener('visibilitychange', () => { if (document.hidden && S.phase === 'run' && !S.modal) togglePause(); });
+document.addEventListener('visibilitychange', () => { if (document.hidden && S.phase === 'run') { saveRun(); if (!S.modal) togglePause(); } });
 canvas.addEventListener('mousemove', (e) => { S.mouse.x = e.clientX; S.mouse.y = e.clientY; });
 canvas.addEventListener('mousedown', (e) => { AUDIO.ensureAudio(); AUDIO.resume(); if (e.button === 0) S.mouse.down = true; if (e.button === 2) { S.mouse.rdown = true; onAction('heavy'); } });
 window.addEventListener('mouseup', (e) => { if (e.button === 0) S.mouse.down = false; if (e.button === 2) S.mouse.rdown = false; });
@@ -3355,6 +3356,7 @@ function updateOmens(dt) {
     if (!S.omens.plague && S.minis.some((m) => m.key === 'salamander' && !m.dead)) triggerOmen('plague');
     // auspicious omens roll on a slow clock while the valley is quiet
     S.omenClock = (S.omenClock || 0) + 1;
+    S.saveClock = (S.saveClock || 0) + 1; if (S.saveClock >= 30) { S.saveClock = 0; saveRun(); }   /* 每 30 息自动记档 */
     if (S.omenClock >= 75 && S.t > 80 && !S.boss && !S.tide && !S.shrineActive) { S.omenClock = 0; const r = Math.random(); if (r < 0.4) triggerOmen('bounty'); else if (r < 0.7 && S.t > 170) triggerOmen('calm'); }
     if (S.endless && !S.tenSuns && S.t >= BOSS_AT_FN() + 240) { S.tenSuns = true; S.omenCd.drought = 0; delete S.omens.drought; if (triggerOmen('drought')) { S.omens.drought = 120; showBanner(SET.lang === 'zh' ? '十日并出 · 焦禾稼,杀草木' : 'TEN SUNS RISE TOGETHER  ·  crops scorch, trees die', 5); } }
     if (world.landmarks) for (const l of world.landmarks) { const pl = PLACE_BY_MARK[l.kind]; if (pl && !S.placesSeen[pl.key] && Math.hypot(P.x - l.x, P.z - l.z) < pl.r) visitPlace(pl); }
@@ -3638,7 +3640,7 @@ function spawnMini(distKey) {
   m.rigKey = distKey;
   showBanner(tr(d.name) + '  ·  ' + tr('wakes'), 4); AUDIO.sfx(d.key === 'wolfking' ? 'foxcry' : 'roar'); if (d.key === 'maw') AUDIO.setDance(true);
   spawnRing(x, z, 6, 0xc48aff, 0.9, 0.08); burstParticles(x, 1, z, 60, [0.75, 0.5, 1], 6, 0.5, 1.0);
-  $('#mini').classList.add('show'); $('#mini .name').textContent = tr(d.name);
+  $('#mini').classList.add('show'); $('#mini .name').textContent = tr(d.name) + (S.eliteWave ? (SET.lang === 'zh' ? ` · 复出${['', '一', '二', '三', '四', '五', '六', '七', '八', '九'][Math.min(9, S.eliteWave)] || S.eliteWave}` : ` · return ${S.eliteWave}`) : '');
   return m;
 }
 function hurtMini(m, dmg, crit = false) {
