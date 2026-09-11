@@ -163,6 +163,10 @@ const TALENTS = [
   { key: 'glass', name: 'Glass cannon', max: 1, keystone: true, desc: 'Damage +60%. Max health −40%.', apply: (p) => { p.keystone = 'glass'; p.dmgTalent *= 1.6; p.maxHp = Math.max(30, Math.round(p.maxHp * 0.6)); p.hp = Math.min(p.hp, p.maxHp); } },
   { key: 'wardenk', name: 'Lantern warden', max: 1, keystone: true, desc: 'Two ash lanterns always orbit you, whatever you wield. Damage −10%.', apply: (p) => { p.keystone = 'wardenk'; p.orbAlways = true; p.dmgTalent *= 0.9; } },
   { key: 'leech', name: 'Ash leech', max: 1, keystone: true, desc: 'Heal 5% of all damage dealt. Regeneration stops; hearts heal half.', apply: (p) => { p.keystone = 'leech'; p.leech = 0.05; p.noRegen = true; } },
+  // 神通: offered only once every ordinary technique is learned (around level 54)
+  { key: 'skyfire', late: true, rare: true, name: 'Skyfire', max: 1, desc: 'Every 6 s a bolt from the tribulation sky strikes the thickest knot of demons near you.', apply: (p) => { p.skyfire = true; p.skyfireT = 3; } },
+  { key: 'shrinkland', late: true, rare: true, name: 'Shrinking land', max: 1, desc: 'Cloud step recovers twice as fast and carries you half again as far.', apply: (p) => { p.dashCdMult = (p.dashCdMult || 1) * 0.5; p.dashLen = (p.dashLen || 1) * 1.5; } },
+  { key: 'goldbody', late: true, rare: true, name: 'Golden body', max: 1, desc: 'Gain 60 max health and 15% armour.', apply: (p) => { p.maxHp += 60; p.hp += 60; p.armourTalent += 0.15; } },
 ];
 // 妖录: every creature quotes its own line from the Classic of Mountains and Seas, checked against the wikisource text
 const LORE = [
@@ -345,6 +349,7 @@ const ZH = {
   'A brighter spark.': '灵光初现。', 'The wick catches.': '灯芯点燃。', 'Warmth returns.': '暖意回归。', 'Steady flame.': '心火稳定。', 'The dark recedes.': '黑暗退去。',
   'Ember heart.': '灵台清明。', 'Wildfire.': '燎原。', 'Beacon.': '明灯高悬。', 'Sunrise in your hands.': '掌中日出。', 'Unquenchable.': '不灭。',
   // talents
+  'Skyfire': '天火', 'Every 6 s a bolt from the tribulation sky strikes the thickest knot of demons near you.': '每 6 息一道劫雷落在你身边妖邪最密处。', 'Shrinking land': '缩地成寸', 'Cloud step recovers twice as fast and carries you half again as far.': '踏云步冷却减半,距离再加一半。', 'Golden body': '金身', 'Gain 60 max health and 15% armour.': '最大命火 +60,护甲 +15%。',
   'Still burning': '龟息诀', 'Gain 20 max health. Recover 35 health.': '最大命火 +20,回复 35 命火。',
   'Wildfire soles': '火行靴', 'Dashing leaves a trail of burning embers.': '踏云步留下一道燃烧的火痕。',
   'Wide awake': '大梦初醒', 'Increase attack and nova radius by 15%.': '攻击与灵光爆范围 +15%。',
@@ -1710,11 +1715,12 @@ function gainXp(n) {
 let luOptions = [];
 function rollTalents() {
   if (P.level >= 10 && !P.path && !P.pathOffered) { P.pathOffered = true; return PATHS.filter((p) => !p.unlock || unlocked(p.unlock)); }
-  const avail = TALENTS.filter((t) => (P.talents[t.key] || 0) < t.max
+  const availAll = TALENTS.filter((t) => (P.talents[t.key] || 0) < t.max
     && !(t.key === 'twin' && P.weapon !== 1 && Math.random() < 0.5)
     && !(t.key === 'tongue' && P.weapon !== 1 && Math.random() < 0.6)
     && !(t.key === 'wind' && P.noRegen)
     && !(t.keystone && (P.keystone || P.level < 3)));
+  let avail = availAll.filter((t) => !t.late); if (!avail.length) avail = availAll.filter((t) => t.late);
   const nOpt = unlocked('fourth') ? 4 : 3;
   const out = [];
   // weighted draw: commons 1, rares 0.55, keystones 0.35 (and at most one keystone per roll)
@@ -2370,7 +2376,8 @@ function updatePlayer(dt) {
   P.dashCd = Math.max(0, P.dashCd - dt); P.heavyCd = Math.max(0, P.heavyCd - dt); P.novaCd = Math.max(0, P.novaCd - dt);
   P.swing = Math.max(0, P.swing - dt);
   if (P.regen > 0 && !P.noRegen) P.hp = Math.min(P.maxHp, P.hp + P.regen * dt * healMul());
-  if (S.cursedT > 0) S.cursedT -= dt; if (S.qiCd > 0) S.qiCd -= dt; if (S.wuluoCd > 0) S.wuluoCd -= dt;
+  if (S.cursedT > 0) S.cursedT -= dt; if (S.qiCd > 0) S.qiCd -= dt;
+  if (P.skyfire) { P.skyfireT -= dt; if (P.skyfireT <= 0) { P.skyfireT = 6; let best = null, bestN = -1; for (const e of S.enemies) { if (e.dying || Math.hypot(e.x - P.x, e.z - P.z) > 12) continue; let n = 0; for (const o of S.enemies) if (!o.dying && (o.x - e.x) ** 2 + (o.z - e.z) ** 2 < 9) n++; if (n > bestN) { bestN = n; best = e; } } if (best) { const bx = best.x, bz = best.z, dmg = 60 * dmgMult(); strikeBolt(bx, bz); W.lightning = Math.max(W.lightning, 0.7); AUDIO.sfx('thunder'); for (const o of S.enemies) if (!o.dying && (o.x - bx) ** 2 + (o.z - bz) ** 2 < 9) hurtEnemy(o, dmg, true); if (S.boss && !S.boss.dead && Math.hypot(S.boss.x - bx, S.boss.z - bz) < 3.5) hurtBig(S.boss, dmg, true); for (const m of S.minis) if (!m.dead && Math.hypot(m.x - bx, m.z - bz) < 3.5) hurtBig(m, dmg, true); } } } if (S.wuluoCd > 0) S.wuluoCd -= dt;
   const mv = moveVector();
   let sp = moveSpeed();
   let dx = mv.x, dz = mv.z;
