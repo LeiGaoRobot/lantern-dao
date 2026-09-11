@@ -6,7 +6,7 @@ Blender 5.2 无头建模 + three.js r184,全部音效 WebAudio 合成,单文件�
 - 在线玩:https://leigaorobot.github.io/lantern-dao/
 - 仓库:https://github.com/LeiGaoRobot/lantern-dao (仙侠旧版在标签 `xianxia-v1.4`)
 - Artifact:https://claude.ai/code/artifact/d8e375be-4549-40bf-8cf4-0f288ebf32bf
-- 玩法:WASD 移动、鼠标瞄准(默认自动出剑)、右键 / K 重击、空格踏云步、E 灵光爆、Q 换法宝、F 炼器坊 / 布下法阵、Tab 自动 / 手动、Esc 暂停;五山、五件法宝、27 门功法、四只精英、八分钟刑天、十分钟过山后问道无尽;支持触屏与手柄,中 / 英文切换
+- 玩法:WASD 移动、鼠标瞄准(默认自动出剑)、右键 / K 重击、空格踏云步、E 灵光爆、Q 换法宝、F 炼器坊 / 布下法阵、Tab 自动 / 手动、Esc 暂停;五山、五件法宝、27 门功法、四只精英、八分钟刑天、十分钟过山后问道无尽;四档难度(清修 / 修行 / 劫难 / 常羊);支持触屏与手柄,中 / 英文切换
 
 ## 山海版(v2.0)
 
