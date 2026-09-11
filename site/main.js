@@ -216,7 +216,8 @@ const TIDE_QUOTE = {
   spitter: { zh: '毕方群现 · 见则其邑有讹火', en: 'BIFANG SWARM  ·  strange fires follow' },
   brute:   { zh: '穷奇群现 · 音如嗥狗,是食人', en: 'QIONGQI SWARM  ·  howling like dogs; they eat men' },
 };
-function tideText(type) { const q = TIDE_QUOTE[type] || TIDE_QUOTE.wisp; return SET.lang === 'zh' ? q.zh : q.en; }
+function dirName(a) { const names = SET.lang === 'zh' ? ['东', '东南', '南', '西南', '西', '西北', '北', '东北'] : ['east', 'south-east', 'south', 'south-west', 'west', 'north-west', 'north', 'north-east']; const idx = ((Math.round(a / (Math.PI / 4)) % 8) + 8) % 8; return names[idx]; }   // +x east, +z south
+function tideText(type, a) { const q = TIDE_QUOTE[type] || TIDE_QUOTE.wisp; const d = a === undefined ? '' : (SET.lang === 'zh' ? ` · 自${dirName(a)}而来` : ` · from the ${dirName(a)}`); return (SET.lang === 'zh' ? q.zh : q.en) + d; }
 const REALMS_ZH = ['练气一层', '练气二层', '练气三层', '练气四层', '练气五层', '练气六层', '练气七层', '练气八层', '练气九层', '筑基初期', '筑基中期', '筑基后期', '金丹初期', '金丹中期', '金丹后期', '元婴初期', '元婴中期', '元婴后期', '化神'];
 function realmName(l) { if (SET.lang !== 'zh') return `${tr('Level')} ${pad2(l)}`; const i = Math.min(REALMS_ZH.length - 1, l - 1); return REALMS_ZH[i] + (l > REALMS_ZH.length ? ' ' + (l - REALMS_ZH.length + 1) : ''); }
 const PATHS = [
@@ -1248,8 +1249,17 @@ function togglePause() {
   if (S.modal === 'pause') { S.modal = null; S.paused = false; $('#pause').classList.remove('show'); }
   else if (!S.modal) {
     S.modal = 'pause'; S.paused = true; $('#pause').classList.add('show');
-    $('#pauseStats').innerHTML = statRows();
+    $('#pauseStats').innerHTML = statRows(); $('#pauseBuild').innerHTML = buildRows();
   }
+}
+function buildRows() {
+  const zh = SET.lang === 'zh'; const chip = (t, cls = '') => `<span class="bchip ${cls}">${t}</span>`;
+  const w = WEAPONS[P.weapon]; const rank = P.weaponRank[w.key] || 0;
+  let h = chip(tr(w.name) + (rank ? ' ' + '★'.repeat(rank) : ''), 'w');
+  if (P.path) h += chip(tr({ sword: 'Sword Path', talisman: 'Talisman Path', body: 'Body Path', demon: 'Demon Path' }[P.path] || P.path), 'p');
+  for (const t of TALENTS) { const n = P.talents[t.key] || 0; if (n) h += chip(tr(t.name) + (t.max > 1 ? ` ×${n}` : ''), t.keystone ? 'k' : t.late ? 'l' : t.rare ? 'r' : ''); }
+  if (P.wards) for (const k in P.wards) { const wd = Object.values(WARDS).find((x) => x.key === k); if (wd) h += chip(tr(wd.name), 'wd'); }
+  return `<div class="sub" style="margin:12px 0 4px">${zh ? '本局修行' : 'This run'}</div><div class="buildlist">${h}</div>`;
 }
 function statRows() {
   return `<div>${tr('Time survived')} <b>${fmtTime(S.t)}</b></div><div>${tr('Level')} <b>${SET.lang === 'zh' ? realmName(P.level) : P.level}</b></div><div>${tr('Defeated')} <b>${S.stats.kills}</b></div><div>${tr('Elites')} <b>${S.stats.elites}</b></div><div>${tr('Damage dealt')} <b>${Math.round(S.stats.dmgDealt)}</b></div><div>${tr('Forge shards')} <b>${P.shards}</b></div><div>${tr('Shrines lit')} <b>${S.stats.shrines || 0} / 4</b></div><div>${tr('Elites felled')} <b>${S.stats.minis || 0}${S.endless ? '' : ' / 4'}</b></div><div>${tr('Omens')} <b>${S.stats.omens || 0}${S.stats.dangkang ? ' · ' + tr('Dangkang') + ' ' + S.stats.dangkang : ''}</b></div><div>${tr('Atlas')} <b>${S.stats.places || 0} / ${PLACES.length}</b></div>`;
@@ -1968,7 +1978,7 @@ function updateSpawner(dt) {
     if (e && n > 1) for (let i = 1; i < n; i++) { const a = Math.random() * 6.28; spawnEnemy(type, e.x + Math.cos(a) * 1.5, e.z + Math.sin(a) * 1.5); }
   }
   // demon tide: from 2:00, every 150 s, one demon kind pours in from one side for 20 s
-  if (!S.tide && S.t >= 120 && !S.boss && !S.shrineActive && !(S.omens && S.omens.calm) && ((S.t - 120) % 150) < dt) { S.tide = { type: pickType(w), a: Math.random() * Math.PI * 2, t: 20 }; showBanner(tideText(S.tide.type), 4); AUDIO.sfx('roar'); if (S.tide.type === 'crawler') triggerOmen('drought'); else if (S.tide.type === 'spitter') triggerOmen('fire'); }
+  if (!S.tide && S.t >= 120 && !S.boss && !S.shrineActive && !(S.omens && S.omens.calm) && ((S.t - 120) % 150) < dt) { S.tide = { type: pickType(w), a: Math.random() * Math.PI * 2, t: 20 }; showBanner(tideText(S.tide.type, S.tide.a), 4); AUDIO.sfx('roar'); if (S.tide.type === 'crawler') triggerOmen('drought'); else if (S.tide.type === 'spitter') triggerOmen('fire'); }
   if (S.tide) {
     S.tide.t -= dt;
     if (Math.random() < 3.2 * DIFF().spawn * dt && S.enemies.length < cap + 40) {

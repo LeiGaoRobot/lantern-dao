@@ -190,6 +190,13 @@
   .atlas .pl.on { opacity: 1; color: var(--cinnabar, #b8452e); border-color: rgba(184,69,46,.4); background: rgba(184,69,46,.06); }
   body.zh .atlas .pl { font-family: "Noto Serif SC", "STSong", "SimSun", serif; letter-spacing: .08em; }
   @media (max-width: 640px) { .atlas { grid-template-columns: repeat(3, 1fr); } }
+  .buildlist { display: flex; flex-wrap: wrap; gap: 6px; }
+  .bchip { border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; font-size: 12px; opacity: .9; }
+  .bchip.w { color: var(--cinnabar, #b8452e); border-color: rgba(184,69,46,.45); font-weight: 600; }
+  .bchip.p { color: var(--gilt, #9c7b24); border-color: rgba(156,123,36,.5); }
+  .bchip.k { border-style: double; border-width: 3px; }
+  .bchip.l { background: rgba(243,226,176,.35); }
+  .bchip.wd { font-style: italic; }
   .achgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
   .ach { border: 1px solid var(--line); border-radius: 12px; padding: 12px; opacity: .55; }
   .ach.on { opacity: 1; border-color: rgba(111,214,197,.5); background: rgba(111,214,197,.06); }
@@ -443,6 +450,7 @@
   <h2>Paused</h2>
   <div class="sub">The valley waits.</div>
   <div class="stats" id="pauseStats"></div>
+  <div id="pauseBuild"></div>
   <div class="sub" id="settingsTitle" style="margin:16px 0 4px">Settings</div>
   <div class="settings">
     <div class="srow" id="setQuality"><span class="k">Quality</span><span class="v">High</span><button class="btn ghost">Toggle</button></div>
