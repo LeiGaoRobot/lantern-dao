@@ -393,7 +393,7 @@
     <h1>Lantern Dao.</h1>
     <div class="lead">A hidden valley between mountains and seas.<br>One lamp, one cultivator.</div>
     <div class="desc">Walk the five mountains. Gather langgan jade.<br>Refine your artefacts. Face Xingtian.<br>Hold out ten minutes — then walk the endless Dao.</div>
-    <div class="pickrow"><span class="plabel" id="diffLabel">Difficulty</span><div class="picks" id="diffPick"><button class="dp" data-d="calm"><span class="n">Serene</span></button><button class="dp on" data-d="standard"><span class="n">Cultivate</span></button><button class="dp" data-d="ash"><span class="n">Tribulation</span></button></div></div>
+    <div class="pickrow"><span class="plabel" id="diffLabel">Difficulty</span><div class="picks" id="diffPick"><button class="dp" data-d="calm"><span class="n">Serene</span></button><button class="dp on" data-d="standard"><span class="n">Cultivate</span></button><button class="dp" data-d="ash"><span class="n">Tribulation</span></button><button class="dp" data-d="changyang" hidden><span class="n">Changyang</span></button></div></div>
     <div class="pdesc" id="diffDesc"></div>
     <div class="pickrow" id="weaponRow"><span class="plabel" id="weaponLabel">Starting weapon</span><div class="picks" id="weaponPick" style="display:none"></div></div>
     <button class="btn" id="startBtn">Enter the valley &nbsp;→</button>
@@ -1429,6 +1429,7 @@ const RUN_LENGTH = 600;      // 10 minutes
 const DIFFS = {
   calm:     { name: 'Serene',   zh: '清修', dmg: 0.7,  spawn: 0.8,  hp: 0.9,  speed: 0.95, elite: 1.3, bossAt: 480, phase2: false, desc: 'Demons hit 30% softer, Xingtian never rages.', zhDesc: '妖邪伤害 −30%,刑天没有雷怒。' },
   standard: { name: 'Cultivate', zh: '修行', dmg: 1.0,  spawn: 1.0,  hp: 1.0,  speed: 1.0,  elite: 1.0, bossAt: 480, phase2: true,  desc: 'The valley as intended. The Lord at eight minutes.', zhDesc: '标准体验,刑天八分钟现身。' },
+  changyang: { name: 'Changyang', zh: '常羊', dmg: 2.0, spawn: 2.6, hp: 1.6, speed: 1.25, elite: 0.5, bossAt: 300, phase2: true, desc: "Xingtian's own mountain: nearly three times the beasts, hits for 200%, the Lord at five. Unlocked by passing the Tribulation.", zhDesc: '刑天葬首之山:近三倍妖邪、伤害 +100%、刑天五分钟现身。需先在劫难档渡劫。' },
   ash:      { name: 'Tribulation', zh: '劫难', dmg: 1.75, spawn: 2.4,  hp: 1.5,  speed: 1.25, elite: 0.55, bossAt: 360, phase2: true,  desc: 'More than twice the demons, faster, 75% harder hits, Xingtian at six.', zhDesc: '妖邪 2.4 倍、更快、伤害 +75%,刑天六分钟现身。' },
 };
 const DIFF = () => DIFFS[SET.difficulty] || DIFFS.standard;
@@ -1681,7 +1682,7 @@ const SET = Object.assign({ v: SET_V, quality: 'high', shake: true, numbers: tru
     const out = {};
     for (const k of ['quality', 'shake', 'numbers', 'music', 'sfx', 'lang', 'difficulty', 'startWeapon', 'cues']) if (k in raw) out[k] = raw[k];
     out.cues = !!out.cues;
-    if (!['calm', 'standard', 'ash'].includes(out.difficulty)) delete out.difficulty;
+    if (!['calm', 'standard', 'ash', 'changyang'].includes(out.difficulty)) delete out.difficulty;
     if (!Number.isInteger(out.startWeapon)) delete out.startWeapon;
     if (typeof out.music === 'number') out.music = Math.min(0.5, Math.max(0, out.music)); else delete out.music;
     if (typeof out.sfx === 'number') out.sfx = Math.min(0.8, Math.max(0, out.sfx)); else delete out.sfx;
@@ -1731,7 +1732,7 @@ const ZH = {
   'Every third hit strikes for 2.5×': '每第三击造成 2.5 倍伤害', 'Reach +40%': '索长 +40%', 'Hits drag enemies toward you': '命中把妖邪拽向你',
   'DEMON TIDE  ·  They come from one side. Hold.': '异兽群现  ·  从一侧涌来,守住。', 'THE TIDE BREAKS  ·  +6 cinnabar grains': '妖潮退去  ·  +6 丹粟',
   'Foundation memory': '筑基印记', 'Reach Foundation Establishment (level 10) in one run': '单局达到筑基(10 级)', 'Every run starts at Qi Refining 3 with two techniques': '每局开局即练气三层,自带两门功法',
-  'Demon heart': '魔心', 'Pass the tribulation on Tribulation difficulty': '在劫难档渡过天劫', 'A fourth path at Foundation: the Demon Path': '筑基时多一条道途:魔修',
+  'Demon heart': '魔心', 'Pass the tribulation on Tribulation difficulty': '在劫难档渡过天劫', 'A fourth path at Foundation: the Demon Path': '筑基时多一条道途:魔修;开放常羊档',
   'Demon Path': '魔修', 'Damage +40%, max health −25%, heal 3% of all damage dealt.': '伤害 +40%,最大命火 −25%,造成伤害的 3% 转为命火。',
   'Keystone': '本命功法', 'Rare': '秘传', 'Path': '道途', 'Needs Golden Core': '需金丹境', 'A path is chosen once. It shapes the rest of the run.': '道途只能择一次,决定此后的修行方向。',
   'Sword Path': '剑修', 'Attack 15% faster, crit +10%, damage +10%.': '攻速 +15%,会心 +10%,伤害 +10%。',
@@ -1779,6 +1780,7 @@ const ZH = {
 };
 // English display layer: keys stay the Emberlight originals (saves, MINIS/bigs, ZH lookups all hang off them)
 const EN = {
+  'A fourth path at Foundation: the Demon Path': 'A fourth path at Foundation: the Demon Path, and the Changyang difficulty',
   'Ember nova ready': 'Spirit burst ready', 'Ember nova': 'Spirit burst', 'Dash ready': 'Cloud step ready', 'Dash': 'Cloud step',
   'forge shards': 'cinnabar grains', 'forge shard': 'cinnabar grain', 'Forge shards': 'Cinnabar grains', 'shards': 'crystals', 'XP': 'Qi',
   'Enter forge': 'Enter the refinery', 'Forge': 'Refine', 'Switch weapon': 'Swap artefact', 'enemies': 'demons', 'kills': 'slain', 'defeated': 'slain', 'Threat': 'Sha',
@@ -1929,9 +1931,9 @@ function loadMeta() {
     // migrate: fill missing fields, coerce types, keep only well-formed runs, unknown unlock keys dropped
     const out = Object.assign({}, fresh);
     for (const k of ['totalKills', 'bossKills', 'runsPlayed', 'bestTime']) out[k] = Number.isFinite(m[k]) ? Math.max(0, Math.floor(m[k])) : 0;
-    out.runs = Array.isArray(m.runs) ? m.runs.filter((r) => r && Number.isFinite(r.time)).map((r) => ({ time: Math.floor(r.time), kills: r.kills | 0, level: r.level | 0, won: !!r.won, boss: !!r.boss, date: String(r.date || ''), diff: ['calm', 'standard', 'ash'].includes(r.diff) ? r.diff : 'standard', shrines: r.shrines | 0 })).slice(0, 5) : [];
+    out.runs = Array.isArray(m.runs) ? m.runs.filter((r) => r && Number.isFinite(r.time)).map((r) => ({ time: Math.floor(r.time), kills: r.kills | 0, level: r.level | 0, won: !!r.won, boss: !!r.boss, date: String(r.date || ''), diff: ['calm', 'standard', 'ash', 'changyang'].includes(r.diff) ? r.diff : 'standard', shrines: r.shrines | 0 })).slice(0, 5) : [];
     out.bestiary = {}; if (m.bestiary && typeof m.bestiary === 'object') for (const k of ['wolfking', 'sentinel', 'salamander', 'maw']) if (m.bestiary[k]) out.bestiary[k] = String(m.bestiary[k]);
-    out.byDiff = {}; if (m.byDiff && typeof m.byDiff === 'object') for (const k of ['calm', 'standard', 'ash']) if (m.byDiff[k]) out.byDiff[k] = { best: m.byDiff[k].best | 0, wins: m.byDiff[k].wins | 0, runs: m.byDiff[k].runs | 0 };
+    out.byDiff = {}; if (m.byDiff && typeof m.byDiff === 'object') for (const k of ['calm', 'standard', 'ash', 'changyang']) if (m.byDiff[k]) out.byDiff[k] = { best: m.byDiff[k].best | 0, wins: m.byDiff[k].wins | 0, runs: m.byDiff[k].runs | 0 };
     out.guided = !!m.guided;
     for (const k of ['dangkangCaught', 'jingweiStones']) out[k] = Number.isFinite(m[k]) ? Math.max(0, Math.floor(m[k])) : 0;
     out.omens = {}; if (m.omens && typeof m.omens === 'object') for (const k in OMENS) if (m.omens[k]) out.omens[k] = 1;
@@ -1974,7 +1976,7 @@ function renderArchive() {
   }).join('') + '</div>';
   h += `<div class="sub" style="margin:16px 0 6px">${tr('Best runs')}</div>`;
   h += META.runs.length ? '<table class="runs">' + META.runs.map((r) => `<tr><td>${fmtTime(r.time)}</td><td>${SET.lang === 'zh' ? DIFFS[r.diff || 'standard'].zh : DIFFS[r.diff || 'standard'].name}</td><td>${r.kills} ${tr('defeated')}</td><td>${tr('Level')} ${r.level}</td><td>${r.won ? tr('Dawn') : (r.boss ? tr('Warden slain') : '—')}${r.shrines ? ` · ${r.shrines}${tr(' shrines')}` : ''}</td><td>${r.date}</td></tr>`).join('') + '</table>' : `<div class="sub">${tr('No runs yet.')}</div>`;
-  const bdRows = ['calm', 'standard', 'ash'].map((k) => { const b = (META.byDiff || {})[k]; return b ? `<span class="dbadge"><b>${SET.lang === 'zh' ? DIFFS[k].zh : DIFFS[k].name}</b> ${fmtTime(b.best)} · ${b.wins}/${b.runs} ${tr('dawns')}</span>` : ''; }).join('');
+  const bdRows = ['calm', 'standard', 'ash', 'changyang'].map((k) => { const b = (META.byDiff || {})[k]; return b ? `<span class="dbadge"><b>${SET.lang === 'zh' ? DIFFS[k].zh : DIFFS[k].name}</b> ${fmtTime(b.best)} · ${b.wins}/${b.runs} ${tr('dawns')}</span>` : ''; }).join('');
   if (bdRows) h += `<div class="dbadges">${bdRows}</div>`;
   box.innerHTML = h;
 }
@@ -2562,7 +2564,8 @@ function updateAim() {
 $('#startBtn').addEventListener('click', () => { AUDIO.ensureAudio(); AUDIO.resume(); startRun(); });
 for (const b of document.querySelectorAll('#diffPick .dp')) b.addEventListener('click', () => { SET.difficulty = b.dataset.d; saveSettings(); renderDiffPick(); AUDIO.sfx('ui'); });
 function renderDiffPick() {
-  for (const b of document.querySelectorAll('#diffPick .dp')) { const d = DIFFS[b.dataset.d]; b.classList.toggle('on', SET.difficulty === b.dataset.d); b.querySelector('.n').textContent = SET.lang === 'zh' ? d.zh : d.name; }
+  if (SET.difficulty === 'changyang' && !unlocked('demonpath')) SET.difficulty = 'standard';
+  for (const b of document.querySelectorAll('#diffPick .dp')) { b.hidden = b.dataset.d === 'changyang' && !unlocked('demonpath'); const d = DIFFS[b.dataset.d]; b.classList.toggle('on', SET.difficulty === b.dataset.d); b.querySelector('.n').textContent = SET.lang === 'zh' ? d.zh : d.name; }
   const d = DIFF(); $('#diffDesc').textContent = SET.lang === 'zh' ? d.zhDesc : d.desc;
   renderWeaponPick();
 }
@@ -3245,7 +3248,7 @@ function mixFor() {
   if (D === 'hearth') w.wisp *= 1.2;
   return w;
 }
-const omenSeverity = () => SET.difficulty === 'calm' ? 0.6 : SET.difficulty === 'ash' ? 1.3 : 1;   // ill omens bite softer on 清修, harder on 劫难
+const omenSeverity = () => SET.difficulty === 'calm' ? 0.6 : SET.difficulty === 'ash' ? 1.3 : SET.difficulty === 'changyang' ? 1.5 : 1;   // ill omens bite softer on 清修, harder on 劫难
 function visitPlace(pl) {
   S.placesSeen[pl.key] = 1; S.stats.places = (S.stats.places || 0) + 1;
   const zh = SET.lang === 'zh'; const first = !(META.places && META.places[pl.key]);
