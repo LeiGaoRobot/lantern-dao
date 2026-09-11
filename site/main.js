@@ -361,6 +361,7 @@ const ZH = {
   'One more lantern': '多一颗灵珠', 'Orbit radius +30%': '环绕半径 +30%', 'Lanterns scorch the ground': '灵珠灼烧地面',
   // unlocks / archive
   'Wide horizon': '开阔视野', 'Survive 5 minutes in one run': '单局守过 5 分钟', 'Level-ups offer four talents instead of three': '突破时四选一而非三选一',
+  'The whole bestiary': '妖录全览', 'Meet every creature in the bestiary': '妖录十四条全部遇见', 'The first cast of the Ditai stones each run is free': '每局第一次帝台之棋不花丹粟',
   'Shanhai atlas': '山海图', 'Stand at all eleven places of the mountains and seas': '踏遍山海十一处', 'Every run starts with Migu: Never Lost': '每局开局自带 迷榖·不迷', 'Atlas': '山海图', 'places': '处',
   "Smith's tithe": '炼器师的份例', 'Defeat the Ash Warden': '伏诛刑天', 'Every run starts with 10 forge shards': '每局开局 10 丹粟',
   'Cinder in the hand': '掌中符火', 'Defeat 3000 creatures in total': '累计斩妖 3000', 'Runs start with the Cinder Bolt, already forged once': '开局持有炼过一次的符箓',
@@ -508,6 +509,7 @@ const UNLOCKS = [
   { key: 'boltstart', name: 'Cinder in the hand', how: 'Defeat 3000 creatures in total', gives: 'Runs start with the Cinder Bolt, already forged once', test: (m) => m.totalKills >= 3000 },
   { key: 'foundation', name: 'Foundation memory', how: 'Reach Foundation Establishment (level 10) in one run', gives: 'Every run starts at Qi Refining 3 with two techniques', test: (m, run) => run && run.level >= 10 },
   { key: 'atlas', name: 'Shanhai atlas', how: 'Stand at all eleven places of the mountains and seas', gives: 'Every run starts with Migu: Never Lost', test: (m) => PLACES.every((p) => m.places && m.places[p.key]) },
+  { key: 'lorebook', name: 'The whole bestiary', how: 'Meet every creature in the bestiary', gives: 'The first cast of the Ditai stones each run is free', test: (m) => m.totalKills > 0 && m.bossKills > 0 && ['wolfking', 'sentinel', 'salamander', 'maw'].every((k) => m.bestiary && m.bestiary[k]) && ['bounty', 'calm', 'dark'].every((k) => m.omens && m.omens[k]) && !!(m.seen && m.seen.jingwei) },
   { key: 'demonpath', name: 'Demon heart', how: 'Pass the tribulation on Tribulation difficulty', gives: 'A fourth path at Foundation: the Demon Path', test: (m, run) => run && run.won && run.diff === 'ash' },
 ];
 function loadMeta() {
@@ -977,14 +979,15 @@ function applyWeather() {
   sun.color.copy(c.sunC); sun.intensity = c.sunI + W.lightning * 4;
   renderer.toneMappingExposure = c.exposure;
   setGlow('WindowGlass', 0.35 + c.glowWin); setGlow('Lantern', 0.4 + c.glowLamp); setGlow('Fire', 1.6); setGlow('HotMetal', 1.4);
-  setGlow('EmberCore', 1.5); setGlow('PlayerLamp', 1.2 + c.lamp * 0.3); if (!S.cues) { setGlow('Crystal', 1.4); setGlow('ShardCrystal', 1.5); setGlow('HeartGlow', 1.5); }
+  setGlow('EmberCore', 1.5); setGlow('PlayerLamp', (1.2 + c.lamp * 0.3) * realmLamp()); if (!S.cues) { setGlow('Crystal', 1.4); setGlow('ShardCrystal', 1.5); setGlow('HeartGlow', 1.5); }
   MATS.snow.opacity = c.snow;
   if ((c.snow > 0.01) !== S.snowVisible) { S.snowVisible = c.snow > 0.01; for (const k in world.sets) for (const m of world.sets[k].meshes) if (m.isSnow) m.visible = S.snowVisible; }
   ground.uniforms.uSnow.value = c.snow; ground.uniforms.uCloud.value = c.cloud; ground.uniforms.uWet.value = c.wet;
   // snow tints the vegetation
   MATS.body.color.setRGB(1 - c.snow * 0.08, 1 - c.snow * 0.05, 1 + c.snow * 0.06); MATS.tree.color.copy(MATS.body.color);
   scene.environmentIntensity = 0.06 + 0.34 * clamp(c.sunI / 2, 0, 1);
-  lampLight.intensity = c.lamp * 2.2;
+  lampLight.intensity = c.lamp * 2.2 * realmLamp();   // the lamp burns brighter as the realm rises
+  lampLight.distance = 12 + 3 * realmTier();
   S.nightK = clamp(c.lamp / 4.5, 0, 1);
   forgeLight.intensity = 2.5 + c.lamp;
   FX.rain.material.opacity = c.rain * 0.55;
@@ -1260,6 +1263,7 @@ function startRun() {
   if (ANIM.w) { for (const k in ANIM.w.actions) if (!['idle', 'walk', 'charge'].includes(k)) ANIM.w.actions[k].stop(); }
   S.bossCorpse = null;
   if (unlocked('tithe')) P.shards = 10;
+  if (unlocked('lorebook')) P.freeQi = true;
   if (unlocked('atlas')) { P.wards = P.wards || {}; if (!P.wards.tidewalker) { P.wards.tidewalker = true; applyWard('tidewalker'); } }
   if (unlocked('boltstart')) { P.weapon = Math.min(WEAPONS.length - 1, SET.startWeapon | 0); P.weaponRank.bolt = 1; }
   if (unlocked('foundation')) { S.timers.push({ t: 0.6, fn: () => gainXp(P.xpNext) }); S.timers.push({ t: 0.9, fn: () => gainXp(P.xpNext) }); }
@@ -1384,8 +1388,9 @@ function nearDitai() { return S.phase === 'run' && Math.hypot(P.x - DITAI.x, P.z
 function playDitai() {
   const zh = SET.lang === 'zh';
   if ((S.qiCd || 0) > 0) { showBanner(zh ? '帝台之棋 · 石纹未定,稍候再问' : 'DITAI STONES  ·  the patterns are still settling; ask again soon', 2.5); return; }
-  if (P.shards < 5) { showBanner(zh ? '帝台之棋 · 需 5 丹粟' : 'DITAI STONES  ·  five cinnabar grains to cast', 2.5); AUDIO.sfx('ui'); return; }
-  P.shards -= 5; S.qiCd = 45; S.stats.qi = (S.stats.qi || 0) + 1; AUDIO.sfx('shard', 0.2);
+  if (!P.freeQi && P.shards < 5) { showBanner(zh ? '帝台之棋 · 需 5 丹粟' : 'DITAI STONES  ·  five cinnabar grains to cast', 2.5); AUDIO.sfx('ui'); return; }
+  if (P.freeQi) { P.freeQi = false; showNumber(P.x, 2.2, P.z, zh ? '妖录全览 · 免费' : 'free cast', 'heal'); } else P.shards -= 5;
+  S.qiCd = 45; S.stats.qi = (S.stats.qi || 0) + 1; AUDIO.sfx('shard', 0.2);
   spawnRing(DITAI.x, DITAI.z, 2.4, 0xe8c070, 0.9, 0.2); burstParticles(DITAI.x, 1.2, DITAI.z, 40, [0.95, 0.8, 0.45], 4, 0.4, 0.8, -2);
   const r = Math.random();
   if (r < 0.42) { const heal = Math.round(P.maxHp * 0.4); P.hp = Math.min(P.maxHp, P.hp + heal); showNumber(P.x, 1.6, P.z, '+' + heal, 'heal'); showBanner(zh ? '帝台之棋 · 吉 · 命火回四成' : 'DITAI STONES  ·  fortune  ·  two fifths of your fire returns', 4); AUDIO.sfx('heart'); }
@@ -1834,6 +1839,8 @@ function visitPlace(pl) {
   META.places = META.places || {}; if (first) { META.places[pl.key] = 1; saveMeta(); }
   if (first && !META.unlocks.atlas && PLACES.every((p) => META.places[p.key])) { META.unlocks.atlas = new Date().toISOString().slice(0, 10); saveMeta(); S.timers.push({ t: 5.2, fn: () => showBanner(zh ? '山海图已全 · 下局起自带 迷榖·不迷' : 'THE ATLAS IS COMPLETE  ·  from the next run you carry Migu: Never Lost', 5) }); AUDIO.sfx('win', 0.2); }
 }
+function realmTier() { const L = P.level || 1; return L >= 19 ? 4 : L >= 16 ? 3 : L >= 13 ? 2 : L >= 10 ? 1 : 0; }
+function realmLamp() { return 1 + 0.15 * realmTier(); }
 function healMul() { if (!(S.omens && (S.omens.drought || S.omens.plague))) return 1; const pen = 0.5 * omenSeverity() * (P.wards && P.wards.tidewalker ? 0.5 : 1); return clamp(1 - pen, 0.25, 1); }
 function triggerOmen(key) {
   const o = OMENS[key]; if (!o || !S.omens || S.phase !== 'run') return false;
@@ -2059,7 +2066,8 @@ function updatePickups(dt) {
   }
 }
 function updateBurns(dt) {
-  for (let i = S.burns.length - 1; i >= 0; i--) { const b = S.burns[i]; b.t -= dt;
+  const wetK = W.cur.rain > 0.3 ? 2.5 : 1;   // rain puts strange fire out
+  for (let i = S.burns.length - 1; i >= 0; i--) { const b = S.burns[i]; b.t -= dt * wetK;
     if (b.hostile && !(P.wards && P.wards.ashwalker) && (P.x - b.x) ** 2 + (P.z - b.z) ** 2 < 1.4) { P.burnT = (P.burnT || 0) + dt; if (P.burnT > 0.5) { P.burnT = 0; hurtPlayer(6, 'burn'); } } if (Math.random() < 0.4) spawnParticle(b.x + (Math.random() - 0.5), 0.1, b.z + (Math.random() - 0.5), 0, 1.5, 0, 1, 0.5, 0.15, 0.4, 0.5, 0); if (b.t <= 0) S.burns.splice(i, 1); }
 }
 
@@ -2745,7 +2753,7 @@ function autopilot(dt) {
 // debug / capture hooks (used by the verification script)
 // =====================================================================
 window.__emberlight = {
-  S, P: () => P, W, world: () => world, startRun, endRun, spawnBoss, triggerOmen, omens: () => S.omens, playDitai, nearDitai, DITAI, prayWuluo, nearWuluo, WULUO, PLACES, visitPlace, hurtBig, dangkang: () => S.dangkang, startJingweiErrand, jwQuest: () => S.jwQuest, spawnEnemy, spawnAround, setWeather: (tod, wx) => { W.tod = tod; W.wx = wx; W.auto = false; refreshWeatherButtons(); },
+  S, P: () => P, W, world: () => world, startRun, endRun, spawnBoss, triggerOmen, omens: () => S.omens, playDitai, nearDitai, DITAI, prayWuluo, nearWuluo, WULUO, PLACES, visitPlace, hurtBig, realmTier, realmLamp, lampI: () => lampLight.intensity, dangkang: () => S.dangkang, startJingweiErrand, jwQuest: () => S.jwQuest, spawnEnemy, spawnAround, setWeather: (tod, wx) => { W.tod = tod; W.wx = wx; W.auto = false; refreshWeatherButtons(); },
   cheat: (o) => Object.assign(P, o), META, recordRun, SET, applyLang, applyQuality, applyCues, gainXp, AUDIO, camDist: (v) => { camDist = v; }, PAD, pollGamepad, lightShrine, nearShrine, shrines: () => S.shrines, DIFFS, rollTalents, TALENTS, WEAPONS, spawnMini, MINIS, minis: () => S.minis, hurtMini, killMini, GUIDE, ANIM, clips: () => kit.clips.map((c) => c.name + ':' + c.duration.toFixed(2)), post: () => ({ ao: gtaoPass && gtaoPass.enabled, bloom: bloomPass && bloomPass.enabled, passes: composer && composer.passes.length }),
   project: (x, y, z) => { const v = new THREE.Vector3(x, y, z).project(camera); return { sx: (v.x * 0.5 + 0.5) * window.innerWidth, sy: (-v.y * 0.5 + 0.5) * window.innerHeight }; },
   slashes: () => S.slashes.map((m) => ({ ry: m.rotation.y, arc: m.userData.arc })), giveShards: (n) => { P.shards += n; }, teleport: (x, z) => { P.x = x; P.z = z; }, cranes: () => craneSet ? { count: craneSet.count, body: !!craneSet.body, tris: craneSet.body ? craneSet.body.geometry.attributes.position.count / 3 : 0 } : null,

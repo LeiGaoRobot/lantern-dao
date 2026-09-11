@@ -53,6 +53,9 @@
 - **穷奇嗥**(v2.9):穷奇现身时 14 丈内妖邪 `hasteT = 6`,移速 ×1.25
 - **精卫成群**(v2.9):飞鸟数 `3 + min(4, META.jingweiStones)`
 - **山海图**(v3.0):`PLACES` 十一处,半径 4–8 丈,每秒检测一次;`META.places` 全满即写 `META.unlocks.atlas`,开局 `applyWard('tidewalker')`
+- **境界灯火**(v3.1):`realmTier()` 0–4(练气 / 筑基 / 金丹 / 元婴 / 化神),`realmLamp() = 1 + 0.15 × tier` 乘在点光与提灯自发光上,点光半径 `12 + 3 × tier`
+- **讹火遇雨**(v3.1):`W.cur.rain > 0.3` 时燃地计时 ×2.5 消耗
+- **妖录全览**(v3.1):机缘 `lorebook`,条件为 `META` 里五妖(totalKills)/ 刑天(bossKills)/ 四精英(bestiary)/ 当康·凤皇·烛龙(omens)/ 精卫(seen)齐全;效果 `P.freeQi`,帝台之棋首掷免费
 - **刑天复起**(v3.0):`hurtBoss` 血尽且 `!b.revived && DIFF().phase2` → `hp = 0.2 × maxHp`、移速 ×1.2、周围击退 10 / 玩家推开 3 丈并 1 s 无敌;等效于劫主总血量 ×1.2
 - **扶桑暖光**(v2.2):夜里在扶桑 9 丈内每秒回 2.5 命火(受回复倍率影响),金色光点上浮,首次横幅
 - **精卫衔石**(v2.4):木石堆 3.8 丈内按 F 起任务(`S.jwQuest`):60 息内走到东岸 (97, 2) 的光环处,途中移速 ×0.88;成功 +8 丹粟、`META.jingweiStones`;超时"石落半途"。HUD 计时条与征兆共用 `#omen`
