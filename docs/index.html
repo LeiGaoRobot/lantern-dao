@@ -141,6 +141,7 @@
   .tiny { font-size: 10px; letter-spacing: .2em; color: var(--muted); text-transform: uppercase; margin-top: 18px; }
   .center { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(12, 8, 20, .55); backdrop-filter: blur(4px); }
   .modal { background: var(--panel2); border: 1px solid var(--line); border-radius: 18px; padding: 28px 30px; width: min(560px, 92vw); box-shadow: 0 30px 80px rgba(0,0,0,.5); }
+  .modal { max-height: 92vh; overflow-y: auto; overscroll-behavior: contain; }   /* long panels (archive with the atlas) scroll inside the viewport */
   .modal h2 { font-family: Fraunces, Georgia, serif; font-weight: 600; font-size: 30px; margin: 0 0 6px; color: var(--gold); }
   .modal .sub { color: var(--muted); font-size: 13px; margin-bottom: 18px; }
   .choice { display: block; width: 100%; text-align: left; background: rgba(255,255,255,.05); border: 1px solid var(--line); color: var(--ink); border-radius: 12px; padding: 12px 16px; margin-top: 10px; font: inherit; cursor: pointer; }
@@ -2447,6 +2448,7 @@ function toggleAutoWx() { W.auto = !W.auto; W.wxTimer = 30; refreshWeatherButton
 const KEYMAP = { KeyW: 'up', KeyS: 'down', KeyA: 'left', KeyD: 'right', ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right', Space: 'dash', KeyE: 'nova', KeyQ: 'swap', KeyF: 'forge', KeyJ: 'attack', KeyK: 'heavy', Tab: 'auto', Escape: 'pause', KeyT: 'tod', KeyR: 'wx', KeyY: 'autowx', F4: 'hideui', Digit1: 'c1', Digit2: 'c2', Digit3: 'c3', Digit4: 'c4', KeyM: 'mute' };
 const KEYMAP2 = { w: 'up', s: 'down', a: 'left', d: 'right', arrowup: 'up', arrowdown: 'down', arrowleft: 'left', arrowright: 'right', ' ': 'dash', e: 'nova', q: 'swap', f: 'forge', j: 'attack', k: 'heavy', tab: 'auto', escape: 'pause', t: 'tod', r: 'wx', y: 'autowx', f4: 'hideui', 1: 'c1', 2: 'c2', 3: 'c3', 4: 'c4', m: 'mute' };
 window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') for (const sel of ['#archive', '#about']) if ($(sel).classList.contains('show')) { $(sel).classList.remove('show'); return; }   // Escape closes the archive / about panels before anything else
   const a = KEYMAP[e.code] || KEYMAP2[String(e.key).toLowerCase()];
   if (!a) return;
   if (['auto', 'dash', 'hideui', 'tod', 'wx', 'autowx'].includes(a)) e.preventDefault();
@@ -2567,6 +2569,8 @@ $('#aboutBtn').addEventListener('click', () => { $('#about').classList.add('show
 $('#aboutClose').addEventListener('click', () => { $('#about').classList.remove('show'); });
 $('#archiveBtn').addEventListener('click', () => { renderArchive(); $('#archive').classList.add('show'); });
 $('#archiveClose').addEventListener('click', () => { $('#archive').classList.remove('show'); });
+// clicking the dimmed backdrop (not the panel) closes the archive / about overlays, and so does Escape (see the keydown listener)
+for (const sel of ['#about', '#archive']) $(sel + ' .center').addEventListener('click', (e) => { if (e.target === e.currentTarget) $(sel).classList.remove('show'); });
 $('#autoBtn').addEventListener('click', () => onAction('auto'));
 $('#swapBtn').addEventListener('click', () => onAction('swap'));
 $('#todBtn').addEventListener('click', () => onAction('tod'));
