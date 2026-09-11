@@ -119,7 +119,7 @@ autopilot(完美风筝的内置 AI)基线:v1.4 清修 通关 / 修行 通关(最
 
 ## 中途存档(v3.8)
 
-`saveRun()` 在暂停 / 退出 / `beforeunload` 时写 `emberlight.run`,存修士对象里所有可序列化字段(跳过 WeakMap / 函数 / Object3D)、`S.t`、难度、无尽、战绩、法阵 done 状态、`miniDone`、`eliteWave`、山海图足迹等;`resumeRun()` 先走一遍 `startRun()` 再覆盖,并清掉筑基印记的开局灵气计时器,落点灵泉旁 (2.2, 2.6),2 s 无敌;`endRun()` 清档。不存的:妖邪、拾取、弹幕、燃地、正在守的法阵(退回 idle)、在场刑天(`bossSpawned` 置假让它回来时再现身)。
+`saveRun()` 在暂停 / 退出 / `beforeunload` 时写 `emberlight.run`,存修士对象里所有可序列化字段(跳过 WeakMap / 函数 / Object3D)、`S.t`、难度、无尽、战绩、法阵 done 状态、`miniDone`、`eliteWave`、山海图足迹等;`resumeRun()` 先走一遍 `startRun()` 再覆盖,并清掉筑基印记的开局灵气计时器,落点灵泉旁 (2.2, 2.6),2 s 无敌;`endRun()` 清档;v3.9 起每 30 s(`S.saveClock`)与 `visibilitychange` 隐藏时也写。不存的:妖邪、拾取、弹幕、燃地、正在守的法阵(退回 idle)、在场刑天(`bossSpawned` 置假让它回来时再现身)。
 
 ## 已知的松弛点
 
