@@ -53,6 +53,7 @@
 - **穷奇嗥**(v2.9):穷奇现身时 14 丈内妖邪 `hasteT = 6`,移速 ×1.25
 - **精卫成群**(v2.9):飞鸟数 `3 + min(4, META.jingweiStones)`
 - **山海图**(v3.0):`PLACES` 十一处,半径 4–8 丈,每秒检测一次;`META.places` 全满即写 `META.unlocks.atlas`,开局 `applyWard('tidewalker')`
+- **域候**(v3.2):自动换天气时池子 = 基础池 + `WX_BIAS[district]`(昆仑 +雪雪晴,汤谷 +晴晴晴且滤掉雪,招摇 +雨暴雨,发鸠 +雨晴);300 次抽样 昆仑雪 39% / 汤谷晴 67% 无雪 / 招摇雨+暴雨 68%
 - **境界灯火**(v3.1):`realmTier()` 0–4(练气 / 筑基 / 金丹 / 元婴 / 化神),`realmLamp() = 1 + 0.15 × tier` 乘在点光与提灯自发光上,点光半径 `12 + 3 × tier`
 - **讹火遇雨**(v3.1):`W.cur.rain > 0.3` 时燃地计时 ×2.5 消耗
 - **妖录全览**(v3.1):机缘 `lorebook`,条件为 `META` 里五妖(totalKills)/ 刑天(bossKills)/ 四精英(bestiary)/ 当康·凤皇·烛龙(omens)/ 精卫(seen)齐全;效果 `P.freeQi`,帝台之棋首掷免费

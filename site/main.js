@@ -919,6 +919,7 @@ const WX_PRESET = {
   storm: { rain: 1.0, snow: 0, cloud: 0.8, wet: 1.0, fogMul: 0.5, sunMul: 0.35, skyDark: 0.45, wind: 0.9 },
   snow:  { rain: 0, snow: 1, cloud: 0.35, wet: 0, fogMul: 0.6, sunMul: 0.8, skyDark: 0.1, wind: 0.35 },
 };
+const WX_BIAS = { wildwood: ['snow', 'snow', 'clear'], cinder: ['clear', 'clear', 'clear'], silvermere: ['rain', 'storm', 'rain'], mossfall: ['rain', 'clear'] };
 function weatherTarget() {
   const T = TOD_PRESET[W.tod], X = WX_PRESET[W.wx];
   const dark = new THREE.Color(0x2a2a38), trib = new THREE.Color(0x160f24), tk = S.tribK || 0;
@@ -947,7 +948,11 @@ function updateWeather(dt) {
     W.wxTimer -= dt;
     if (W.wxTimer <= 0) {
       W.wxTimer = 55 + Math.random() * 50;
-      const pool = W.wx === 'clear' ? ['rain', 'snow', 'clear', 'rain', 'storm'] : ['clear', 'clear', W.wx === 'rain' ? 'storm' : 'rain', 'snow'];
+      const dk = S.district ? S.district.key : 'hearth';
+      const base = W.wx === 'clear' ? ['rain', 'snow', 'clear', 'rain', 'storm'] : ['clear', 'clear', W.wx === 'rain' ? 'storm' : 'rain', 'snow'];
+      // 域候: Kunlun leans to snow, Tanggu (十日所浴) never snows and clears fast, Zhaoyao (临于西海之上) rains, Fajiu is grey
+      const bias = WX_BIAS[dk] || [];
+      const pool = base.concat(bias).filter((x) => !(dk === 'cinder' && x === 'snow'));
       W.wx = pool[Math.floor(Math.random() * pool.length)];
       refreshWeatherButtons();
     }
@@ -2422,6 +2427,7 @@ function renderEnemies() {
     else if (e.lungeWarn > 0) { sy = 1.15; sxz = 0.85; }
     else if (e.type === 'brute') { const st = Math.sin(e.bob * 0.6); sy = 1 + Math.max(0, st) * 0.09; sxz = 1 - Math.max(0, st) * 0.04; hop = Math.max(0, st) * 0.18; }
     else if (e.type === 'spitter' && e.shootCd < 0.5 && e.shootCd > 0) { const k = 1 - e.shootCd / 0.5; sy = 1 - k * 0.18; sxz = 1 + k * 0.22; }
+    else if (e.type === 'spitter') { const st = Math.abs(Math.sin(e.bob * 1.5)); hop = st * 0.32; sy = 1 + st * 0.06; sxz = 1 - st * 0.03; }   // 毕方一足: it hops
     _p3.set(e.x, hop, e.z);
     _q.setFromAxisAngle(_up, e.face);
     if (e.type === 'wisp') { _qx.setFromAxisAngle(_ax, 0.25); _q.multiply(_qx); _p3.y = 0.25 + Math.sin(e.bob * 1.3) * 0.15; }
@@ -2753,7 +2759,7 @@ function autopilot(dt) {
 // debug / capture hooks (used by the verification script)
 // =====================================================================
 window.__emberlight = {
-  S, P: () => P, W, world: () => world, startRun, endRun, spawnBoss, triggerOmen, omens: () => S.omens, playDitai, nearDitai, DITAI, prayWuluo, nearWuluo, WULUO, PLACES, visitPlace, hurtBig, realmTier, realmLamp, lampI: () => lampLight.intensity, dangkang: () => S.dangkang, startJingweiErrand, jwQuest: () => S.jwQuest, spawnEnemy, spawnAround, setWeather: (tod, wx) => { W.tod = tod; W.wx = wx; W.auto = false; refreshWeatherButtons(); },
+  S, P: () => P, W, world: () => world, startRun, endRun, spawnBoss, triggerOmen, omens: () => S.omens, playDitai, nearDitai, DITAI, prayWuluo, nearWuluo, WULUO, PLACES, visitPlace, hurtBig, realmTier, realmLamp, lampI: () => lampLight.intensity, WX_BIAS, dangkang: () => S.dangkang, startJingweiErrand, jwQuest: () => S.jwQuest, spawnEnemy, spawnAround, setWeather: (tod, wx) => { W.tod = tod; W.wx = wx; W.auto = false; refreshWeatherButtons(); },
   cheat: (o) => Object.assign(P, o), META, recordRun, SET, applyLang, applyQuality, applyCues, gainXp, AUDIO, camDist: (v) => { camDist = v; }, PAD, pollGamepad, lightShrine, nearShrine, shrines: () => S.shrines, DIFFS, rollTalents, TALENTS, WEAPONS, spawnMini, MINIS, minis: () => S.minis, hurtMini, killMini, GUIDE, ANIM, clips: () => kit.clips.map((c) => c.name + ':' + c.duration.toFixed(2)), post: () => ({ ao: gtaoPass && gtaoPass.enabled, bloom: bloomPass && bloomPass.enabled, passes: composer && composer.passes.length }),
   project: (x, y, z) => { const v = new THREE.Vector3(x, y, z).project(camera); return { sx: (v.x * 0.5 + 0.5) * window.innerWidth, sy: (-v.y * 0.5 + 0.5) * window.innerHeight }; },
   slashes: () => S.slashes.map((m) => ({ ry: m.rotation.y, arc: m.userData.arc })), giveShards: (n) => { P.shards += n; }, teleport: (x, z) => { P.x = x; P.z = z; }, cranes: () => craneSet ? { count: craneSet.count, body: !!craneSet.body, tris: craneSet.body ? craneSet.body.geometry.attributes.position.count / 3 : 0 } : null,
