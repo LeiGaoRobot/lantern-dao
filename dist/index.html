@@ -405,6 +405,7 @@
     <div class="pdesc" id="diffDesc"></div>
     <div class="pickrow" id="weaponRow"><span class="plabel" id="weaponLabel">Starting weapon</span><div class="picks" id="weaponPick" style="display:none"></div></div>
     <button class="btn" id="startBtn">Enter the valley &nbsp;→</button>
+    <button class="btn ghost" id="resumeRunBtn" hidden style="margin-top:8px">Resume</button>
     <div class="controls">
       <b>WASD</b> Move <span class="dot">•</span> <b>Mouse</b> Aim <span class="dot">•</span> <b>Auto attack on</b> <span class="dot">•</span> <b>Right click / K</b> Heavy<br>
       <b>Space</b> Cloud step <span class="dot">•</span> <b>E</b> Spirit burst <span class="dot">•</span> <b>Q</b> Swap artefact<br>
@@ -2607,7 +2608,9 @@ $('#autoWxBtn').addEventListener('click', () => onAction('autowx'));
 $('#forgeHint').addEventListener('click', () => onAction('forge'));
 $('#pauseBtn').addEventListener('click', () => { if (S.phase === 'run' && (!S.modal || S.modal === 'pause')) togglePause(); });
 $('#resumeBtn').addEventListener('click', () => togglePause());
-$('#quitBtn').addEventListener('click', () => backToTitle());
+$('#quitBtn').addEventListener('click', () => { saveRun(); backToTitle(); });
+$('#resumeRunBtn').addEventListener('click', () => { AUDIO.ensureAudio(); AUDIO.resume(); if (!resumeRun()) refreshResumeBtn(); });
+window.addEventListener('beforeunload', () => { if (S.phase === 'run') saveRun(); });
 $('#diagBtn').addEventListener('click', async () => {
   const gl = renderer.getContext(); const dbg = gl.getExtension('WEBGL_debug_renderer_info');
   const lines = [
@@ -2666,7 +2669,7 @@ function togglePause() {
   if (S.phase !== 'run') return;
   if (S.modal === 'pause') { S.modal = null; S.paused = false; $('#pause').classList.remove('show'); }
   else if (!S.modal) {
-    S.modal = 'pause'; S.paused = true; $('#pause').classList.add('show');
+    S.modal = 'pause'; S.paused = true; $('#pause').classList.add('show'); saveRun();
     $('#pauseStats').innerHTML = statRows(); $('#pauseBuild').innerHTML = buildRows();
   }
 }
@@ -2718,6 +2721,31 @@ function startRun() {
   showBanner(`${tr('THE HEARTH')}  ·  ${tr('Collect embers. Find the forge. Survive 10 minutes.')}`, 6);
   S.discovered.add('hearth');
 }
+// ---- 云游归来: a soft save of the cultivator and the clock. Enemies, pickups, the boss and an active shrine are dropped; the world is the same island every run
+const RUN_KEY = 'emberlight.run';
+function saveRun() {
+  if (S.phase !== 'run') return false;
+  const P2 = {}; for (const k in P) { const v = P[k]; if (typeof v === 'function' || v instanceof WeakMap || v instanceof Map || v instanceof Set || (v && typeof v === 'object' && v.isObject3D)) continue; P2[k] = v; }
+  const shr = {}; if (S.shrines) for (const k in S.shrines) shr[k] = { state: S.shrines[k].state === 'done' ? 'done' : 'idle', cd: 0 };
+  const snap = { v: 1, date: new Date().toISOString(), difficulty: SET.difficulty, t: S.t, endless: !!S.endless, P: P2, stats: S.stats, shrines: shr, miniDone: S.miniDone || {}, eliteWave: S.eliteWave || 0, bossKilled: !!S.bossKilled, bossSpawned: !!S.bossSpawned && !S.boss, tribWarned: !!S.tribWarned, placesSeen: S.placesSeen || {}, jwDone: S.jwDone || 0, discovered: [...(S.discovered || [])], wuluoCd: S.wuluoCd || 0, qiCd: S.qiCd || 0 };
+  try { localStorage.setItem(RUN_KEY, JSON.stringify(snap)); return true; } catch (e) { window.__emberLog('save', 'run save failed: ' + e.message); return false; }
+}
+function loadRunSnap() { try { const s = JSON.parse(localStorage.getItem(RUN_KEY) || 'null'); return s && s.v === 1 && s.P && Number.isFinite(s.t) ? s : null; } catch (e) { return null; } }
+function clearRun() { try { localStorage.removeItem(RUN_KEY); } catch (e) { /* nothing to clear */ } }
+function resumeRun() {
+  const snap = loadRunSnap(); if (!snap) return false;
+  if (['calm', 'standard', 'ash', 'changyang'].includes(snap.difficulty)) SET.difficulty = snap.difficulty;
+  startRun();
+  S.timers.length = 0;   /* no foundation-memory xp on top of a restored cultivator */
+  for (const k in snap.P) if (!(P[k] instanceof WeakMap)) P[k] = snap.P[k];
+  P.x = 2.2; P.z = 2.6; P.invuln = 2; P.dashT = 0; P.dashCd = 0; P.hp = Math.max(1, Math.min(P.maxHp, P.hp)); P.animOnce = null;
+  S.t = snap.t; S.endless = !!snap.endless; Object.assign(S.stats, snap.stats || {}); S.miniDone = snap.miniDone || {}; S.eliteWave = snap.eliteWave || 0; S.bossKilled = !!snap.bossKilled; S.bossSpawned = !!snap.bossSpawned; S.tribWarned = !!snap.tribWarned; S.placesSeen = snap.placesSeen || {}; S.jwDone = snap.jwDone || 0; S.wuluoCd = snap.wuluoCd || 0; S.qiCd = snap.qiCd || 0; S.discovered = new Set(snap.discovered || ['hearth']);
+  if (S.shrines) for (const k in snap.shrines) if (S.shrines[k]) { S.shrines[k].state = snap.shrines[k].state; S.shrines[k].cd = 0; }
+  S.guide = null; $('#guide').classList.remove('show'); refreshWeaponCard(); renderDiffPick();
+  showBanner(SET.lang === 'zh' ? `云游归来 · ${fmtTime(S.t)} · ${realmName(P.level)}` : `BACK FROM WANDERING  ·  ${fmtTime(S.t)}  ·  ${tr('Level')} ${P.level}`, 5);
+  return true;
+}
+function refreshResumeBtn() { const b = $('#resumeRunBtn'); if (!b) return; const s = loadRunSnap(); b.hidden = !s; if (s) b.textContent = SET.lang === 'zh' ? `续上局 · ${fmtTime(s.t)} · ${DIFFS[s.difficulty] ? DIFFS[s.difficulty].zh : ''}` : `Resume · ${fmtTime(s.t)} · ${DIFFS[s.difficulty] ? DIFFS[s.difficulty].name : ''}`; }
 function backToTitle() {
   S.phase = 'title'; S.paused = false; S.modal = null; S.t = 0; S.endless = false; S.bannerT = 0;
   $('#banner').classList.remove('show'); $('#boss').classList.remove('show'); $('#forgeHint').classList.remove('show');
@@ -2725,11 +2753,12 @@ function backToTitle() {
   document.body.classList.add('title');
   for (const id of ['end', 'pause', 'forge', 'levelup', 'archive']) $('#' + id).classList.remove('show');
   $('#title').classList.add('show');
-  refreshTitleBest();
+  refreshTitleBest(); refreshResumeBtn();
   S.enemies.length = 0; S.pickups.length = 0; S.projectiles.length = 0; S.eprojectiles.length = 0; wardenRig.visible = false; S.boss = null;
   P = newPlayer();
 }
 function endRun(won) {
+  clearRun();
   S.phase = won ? 'won' : 'dead';
   S.paused = true; S.modal = 'end';
   if (ANIM.p) playOnce(ANIM.p, won ? 'cheer' : 'death', 1);
@@ -2748,7 +2777,7 @@ function endRun(won) {
   AUDIO.setTension(0);
 }
 function goEndless() { S.endless = true; S.phase = 'run'; S.paused = false; S.modal = null; $('#end').classList.remove('show'); showBanner('ENDLESS  ·  The wildwood does not end. Neither do you.', 5); }
-function refreshTitleBest() { const el = $('#titleBest'); if (el) el.textContent = S.best.time > 0 ? (SET.lang === 'zh' ? `最佳战绩 ${fmtTime(S.best.time)} · 击败 ${S.best.kills}` : `Best run ${fmtTime(S.best.time)} · ${S.best.kills} defeated`) : (SET.lang === 'zh' ? '还没有记录。山谷在等你。' : 'No run yet. The valley is waiting.'); }
+function refreshTitleBest() { refreshResumeBtn(); const el = $('#titleBest'); if (el) el.textContent = S.best.time > 0 ? (SET.lang === 'zh' ? `最佳战绩 ${fmtTime(S.best.time)} · 击败 ${S.best.kills}` : `Best run ${fmtTime(S.best.time)} · ${S.best.kills} defeated`) : (SET.lang === 'zh' ? '还没有记录。山谷在等你。' : 'No run yet. The valley is waiting.'); }
 const SRC_NAMES = { wisp: 'a Qique', cinder: 'a Shangao', crawler: 'a Mingshe', spitter: 'a Bifang', spit: "a Bifang's venom", brute: 'a Qiongqi', boss: 'Xingtian', bossSlam: "Xingtian's axe", bossCharge: "Xingtian's charge", burn: 'burning ground', mini: 'a district elite', other: 'the dark' };
 const SRC_ZH = { wisp: '鬿雀', cinder: '山膏', crawler: '鸣蛇', spitter: '毕方', spit: '毕方的火弹', brute: '穷奇', boss: '刑天', bossSlam: '刑天的干戚', bossCharge: '刑天的冲锋', burn: '燃烧的地面', mini: '一域精英', other: '黑暗' };
 function renderDeathReview(won) {
@@ -4212,7 +4241,7 @@ function autopilot(dt) {
 // debug / capture hooks (used by the verification script)
 // =====================================================================
 window.__emberlight = {
-  S, P: () => P, W, world: () => world, startRun, endRun, spawnBoss, triggerOmen, omens: () => S.omens, playDitai, nearDitai, DITAI, prayWuluo, nearWuluo, WULUO, PLACES, visitPlace, hurtBig, realmTier, realmLamp, lampI: () => lampLight.intensity, WX_BIAS, wdmg, ringColor: () => FX.playerRing.material.color.getHexString(), dangkang: () => S.dangkang, startJingweiErrand, jwQuest: () => S.jwQuest, spawnEnemy, spawnAround, setWeather: (tod, wx) => { W.tod = tod; W.wx = wx; W.auto = false; refreshWeatherButtons(); },
+  S, P: () => P, W, world: () => world, startRun, endRun, spawnBoss, triggerOmen, omens: () => S.omens, playDitai, nearDitai, DITAI, prayWuluo, nearWuluo, WULUO, PLACES, visitPlace, hurtBig, realmTier, realmLamp, lampI: () => lampLight.intensity, WX_BIAS, wdmg, saveRun, loadRunSnap, resumeRun, clearRun, ringColor: () => FX.playerRing.material.color.getHexString(), dangkang: () => S.dangkang, startJingweiErrand, jwQuest: () => S.jwQuest, spawnEnemy, spawnAround, setWeather: (tod, wx) => { W.tod = tod; W.wx = wx; W.auto = false; refreshWeatherButtons(); },
   cheat: (o) => Object.assign(P, o), META, recordRun, SET, applyLang, applyQuality, applyCues, gainXp, AUDIO, camDist: (v) => { camDist = v; }, PAD, pollGamepad, lightShrine, nearShrine, shrines: () => S.shrines, DIFFS, rollTalents, TALENTS, WEAPONS, spawnMini, MINIS, minis: () => S.minis, hurtMini, killMini, GUIDE, ANIM, clips: () => kit.clips.map((c) => c.name + ':' + c.duration.toFixed(2)), post: () => ({ ao: gtaoPass && gtaoPass.enabled, bloom: bloomPass && bloomPass.enabled, passes: composer && composer.passes.length }),
   project: (x, y, z) => { const v = new THREE.Vector3(x, y, z).project(camera); return { sx: (v.x * 0.5 + 0.5) * window.innerWidth, sy: (-v.y * 0.5 + 0.5) * window.innerHeight }; },
   slashes: () => S.slashes.map((m) => ({ ry: m.rotation.y, arc: m.userData.arc })), giveShards: (n) => { P.shards += n; }, teleport: (x, z) => { P.x = x; P.z = z; }, cranes: () => craneSet ? { count: craneSet.count, body: !!craneSet.body, tris: craneSet.body ? craneSet.body.geometry.attributes.position.count / 3 : 0 } : null,
