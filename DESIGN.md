@@ -121,6 +121,10 @@ autopilot(完美风筝的内置 AI)基线:v1.4 清修 通关 / 修行 通关(最
 | 筑基印记 | 单局达筑基 | 开局即练气三层,自带两门功法 |
 | 魔心 | 劫难档渡劫 | 筑基时多一条道途:魔修 |
 
+## 起山(v4.2)
+
+`SET.startAt` ∈ hearth / wildwood / mossfall / cinder / silvermere,后四项需 `META.lit[key]`(守满该山法阵时写)。`startRun` 末尾:出生 `(D.cx + 2.4, D.cz + 2.0)`、1.5 s 无敌、`applyWard` 该山功法、`W.wx = STARTS[k].wx` 且 `wxTimer = 70`、`S.guide = null`、`S.startAt = k`。精英唤醒条件由 `S.t > 75` 且进山 8 s 改为:本山 `S.t > 45` 即现身。`resumeRun` 用 `S.resuming` 跳过起山逻辑,再从存档恢复 `S.startAt`。
+
 ## 岛势(v4.1)
 
 `SET.island` = fixed / new / pin,`pickSeed()` 给 7 / 随机 1–999999 / `SET.seedPin`;开局 `rebuildWorld(seed)`。`world.js`:`setRoadSeed(seed)`(每条路相位 0–2π、幅度 3–6.5,种子 7 为 0 / 4.5)、`landmarkBlock(D, fn)`(地标组绕法阵转 `theta`,先干跑一遍检查实心件离路 ≥ 路半宽 + 半径 + 0.6 + 抖动,不行就 +15°,最多 24 次;抖动 ±1.6,地标自身朝向 `rotY − theta`)、`repaintGround(ground)`。`world.seed / world.twists` 可查。山海图足迹按 `mark` 记,不受位置影响。

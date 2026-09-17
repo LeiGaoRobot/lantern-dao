@@ -270,13 +270,14 @@ let P = newPlayer();
 // settings (persisted) + translations
 // =====================================================================
 const SET_V = 1, META_V = 1;
-const SET = Object.assign({ v: SET_V, quality: 'high', shake: true, numbers: true, music: 0.28, sfx: 0.55, lang: 'zh', difficulty: 'standard', startWeapon: 0, cues: false, island: 'fixed', seedPin: 7 }, (() => {
+const SET = Object.assign({ v: SET_V, quality: 'high', shake: true, numbers: true, music: 0.28, sfx: 0.55, lang: 'zh', difficulty: 'standard', startWeapon: 0, cues: false, island: 'fixed', seedPin: 7, startAt: 'hearth' }, (() => {
   try {
     const raw = JSON.parse(localStorage.getItem('emberlight.settings') || '{}');
     if (typeof raw !== 'object' || raw === null) return {};
     // migrations by version: v0 (no field) → v1: clamp volumes, drop unknown keys
     const out = {};
-    for (const k of ['quality', 'shake', 'numbers', 'music', 'sfx', 'lang', 'difficulty', 'startWeapon', 'cues', 'island', 'seedPin']) if (k in raw) out[k] = raw[k];
+    for (const k of ['quality', 'shake', 'numbers', 'music', 'sfx', 'lang', 'difficulty', 'startWeapon', 'cues', 'island', 'seedPin', 'startAt']) if (k in raw) out[k] = raw[k];
+    if (!['hearth', 'wildwood', 'mossfall', 'cinder', 'silvermere'].includes(out.startAt)) delete out.startAt;
     if (!['fixed', 'new', 'pin'].includes(out.island)) delete out.island;
     if (!Number.isInteger(out.seedPin) || out.seedPin < 1 || out.seedPin > 999999) delete out.seedPin;
     out.cues = !!out.cues;
@@ -525,7 +526,7 @@ const UNLOCKS = [
   { key: 'demonpath', name: 'Demon heart', how: 'Pass the tribulation on Tribulation difficulty', gives: 'A fourth path at Foundation: the Demon Path', test: (m, run) => run && run.won && run.diff === 'ash' },
 ];
 function loadMeta() {
-  const fresh = { v: META_V, totalKills: 0, bossKills: 0, runsPlayed: 0, bestTime: 0, runs: [], unlocks: {}, byDiff: {}, bestiary: {}, omens: {}, seen: {}, dangkangCaught: 0, jingweiStones: 0, places: {} };
+  const fresh = { v: META_V, totalKills: 0, bossKills: 0, runsPlayed: 0, bestTime: 0, runs: [], unlocks: {}, byDiff: {}, bestiary: {}, omens: {}, seen: {}, dangkangCaught: 0, jingweiStones: 0, places: {}, lit: {} };
   try {
     const m = JSON.parse(localStorage.getItem('emberlight.meta') || 'null');
     if (!m || typeof m !== 'object') return fresh;
@@ -536,6 +537,7 @@ function loadMeta() {
     out.bestiary = {}; if (m.bestiary && typeof m.bestiary === 'object') for (const k of ['wolfking', 'sentinel', 'salamander', 'maw']) if (m.bestiary[k]) out.bestiary[k] = String(m.bestiary[k]);
     out.byDiff = {}; if (m.byDiff && typeof m.byDiff === 'object') for (const k of ['calm', 'standard', 'ash', 'changyang']) if (m.byDiff[k]) out.byDiff[k] = { best: m.byDiff[k].best | 0, wins: m.byDiff[k].wins | 0, runs: m.byDiff[k].runs | 0 };
     out.guided = !!m.guided;
+    out.lit = {}; if (m.lit && typeof m.lit === 'object') for (const k of ['wildwood', 'mossfall', 'cinder', 'silvermere']) if (m.lit[k]) out.lit[k] = 1;
     for (const k of ['dangkangCaught', 'jingweiStones']) out[k] = Number.isFinite(m[k]) ? Math.max(0, Math.floor(m[k])) : 0;
     out.omens = {}; if (m.omens && typeof m.omens === 'object') for (const k in OMENS) if (m.omens[k]) out.omens[k] = 1;
     out.seen = {}; if (m.seen && typeof m.seen === 'object') for (const k of ['jingwei']) if (m.seen[k]) out.seen[k] = 1;
@@ -654,6 +656,22 @@ function rebuildWorld(seed) {
   forgeLight.position.set(world.forgePos.x, 1.4, world.forgePos.z);
   S.cullX = null; S.snowVisible = null; S.fusangLm = null;
   return true;
+}
+// 起山: where a run begins. A mountain start brings its ward, its weather, and its elite at 0:45
+const STARTS = {
+  hearth:     { zh: '青要', en: 'Qingyao', wx: null },
+  wildwood:   { zh: '昆仑', en: 'Kunlun', wx: 'snow' },
+  mossfall:   { zh: '发鸠', en: 'Fajiu', wx: 'storm' },
+  cinder:     { zh: '汤谷', en: 'Tanggu', wx: 'clear' },
+  silvermere: { zh: '招摇', en: 'Zhaoyao', wx: 'rain' },
+};
+function startName(k) { const s = STARTS[k] || STARTS.hearth; return SET.lang === 'zh' ? s.zh : s.en; }
+function startOpen(k) { return k === 'hearth' || !!(META.lit && META.lit[k]); }
+function renderStartPick() {
+  const zh = SET.lang === 'zh'; if (!startOpen(SET.startAt)) SET.startAt = 'hearth';
+  for (const b of document.querySelectorAll('#startPick .dp')) { const k = b.dataset.s, open = startOpen(k); b.disabled = !open; b.classList.toggle('on', SET.startAt === k); b.querySelector('.n').textContent = startName(k) + (open ? '' : ' 🔒'); b.title = open ? '' : (zh ? '先在此山点亮一次灵脉法阵' : 'Light the spirit array on this mountain once'); }
+  $('#startLabel').textContent = zh ? '起山' : 'Begin at';
+  const k = SET.startAt; $('#startDesc').textContent = k === 'hearth' ? (zh ? '从青要坊市起步,炼器坊就在身边。' : 'Begin in the Qingyao market, the forge at hand.') : (zh ? `从${startName(k)}起步:自带 ${tr(WARDS[k].name)};此山精英四十五息后现身;炼器坊远在岛心。` : `Begin at ${startName(k)}: you carry ${tr(WARDS[k].name)}; its elite wakes at 0:45; the forge is a long walk away.`);
 }
 function pickSeed() { return SET.island === 'new' ? 1 + Math.floor(Math.random() * 999999) : SET.island === 'pin' ? (SET.seedPin | 0) || 7 : 7; }
 function renderIslandPick() {
@@ -1191,6 +1209,7 @@ function updateAim() {
 // UI wiring
 // =====================================================================
 $('#startBtn').addEventListener('click', () => { AUDIO.ensureAudio(); AUDIO.resume(); rebuildWorld(pickSeed()); startRun(); });
+for (const b of document.querySelectorAll('#startPick .dp')) b.addEventListener('click', () => { if (!startOpen(b.dataset.s)) return; SET.startAt = b.dataset.s; saveSettings(); renderStartPick(); AUDIO.sfx('ui'); });
 for (const b of document.querySelectorAll('#islandPick .dp')) b.addEventListener('click', () => { SET.island = b.dataset.i; saveSettings(); renderIslandPick(); AUDIO.sfx('ui'); });
 $('#seedPin').addEventListener('input', (e) => { const v = parseInt(e.target.value, 10); if (Number.isInteger(v) && v >= 1 && v <= 999999) { SET.seedPin = v; saveSettings(); } });
 $('#seedPin').addEventListener('keydown', (e) => e.stopPropagation());
@@ -1199,7 +1218,7 @@ function renderDiffPick() {
   if (SET.difficulty === 'changyang' && !unlocked('demonpath')) SET.difficulty = 'standard';
   for (const b of document.querySelectorAll('#diffPick .dp')) { b.hidden = b.dataset.d === 'changyang' && !unlocked('demonpath'); const d = DIFFS[b.dataset.d]; b.classList.toggle('on', SET.difficulty === b.dataset.d); b.querySelector('.n').textContent = SET.lang === 'zh' ? d.zh : d.name; }
   const d = DIFF(); $('#diffDesc').textContent = SET.lang === 'zh' ? d.zhDesc : d.desc;
-  renderWeaponPick(); renderIslandPick();
+  renderWeaponPick(); renderIslandPick(); renderStartPick();
 }
 function renderWeaponPick() {
   const box = $('#weaponPick'); if (!box) return;
@@ -1337,6 +1356,15 @@ function startRun() {
   AUDIO.setTension(0); AUDIO.setDance(false); AUDIO.setDistrict('hearth'); AUDIO.musicVolume(SET.music); AUDIO.sfxVolume(SET.sfx);
   showBanner(`${tr('THE HEARTH')}  ·  ${tr('Collect embers. Find the forge. Survive 10 minutes.')}`, 6);
   S.discovered.add('hearth');
+  S.startAt = 'hearth';
+  if (SET.startAt !== 'hearth' && startOpen(SET.startAt) && !S.resuming) {
+    const k = SET.startAt, D = DISTRICTS.find((d) => d.key === k), w = WARDS[k];
+    S.startAt = k; P.x = D.cx + 2.4; P.z = D.cz + 2.0; S.camFx = null; S.camFz = null; P.invuln = 1.5;
+    P.wards = P.wards || {}; if (!P.wards[w.key]) { P.wards[w.key] = true; applyWard(w.key); }
+    if (STARTS[k].wx) { W.wx = STARTS[k].wx; W.wxTimer = 70; applyWeatherInstant(); refreshWeatherButtons(); }
+    S.guide = null; $('#guide').classList.remove('show'); S.discovered.add(k);
+    showBanner(SET.lang === 'zh' ? `起于${startName(k)} · 自带 ${tr(w.name)} · 此山精英四十五息后现身` : `BEGIN AT ${startName(k).toUpperCase()}  ·  ${tr(w.name)} in hand  ·  its elite wakes at 0:45`, 6);
+  }
 }
 // ---- 云游归来: a soft save of the cultivator and the clock. Enemies, pickups, the boss and an active shrine are dropped; the world is the same island every run
 const RUN_KEY = 'emberlight.run';
@@ -1344,7 +1372,7 @@ function saveRun() {
   if (S.phase !== 'run') return false;
   const P2 = {}; for (const k in P) { const v = P[k]; if (typeof v === 'function' || v instanceof WeakMap || v instanceof Map || v instanceof Set || (v && typeof v === 'object' && v.isObject3D)) continue; P2[k] = v; }
   const shr = {}; if (S.shrines) for (const k in S.shrines) shr[k] = { state: S.shrines[k].state === 'done' ? 'done' : 'idle', cd: 0 };
-  const snap = { v: 1, date: new Date().toISOString(), seed: S.seed, difficulty: SET.difficulty, t: S.t, endless: !!S.endless, P: P2, stats: S.stats, shrines: shr, miniDone: S.miniDone || {}, eliteWave: S.eliteWave || 0, bossKilled: !!S.bossKilled, bossSpawned: !!S.bossSpawned && !S.boss, tribWarned: !!S.tribWarned, placesSeen: S.placesSeen || {}, jwDone: S.jwDone || 0, discovered: [...(S.discovered || [])], wuluoCd: S.wuluoCd || 0, qiCd: S.qiCd || 0 };
+  const snap = { v: 1, date: new Date().toISOString(), seed: S.seed, startAt: S.startAt || 'hearth', difficulty: SET.difficulty, t: S.t, endless: !!S.endless, P: P2, stats: S.stats, shrines: shr, miniDone: S.miniDone || {}, eliteWave: S.eliteWave || 0, bossKilled: !!S.bossKilled, bossSpawned: !!S.bossSpawned && !S.boss, tribWarned: !!S.tribWarned, placesSeen: S.placesSeen || {}, jwDone: S.jwDone || 0, discovered: [...(S.discovered || [])], wuluoCd: S.wuluoCd || 0, qiCd: S.qiCd || 0 };
   try { localStorage.setItem(RUN_KEY, JSON.stringify(snap)); return true; } catch (e) { window.__emberLog('save', 'run save failed: ' + e.message); return false; }
 }
 function loadRunSnap() { try { const s = JSON.parse(localStorage.getItem(RUN_KEY) || 'null'); return s && s.v === 1 && s.P && Number.isFinite(s.t) ? s : null; } catch (e) { return null; } }
@@ -1353,7 +1381,8 @@ function resumeRun() {
   const snap = loadRunSnap(); if (!snap) return false;
   if (['calm', 'standard', 'ash', 'changyang'].includes(snap.difficulty)) SET.difficulty = snap.difficulty;
   rebuildWorld(Number.isInteger(snap.seed) ? snap.seed : 7);
-  startRun();
+  S.resuming = true; try { startRun(); } finally { S.resuming = false; }
+  S.startAt = STARTS[snap.startAt] ? snap.startAt : 'hearth';
   S.timers.length = 0;   /* no foundation-memory xp on top of a restored cultivator */
   for (const k in snap.P) if (!(P[k] instanceof WeakMap)) P[k] = snap.P[k];
   P.x = 2.2; P.z = 2.6; P.invuln = 2; P.dashT = 0; P.dashCd = 0; P.hp = Math.max(1, Math.min(P.maxHp, P.hp)); P.animOnce = null;
@@ -1521,7 +1550,8 @@ function updateShrines(dt) {
     if (d > SHRINE_LEASH) { sh.state = 'idle'; sh.cd = 20; S.shrineActive = null; $('#shrine').classList.remove('show'); showBanner('THE SHRINE GUTTERS OUT  ·  You strayed too far.', 3); AUDIO.sfx('lose'); }
     else if (sh.t <= 0) {
       sh.state = 'done'; S.shrineActive = null; $('#shrine').classList.remove('show');
-      const w = WARDS[sh.key]; P.wards = P.wards || {}; P.wards[w.key] = true; applyWard(w.key);
+      const w = WARDS[sh.key]; P.wards = P.wards || {}; if (!P.wards[w.key]) { P.wards[w.key] = true; applyWard(w.key); }
+      META.lit = META.lit || {}; if (!META.lit[sh.key]) { META.lit[sh.key] = 1; saveMeta(); S.timers.push({ t: 6.2, fn: () => showBanner(SET.lang === 'zh' ? `此后可从${startName(sh.key)}起步` : `You may now begin a run at ${startName(sh.key)}`, 4) }); }
       P.shards += 20;
       showBanner(`${tr('WARD GAINED')} · ${tr(w.name)}  ·  ${tr(w.desc)}`, 6);
       AUDIO.sfx('win'); spawnRing(sh.x, sh.z, 10, 0x8ff0dc, 1.0, 0.06); burstParticles(sh.x, 2, sh.z, 120, [0.55, 0.95, 0.85], 7, 0.5, 1.2, -1);
@@ -2299,8 +2329,9 @@ function killMini(m) {
 function updateMinis(dt) {
   if (S.miniCorpses) for (let i = S.miniCorpses.length - 1; i >= 0; i--) { const m = S.miniCorpses[i]; m.corpseT -= S.dtRaw; MINI_RIGS[m.rigKey].anim.mixer.update(S.dtRaw); if (m.corpseT <= 0) { MINI_RIGS[m.rigKey].rig.visible = false; S.miniCorpses.splice(i, 1); } }
   // wake the district elite a few seconds after arrival
-  if (S.t > 75 && S.district.key !== 'hearth' && !S.minis.length && !(S.miniDone && S.miniDone[MINIS[S.district.key].key])) {
-    S.miniWake = (S.miniWake || 0) + dt; if (S.miniWake > 8) { S.miniWake = 0; spawnMini(S.district.key); }
+  const homeWake = S.startAt && S.startAt !== 'hearth' && S.district.key === S.startAt;
+  if (S.t > (homeWake ? 45 : 75) && S.district.key !== 'hearth' && !S.minis.length && !(S.miniDone && S.miniDone[MINIS[S.district.key].key])) {
+    S.miniWake = (S.miniWake || 0) + dt; if (S.miniWake > (homeWake ? 0 : 8)) { S.miniWake = 0; spawnMini(S.district.key); }
   } else S.miniWake = 0;
   for (const m of S.minis) {
     const d0 = m.def; const R = MINI_RIGS[m.rigKey]; const A = R.anim;
@@ -2871,7 +2902,7 @@ function autopilot(dt) {
 // debug / capture hooks (used by the verification script)
 // =====================================================================
 window.__emberlight = {
-  S, P: () => P, W, world: () => world, startRun, endRun, spawnBoss, triggerOmen, omens: () => S.omens, playDitai, nearDitai, DITAI, prayWuluo, nearWuluo, WULUO, PLACES, visitPlace, hurtBig, realmTier, realmLamp, lampI: () => lampLight.intensity, WX_BIAS, wdmg, rebuildWorld, pickSeed, renderer, fireSecondary, saveRun, loadRunSnap, resumeRun, clearRun, ringColor: () => FX.playerRing.material.color.getHexString(), dangkang: () => S.dangkang, startJingweiErrand, jwQuest: () => S.jwQuest, spawnEnemy, spawnAround, setWeather: (tod, wx) => { W.tod = tod; W.wx = wx; W.auto = false; refreshWeatherButtons(); },
+  S, P: () => P, W, world: () => world, startRun, endRun, spawnBoss, triggerOmen, omens: () => S.omens, playDitai, nearDitai, DITAI, prayWuluo, nearWuluo, WULUO, PLACES, visitPlace, hurtBig, realmTier, realmLamp, lampI: () => lampLight.intensity, WX_BIAS, wdmg, rebuildWorld, pickSeed, renderer, STARTS, startOpen, renderStartPick, fireSecondary, saveRun, loadRunSnap, resumeRun, clearRun, ringColor: () => FX.playerRing.material.color.getHexString(), dangkang: () => S.dangkang, startJingweiErrand, jwQuest: () => S.jwQuest, spawnEnemy, spawnAround, setWeather: (tod, wx) => { W.tod = tod; W.wx = wx; W.auto = false; refreshWeatherButtons(); },
   cheat: (o) => Object.assign(P, o), META, recordRun, SET, applyLang, applyQuality, applyCues, gainXp, AUDIO, camDist: (v) => { camDist = v; }, PAD, pollGamepad, lightShrine, nearShrine, shrines: () => S.shrines, DIFFS, rollTalents, TALENTS, WEAPONS, spawnMini, MINIS, minis: () => S.minis, hurtMini, killMini, GUIDE, ANIM, clips: () => kit.clips.map((c) => c.name + ':' + c.duration.toFixed(2)), post: () => ({ ao: gtaoPass && gtaoPass.enabled, bloom: bloomPass && bloomPass.enabled, passes: composer && composer.passes.length }),
   project: (x, y, z) => { const v = new THREE.Vector3(x, y, z).project(camera); return { sx: (v.x * 0.5 + 0.5) * window.innerWidth, sy: (-v.y * 0.5 + 0.5) * window.innerHeight }; },
   slashes: () => S.slashes.map((m) => ({ ry: m.rotation.y, arc: m.userData.arc })), giveShards: (n) => { P.shards += n; }, teleport: (x, z) => { P.x = x; P.z = z; }, cranes: () => craneSet ? { count: craneSet.count, body: !!craneSet.body, tris: craneSet.body ? craneSet.body.geometry.attributes.position.count / 3 : 0 } : null,
