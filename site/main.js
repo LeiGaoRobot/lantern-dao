@@ -8,7 +8,7 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
-import { Kit, DynSet, buildGround, generateMap, districtAt, DISTRICTS, ROADS, ISLAND_R, PLAY_R, collideStatic, Grid, setGlow, glowMat, MATS, treeUniforms, mulberry32, vnoise } from './world.js?v=40';
+import { Kit, DynSet, buildGround, repaintGround, setRoadSeed, generateMap, districtAt, DISTRICTS, ROADS, ISLAND_R, PLAY_R, collideStatic, Grid, setGlow, glowMat, MATS, treeUniforms, mulberry32, vnoise } from './world.js?v=41';
 import * as AUDIO from './audio.js?v=36';
 
 const $ = (s) => document.querySelector(s);
@@ -270,13 +270,15 @@ let P = newPlayer();
 // settings (persisted) + translations
 // =====================================================================
 const SET_V = 1, META_V = 1;
-const SET = Object.assign({ v: SET_V, quality: 'high', shake: true, numbers: true, music: 0.28, sfx: 0.55, lang: 'zh', difficulty: 'standard', startWeapon: 0, cues: false }, (() => {
+const SET = Object.assign({ v: SET_V, quality: 'high', shake: true, numbers: true, music: 0.28, sfx: 0.55, lang: 'zh', difficulty: 'standard', startWeapon: 0, cues: false, island: 'fixed', seedPin: 7 }, (() => {
   try {
     const raw = JSON.parse(localStorage.getItem('emberlight.settings') || '{}');
     if (typeof raw !== 'object' || raw === null) return {};
     // migrations by version: v0 (no field) → v1: clamp volumes, drop unknown keys
     const out = {};
-    for (const k of ['quality', 'shake', 'numbers', 'music', 'sfx', 'lang', 'difficulty', 'startWeapon', 'cues']) if (k in raw) out[k] = raw[k];
+    for (const k of ['quality', 'shake', 'numbers', 'music', 'sfx', 'lang', 'difficulty', 'startWeapon', 'cues', 'island', 'seedPin']) if (k in raw) out[k] = raw[k];
+    if (!['fixed', 'new', 'pin'].includes(out.island)) delete out.island;
+    if (!Number.isInteger(out.seedPin) || out.seedPin < 1 || out.seedPin > 999999) delete out.seedPin;
     out.cues = !!out.cues;
     if (!['calm', 'standard', 'ash', 'changyang'].includes(out.difficulty)) delete out.difficulty;
     if (!Number.isInteger(out.startWeapon)) delete out.startWeapon;
@@ -549,7 +551,7 @@ const META = loadMeta();
 function saveMeta() { try { localStorage.setItem('emberlight.meta', JSON.stringify(META)); } catch (e) { window.__emberLog('save', 'meta write failed: ' + e.message); } }
 const unlocked = (k) => !!META.unlocks[k];
 function recordRun(won) {
-  const run = { time: Math.floor(S.t), kills: S.stats.kills, level: P.level, won, boss: !!S.bossKilled, date: new Date().toISOString().slice(0, 10), diff: SET.difficulty, shrines: S.shrines ? Object.values(S.shrines).filter((x) => x.state === 'done').length : 0 };
+  const run = { seed: S.seed, time: Math.floor(S.t), kills: S.stats.kills, level: P.level, won, boss: !!S.bossKilled, date: new Date().toISOString().slice(0, 10), diff: SET.difficulty, shrines: S.shrines ? Object.values(S.shrines).filter((x) => x.state === 'done').length : 0 };
   META.byDiff = META.byDiff || {}; const bd = META.byDiff[SET.difficulty] || (META.byDiff[SET.difficulty] = { best: 0, wins: 0, runs: 0 });
   bd.runs++; bd.best = Math.max(bd.best, run.time); if (won) bd.wins++;
   META.totalKills += S.stats.kills; META.runsPlayed++; if (S.bossKilled) META.bossKills++;
@@ -600,6 +602,7 @@ kit.load('./assets/kit.glb?v=17', (e) => { if (e.total) loadBar.style.transform 
 }).catch((err) => { loadText.textContent = 'Failed to load kit: ' + err.message; console.error(err); });
 
 function buildWorld() {
+  setRoadSeed(S.seed);
   ground = buildGround(scene);
   loadBar.style.transform = 'scaleX(0.75)';
   world = generateMap(kit, scene, S.seed);
@@ -622,7 +625,7 @@ function buildWorld() {
   craneSet = new DynSet(kit, 'Crane', 8, scene, { cast: false, outline: 0 });
   jingweiSet = new DynSet(kit, 'Jingwei', 8, scene, { cast: false, outline: 0 });
   dangkangSet = new DynSet(kit, 'Dangkang', 2, scene, { cast: true, outline: 0 });
-  FX.jingwei = []; { const jw = (world.landmarks || []).find((l) => l.kind === 'jingwei'); const D = DISTRICTS[2]; const from = jw ? { x: jw.x, z: jw.z } : { x: D.cx + 18, z: D.cz - 18 }; const fl = Math.hypot(from.x, from.z) || 1, to = { x: from.x / fl * (ISLAND_R + 9), z: from.z / fl * (ISLAND_R + 9) }; /* 常衔西山之木石,以堙于东海: out over the cloud sea and back */ const nj = 3 + Math.min(4, META.jingweiStones || 0); for (let i = 0; i < nj; i++) FX.jingwei.push({ from, to, t: i / nj, dir: 1, h: 6 + (i % 4) * 0.8, ph: i * 2.1 }); }
+  buildJingweiRoutes();
   FX.cranes = []; for (let i = 0; i < 6; i++) FX.cranes.push({ a: i / 6 * Math.PI * 2, r: 10 + (i % 3) * 4, h: 7 + (i % 2) * 1.5, spd: 0.12 + (i % 3) * 0.02, ph: i * 1.3 }); FX.craneC = { x: 0, z: 0 };
   boltSet = new DynSet(kit, 'Ember', 200, scene, { cast: false, glowKey: 'Bolt', glowMat: new THREE.MeshBasicMaterial({ color: 0xffb060, toneMapped: false }) });
   spitSet = new DynSet(kit, 'Ember', 120, scene, { cast: false, glowKey: 'Spit', glowMat: new THREE.MeshBasicMaterial({ color: 0xff5a2a, toneMapped: false }) });
@@ -640,6 +643,25 @@ function buildWorld() {
   setupTouch();
   applyWeatherInstant();
   requestAnimationFrame(loop);
+}
+// 岛势: tear the static world down and grow another island from a seed (rigs, dynamic sets, effects and the ground mesh are kept)
+function rebuildWorld(seed) {
+  seed = (seed | 0) || 7; if (world && world.seed === seed) return false;
+  if (world) for (const k in world.sets) for (const mesh of world.sets[k].meshes) { scene.remove(mesh); mesh.dispose(); }
+  S.seed = seed; setRoadSeed(seed); repaintGround(ground);
+  world = generateMap(kit, scene, seed);
+  buildAmbientSources(); buildJingweiRoutes(); buildMinimapBg();
+  forgeLight.position.set(world.forgePos.x, 1.4, world.forgePos.z);
+  S.cullX = null; S.snowVisible = null; S.fusangLm = null;
+  return true;
+}
+function pickSeed() { return SET.island === 'new' ? 1 + Math.floor(Math.random() * 999999) : SET.island === 'pin' ? (SET.seedPin | 0) || 7 : 7; }
+function renderIslandPick() {
+  const zh = SET.lang === 'zh';
+  for (const b of document.querySelectorAll('#islandPick .dp')) { b.classList.toggle('on', SET.island === b.dataset.i); b.querySelector('.n').textContent = ({ fixed: zh ? '定势' : 'Classic', new: zh ? '新岛' : 'New island', pin: zh ? '记岛' : 'By number' })[b.dataset.i]; }
+  const inp = $('#seedPin'); inp.hidden = SET.island !== 'pin'; if (document.activeElement !== inp) inp.value = SET.seedPin;
+  $('#islandLabel').textContent = zh ? '岛势' : 'Island';
+  $('#islandDesc').textContent = SET.island === 'fixed' ? (zh ? '原来的那座岛(岛势 #7)。' : 'The original island (#7).') : SET.island === 'new' ? (zh ? '每局换一座岛:四山的地标换了方位,山路换了弯。' : 'A different island every run: landmarks turn about their shrines, roads bend anew.') : (zh ? '输入岛势号,回到同一座岛。' : 'Type an island number to return to it.');
 }
 // Blender-authored clips: idle/walk are the base layer (weights cross-fade), the rest are additive one-shots
 const ANIM = {};
@@ -808,6 +830,12 @@ function buildEffects() {
     g.visible = false; scene.add(g);
     FX.orbs.push(g);
   }
+  buildAmbientSources();
+}
+function buildJingweiRoutes() {
+  FX.jingwei = []; { const jw = (world.landmarks || []).find((l) => l.kind === 'jingwei'); const D = DISTRICTS[2]; const from = jw ? { x: jw.x, z: jw.z } : { x: D.cx + 18, z: D.cz - 18 }; const fl = Math.hypot(from.x, from.z) || 1, to = { x: from.x / fl * (ISLAND_R + 9), z: from.z / fl * (ISLAND_R + 9) }; /* 常衔西山之木石,以堙于东海: out over the cloud sea and back */ const nj = 3 + Math.min(4, META.jingweiStones || 0); for (let i = 0; i < nj; i++) FX.jingwei.push({ from, to, t: i / nj, dir: 1, h: 6 + (i % 4) * 0.8, ph: i * 2.1 }); }
+}
+function buildAmbientSources() {
   // fire sparks at the forge & campfires are spawned from the particle system each frame
   FX.emberSources = [];
   for (const t of (world.placements.Campfire || [])) FX.emberSources.push({ x: t.x, z: t.z, y: 1.3, rate: 5, smoke: true });
@@ -1162,13 +1190,16 @@ function updateAim() {
 // =====================================================================
 // UI wiring
 // =====================================================================
-$('#startBtn').addEventListener('click', () => { AUDIO.ensureAudio(); AUDIO.resume(); startRun(); });
+$('#startBtn').addEventListener('click', () => { AUDIO.ensureAudio(); AUDIO.resume(); rebuildWorld(pickSeed()); startRun(); });
+for (const b of document.querySelectorAll('#islandPick .dp')) b.addEventListener('click', () => { SET.island = b.dataset.i; saveSettings(); renderIslandPick(); AUDIO.sfx('ui'); });
+$('#seedPin').addEventListener('input', (e) => { const v = parseInt(e.target.value, 10); if (Number.isInteger(v) && v >= 1 && v <= 999999) { SET.seedPin = v; saveSettings(); } });
+$('#seedPin').addEventListener('keydown', (e) => e.stopPropagation());
 for (const b of document.querySelectorAll('#diffPick .dp')) b.addEventListener('click', () => { SET.difficulty = b.dataset.d; saveSettings(); renderDiffPick(); AUDIO.sfx('ui'); });
 function renderDiffPick() {
   if (SET.difficulty === 'changyang' && !unlocked('demonpath')) SET.difficulty = 'standard';
   for (const b of document.querySelectorAll('#diffPick .dp')) { b.hidden = b.dataset.d === 'changyang' && !unlocked('demonpath'); const d = DIFFS[b.dataset.d]; b.classList.toggle('on', SET.difficulty === b.dataset.d); b.querySelector('.n').textContent = SET.lang === 'zh' ? d.zh : d.name; }
   const d = DIFF(); $('#diffDesc').textContent = SET.lang === 'zh' ? d.zhDesc : d.desc;
-  renderWeaponPick();
+  renderWeaponPick(); renderIslandPick();
 }
 function renderWeaponPick() {
   const box = $('#weaponPick'); if (!box) return;
@@ -1268,7 +1299,8 @@ function buildRows() {
   return `<div class="sub" style="margin:12px 0 4px">${zh ? '本局修行' : 'This run'}</div><div class="buildlist">${h}</div>`;
 }
 function statRows() {
-  return `<div>${tr('Time survived')} <b>${fmtTime(S.t)}</b></div><div>${tr('Level')} <b>${SET.lang === 'zh' ? realmName(P.level) : P.level}</b></div><div>${tr('Defeated')} <b>${S.stats.kills}</b></div><div>${tr('Elites')} <b>${S.stats.elites}</b></div><div>${tr('Damage dealt')} <b>${Math.round(S.stats.dmgDealt)}</b></div><div>${tr('Forge shards')} <b>${P.shards}</b></div><div>${tr('Shrines lit')} <b>${S.stats.shrines || 0} / 4</b></div><div>${tr('Elites felled')} <b>${S.stats.minis || 0}${S.endless ? '' : ' / 4'}</b></div><div>${tr('Omens')} <b>${S.stats.omens || 0}${S.stats.dangkang ? ' · ' + tr('Dangkang') + ' ' + S.stats.dangkang : ''}</b></div><div>${tr('Atlas')} <b>${S.stats.places || 0} / ${PLACES.length}</b></div>`;
+  const seedRow = `<div>${SET.lang === 'zh' ? '岛势' : 'Island'} <b>#${S.seed}</b></div>`;
+  return seedRow + `<div>${tr('Time survived')} <b>${fmtTime(S.t)}</b></div><div>${tr('Level')} <b>${SET.lang === 'zh' ? realmName(P.level) : P.level}</b></div><div>${tr('Defeated')} <b>${S.stats.kills}</b></div><div>${tr('Elites')} <b>${S.stats.elites}</b></div><div>${tr('Damage dealt')} <b>${Math.round(S.stats.dmgDealt)}</b></div><div>${tr('Forge shards')} <b>${P.shards}</b></div><div>${tr('Shrines lit')} <b>${S.stats.shrines || 0} / 4</b></div><div>${tr('Elites felled')} <b>${S.stats.minis || 0}${S.endless ? '' : ' / 4'}</b></div><div>${tr('Omens')} <b>${S.stats.omens || 0}${S.stats.dangkang ? ' · ' + tr('Dangkang') + ' ' + S.stats.dangkang : ''}</b></div><div>${tr('Atlas')} <b>${S.stats.places || 0} / ${PLACES.length}</b></div>`;
 }
 function showBanner(text, secs = 4) { const b = $('#banner'); b.textContent = tr(text); b.classList.add('show'); S.bannerT = secs; }
 
@@ -1312,7 +1344,7 @@ function saveRun() {
   if (S.phase !== 'run') return false;
   const P2 = {}; for (const k in P) { const v = P[k]; if (typeof v === 'function' || v instanceof WeakMap || v instanceof Map || v instanceof Set || (v && typeof v === 'object' && v.isObject3D)) continue; P2[k] = v; }
   const shr = {}; if (S.shrines) for (const k in S.shrines) shr[k] = { state: S.shrines[k].state === 'done' ? 'done' : 'idle', cd: 0 };
-  const snap = { v: 1, date: new Date().toISOString(), difficulty: SET.difficulty, t: S.t, endless: !!S.endless, P: P2, stats: S.stats, shrines: shr, miniDone: S.miniDone || {}, eliteWave: S.eliteWave || 0, bossKilled: !!S.bossKilled, bossSpawned: !!S.bossSpawned && !S.boss, tribWarned: !!S.tribWarned, placesSeen: S.placesSeen || {}, jwDone: S.jwDone || 0, discovered: [...(S.discovered || [])], wuluoCd: S.wuluoCd || 0, qiCd: S.qiCd || 0 };
+  const snap = { v: 1, date: new Date().toISOString(), seed: S.seed, difficulty: SET.difficulty, t: S.t, endless: !!S.endless, P: P2, stats: S.stats, shrines: shr, miniDone: S.miniDone || {}, eliteWave: S.eliteWave || 0, bossKilled: !!S.bossKilled, bossSpawned: !!S.bossSpawned && !S.boss, tribWarned: !!S.tribWarned, placesSeen: S.placesSeen || {}, jwDone: S.jwDone || 0, discovered: [...(S.discovered || [])], wuluoCd: S.wuluoCd || 0, qiCd: S.qiCd || 0 };
   try { localStorage.setItem(RUN_KEY, JSON.stringify(snap)); return true; } catch (e) { window.__emberLog('save', 'run save failed: ' + e.message); return false; }
 }
 function loadRunSnap() { try { const s = JSON.parse(localStorage.getItem(RUN_KEY) || 'null'); return s && s.v === 1 && s.P && Number.isFinite(s.t) ? s : null; } catch (e) { return null; } }
@@ -1320,6 +1352,7 @@ function clearRun() { try { localStorage.removeItem(RUN_KEY); } catch (e) { /* n
 function resumeRun() {
   const snap = loadRunSnap(); if (!snap) return false;
   if (['calm', 'standard', 'ash', 'changyang'].includes(snap.difficulty)) SET.difficulty = snap.difficulty;
+  rebuildWorld(Number.isInteger(snap.seed) ? snap.seed : 7);
   startRun();
   S.timers.length = 0;   /* no foundation-memory xp on top of a restored cultivator */
   for (const k in snap.P) if (!(P[k] instanceof WeakMap)) P[k] = snap.P[k];
@@ -2838,7 +2871,7 @@ function autopilot(dt) {
 // debug / capture hooks (used by the verification script)
 // =====================================================================
 window.__emberlight = {
-  S, P: () => P, W, world: () => world, startRun, endRun, spawnBoss, triggerOmen, omens: () => S.omens, playDitai, nearDitai, DITAI, prayWuluo, nearWuluo, WULUO, PLACES, visitPlace, hurtBig, realmTier, realmLamp, lampI: () => lampLight.intensity, WX_BIAS, wdmg, fireSecondary, saveRun, loadRunSnap, resumeRun, clearRun, ringColor: () => FX.playerRing.material.color.getHexString(), dangkang: () => S.dangkang, startJingweiErrand, jwQuest: () => S.jwQuest, spawnEnemy, spawnAround, setWeather: (tod, wx) => { W.tod = tod; W.wx = wx; W.auto = false; refreshWeatherButtons(); },
+  S, P: () => P, W, world: () => world, startRun, endRun, spawnBoss, triggerOmen, omens: () => S.omens, playDitai, nearDitai, DITAI, prayWuluo, nearWuluo, WULUO, PLACES, visitPlace, hurtBig, realmTier, realmLamp, lampI: () => lampLight.intensity, WX_BIAS, wdmg, rebuildWorld, pickSeed, renderer, fireSecondary, saveRun, loadRunSnap, resumeRun, clearRun, ringColor: () => FX.playerRing.material.color.getHexString(), dangkang: () => S.dangkang, startJingweiErrand, jwQuest: () => S.jwQuest, spawnEnemy, spawnAround, setWeather: (tod, wx) => { W.tod = tod; W.wx = wx; W.auto = false; refreshWeatherButtons(); },
   cheat: (o) => Object.assign(P, o), META, recordRun, SET, applyLang, applyQuality, applyCues, gainXp, AUDIO, camDist: (v) => { camDist = v; }, PAD, pollGamepad, lightShrine, nearShrine, shrines: () => S.shrines, DIFFS, rollTalents, TALENTS, WEAPONS, spawnMini, MINIS, minis: () => S.minis, hurtMini, killMini, GUIDE, ANIM, clips: () => kit.clips.map((c) => c.name + ':' + c.duration.toFixed(2)), post: () => ({ ao: gtaoPass && gtaoPass.enabled, bloom: bloomPass && bloomPass.enabled, passes: composer && composer.passes.length }),
   project: (x, y, z) => { const v = new THREE.Vector3(x, y, z).project(camera); return { sx: (v.x * 0.5 + 0.5) * window.innerWidth, sy: (-v.y * 0.5 + 0.5) * window.innerHeight }; },
   slashes: () => S.slashes.map((m) => ({ ry: m.rotation.y, arc: m.userData.arc })), giveShards: (n) => { P.shards += n; }, teleport: (x, z) => { P.x = x; P.z = z; }, cranes: () => craneSet ? { count: craneSet.count, body: !!craneSet.body, tris: craneSet.body ? craneSet.body.geometry.attributes.position.count / 3 : 0 } : null,

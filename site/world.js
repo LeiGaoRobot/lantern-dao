@@ -54,8 +54,11 @@ export function districtAt(x, z) {
 
 // ---------------------------------------------------------------- roads (polylines from plaza to each outer district)
 export const ROADS = [];
-(function buildRoads() {
+export function setRoadSeed(seed = 7) {
+  ROADS.length = 0;
+  const rr = mulberry32((seed * 2654435761) >>> 0);
   for (let d = 1; d < 5; d++) {
+    const ph = seed === 7 ? 0 : rr() * Math.PI * 2, amp = seed === 7 ? 4.5 : 3 + rr() * 3.5;
     const D = DISTRICTS[d];
     const ang = Math.atan2(D.cz, D.cx);
     const pts = [];
@@ -63,7 +66,7 @@ export const ROADS = [];
     for (let i = 0; i <= n; i++) {
       const t = i / n;
       const r = PLAZA_R - 1 + t * (Math.hypot(D.cx, D.cz) - PLAZA_R - 6);
-      const wig = Math.sin(t * 5.3 + d) * 4.5 * Math.sin(t * Math.PI);
+      const wig = Math.sin(t * 5.3 + d + ph) * amp * Math.sin(t * Math.PI);
       const a = ang + wig / Math.max(r, 1);
       pts.push([Math.cos(a) * r, Math.sin(a) * r]);
     }
@@ -73,7 +76,8 @@ export const ROADS = [];
   const ring = [];
   for (let i = 0; i <= 28; i++) { const a = i / 28 * Math.PI * 2; ring.push([Math.cos(a) * 9.4, Math.sin(a) * 9.4]); }
   ROADS.push(ring);
-})();
+}
+setRoadSeed(7);
 function segDist(px, pz, ax, az, bx, bz) {
   const dx = bx - ax, dz = bz - az;
   const l2 = dx * dx + dz * dz;
@@ -374,6 +378,11 @@ export function groundColor(x, z, out) {
   return D.key;
 }
 
+export function repaintGround(ground) {
+  const geo = ground.mesh.geometry, pos = geo.attributes.position, col = geo.attributes.color, sm = geo.attributes.snowMask, rm = geo.attributes.roadMask; const c = new THREE.Color();
+  for (let i = 0; i < pos.count; i++) { const kind = groundColor(pos.getX(i), pos.getZ(i), c); col.setXYZ(i, c.r, c.g, c.b); sm.setX(i, kind === 'water' ? 0 : (kind === 'road' ? 0.55 : 1)); rm.setX(i, kind === 'road' ? 1 : 0); }
+  col.needsUpdate = sm.needsUpdate = rm.needsUpdate = true;
+}
 export function buildGround(scene) {
   const SIZE = 300, SEG = 200;
   const geo = new THREE.PlaneGeometry(SIZE, SIZE, SEG, SEG);
@@ -535,32 +544,52 @@ export function generateMap(kit, scene, seed = 7) {
 
   // ---- district landmarks
   const shrine = (D) => { add('Shrine', D.cx, D.cz, 0, 1, { r: 1.2, mark: 'shrine' }); };
+  // every seed but 7 turns each mountain's landmark group about its shrine (the shrine, the quadrant and the vein stay put) and nudges each piece;
+  // the angle steps on by 15 degrees until no solid landmark sits on a road. Seed 7 is the original island, untouched.
+  const lrng = mulberry32((seed * 7919 + 13) >>> 0);
+  const spin = (D, x, z, th) => { const dx = x - D.cx, dz = z - D.cz, c = Math.cos(th), s = Math.sin(th); return { x: D.cx + dx * c - dz * s, z: D.cz + dx * s + dz * c }; };
+  const landmarkBlock = (D, fn) => {
+    shrine(D);
+    let theta = 0; const jit = seed === 7 ? 0 : 1.6;
+    if (seed !== 7) {
+      const t0 = lrng() * Math.PI * 2;
+      for (let k = 0; k < 24; k++) {
+        theta = t0 + k * Math.PI / 12; let ok = true;
+        fn(D, (name, x, z, rotY, scale = 1, opts = {}) => { if (!ok || opts.solid === false) return; const p = spin(D, x, z, theta); const rr0 = (opts.r != null ? opts.r : opts.rect ? Math.max(opts.rect.w, opts.rect.d) / 2 : 1) * scale; if (roadDist(p.x, p.z) < ROAD_W * 0.5 + rr0 + 0.6 + jit) ok = false; }, mulberry32(1));
+        if (ok) break;
+      }
+    }
+    const jr = mulberry32((seed * 31 + D.cx * 7 + D.cz + 1000) >>> 0);
+    fn(D, (name, x, z, rotY = 0, scale = 1, opts = {}) => { const p = spin(D, x, z, theta); const jx = jit ? (jr() - 0.5) * 2 * jit : 0, jz = jit ? (jr() - 0.5) * 2 * jit : 0; add(name, p.x + jx, p.z + jz, rotY - theta, scale, opts); }, rng);
+    return theta;
+  };
+  const twists = {};
   // West mountains (Kunlun / Huaijiang / Zhang'e): jade trees around the array, the nine-faced gate, the black Ruoshui pool, burning cliffs toward the edge
-  { const D = DISTRICTS[1]; shrine(D);
-    for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; add('LanggTree', D.cx + Math.cos(a) * 8, D.cz + Math.sin(a) * 8, rng() * 6, 1.2 + rng() * 0.3, { r: 0.6 }); }
-    add('KunlunGate', D.cx + 12, D.cz + 2, rad(-35), 1.1, { rect: { w: 4.4, d: 1.0 }, mark: 'kunlungate' });
-    add('Ruoshui', D.cx - 9, D.cz + 8, 0.2, 1, { r: 2.7, mark: 'ruoshui' });
-    add('YanhuoCliff', D.cx - 18, D.cz - 14, rad(40), 1.2, { rect: { w: 4.5, d: 1.4 }, mark: 'yanhuo' }); add('YanhuoCliff', D.cx - 24, D.cz - 6, rad(75), 1.0, { rect: { w: 4.5, d: 1.4 } });
-    add('Shatang', D.cx + 4, D.cz - 9, 0.7, 1.1, { r: 0.6 }); add('Shatang', D.cx - 5, D.cz - 6, 2.2, 1.0, { r: 0.6 }); }
+  twists[DISTRICTS[1].key] = landmarkBlock(DISTRICTS[1], (D, A, R) => {
+    for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; A('LanggTree', D.cx + Math.cos(a) * 8, D.cz + Math.sin(a) * 8, R() * 6, 1.2 + R() * 0.3, { r: 0.6 }); }
+    A('KunlunGate', D.cx + 12, D.cz + 2, rad(-35), 1.1, { rect: { w: 4.4, d: 1.0 }, mark: 'kunlungate' });
+    A('Ruoshui', D.cx - 9, D.cz + 8, 0.2, 1, { r: 2.7, mark: 'ruoshui' });
+    A('YanhuoCliff', D.cx - 18, D.cz - 14, rad(40), 1.2, { rect: { w: 4.5, d: 1.4 }, mark: 'yanhuo' }); A('YanhuoCliff', D.cx - 24, D.cz - 6, rad(75), 1.0, { rect: { w: 4.5, d: 1.4 } });
+    A('Shatang', D.cx + 4, D.cz - 9, 0.7, 1.1, { r: 0.6 }); A('Shatang', D.cx - 5, D.cz - 6, 2.2, 1.0, { r: 0.6 }); });
   // North mountains (Fajiu / Gouwu / Youdu): zhe woods, black foxes, Jingwei's heap of twigs at the eastern shore
-  { const D = DISTRICTS[2]; shrine(D);
-    for (let i = 0; i < 9; i++) { const a = i / 9 * Math.PI * 2; add('ZheTree', D.cx + Math.cos(a) * 8.5, D.cz + Math.sin(a) * 8.5, rng() * 6, 1.2 + rng() * 0.4, { r: 0.7 }); }
-    add('JingweiPile', D.cx + 18, D.cz - 18, 0.4, 1.4, { r: 2.0, mark: 'jingwei' }); add('JingweiPile', D.cx + 24, D.cz - 12, 1.9, 1.0, { r: 1.5 });
-    for (const [fx, fz] of [[-6, 4], [7, -5], [-3, -9]]) add('XuanFox', D.cx + fx, D.cz + fz, rng() * 6, 1, { r: 0.35 });
-    add('Boulder', D.cx - 11, D.cz + 7, 0.4, 1.0, { r: 1.7 }); }
+  twists[DISTRICTS[2].key] = landmarkBlock(DISTRICTS[2], (D, A, R) => {
+    for (let i = 0; i < 9; i++) { const a = i / 9 * Math.PI * 2; A('ZheTree', D.cx + Math.cos(a) * 8.5, D.cz + Math.sin(a) * 8.5, R() * 6, 1.2 + R() * 0.4, { r: 0.7 }); }
+    A('JingweiPile', D.cx + 18, D.cz - 18, 0.4, 1.4, { r: 2.0, mark: 'jingwei' }); A('JingweiPile', D.cx + 24, D.cz - 12, 1.9, 1.0, { r: 1.5 });
+    for (const [fx, fz] of [[-6, 4], [7, -5], [-3, -9]]) A('XuanFox', D.cx + fx, D.cz + fz, R() * 6, 1, { r: 0.35 });
+    A('Boulder', D.cx - 11, D.cz + 7, 0.4, 1.0, { r: 1.7 }); });
   // East mountains (Tai / Tanggu): the Fusang tree with its ten suns above the hot valley, privet woods
-  { const D = DISTRICTS[3]; shrine(D);
-    add('FusangTree', D.cx + 8, D.cz + 7, 0.3, 1.1, { r: 1.6, mark: 'fusang' });
-    add('Tanggu', D.cx + 3, D.cz + 12, 0.5, 1, { r: 2.3, mark: 'tanggu' });
-    for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2 + 0.4; add('ZhenTree', D.cx + Math.cos(a) * 9, D.cz + Math.sin(a) * 9, rng() * 6, 1.1 + rng() * 0.4, { r: 0.5 }); }
-    add('Boulder', D.cx - 12, D.cz + 6, 0.4, 1.1, { r: 1.9 }); add('Rock_L', D.cx + 11, D.cz - 8, 2.4, 1.2, { r: 1.2 }); }
+  twists[DISTRICTS[3].key] = landmarkBlock(DISTRICTS[3], (D, A, R) => {
+    A('FusangTree', D.cx + 8, D.cz + 7, 0.3, 1.1, { r: 1.6, mark: 'fusang' });
+    A('Tanggu', D.cx + 3, D.cz + 12, 0.5, 1, { r: 2.3, mark: 'tanggu' });
+    for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2 + 0.4; A('ZhenTree', D.cx + Math.cos(a) * 9, D.cz + Math.sin(a) * 9, R() * 6, 1.1 + R() * 0.4, { r: 0.5 }); }
+    A('Boulder', D.cx - 12, D.cz + 6, 0.4, 1.1, { r: 1.9 }); A('Rock_L', D.cx + 11, D.cz - 8, 2.4, 1.2, { r: 1.2 }); });
   // South mountains (Zhaoyao / Qingqiu / Danxue): cassia woods, the phoenix cliff, the fox mound
-  { const D = DISTRICTS[4]; shrine(D);
-    for (let i = 0; i < 9; i++) { const a = i / 9 * Math.PI * 2; add(i % 3 === 2 ? 'Migu' : 'Cassia', D.cx + Math.cos(a) * 8, D.cz + Math.sin(a) * 8, rng() * 6, 1.2 + rng() * 0.3, { r: 0.6 }); }
-    add('Danxue', D.cx + 10, D.cz - 6, rad(-20), 1.2, { r: 1.6, mark: 'danxue' });
-    add('QingqiuMound', D.cx - 9, D.cz + 6, 0.6, 1.1, { r: 1.8, mark: 'qingqiu' });
-    add('LotusPond', D.cx - 2, D.cz - 9, 0.3, 1, { r: 2.9 });
-    for (let i = 0; i < 10; i++) { const a = rng() * Math.PI * 2, r = 4 + rng() * 7; add('Zhuyu', D.cx + Math.cos(a) * r, D.cz + Math.sin(a) * r, rng() * 6, 1 + rng() * 0.3, { solid: false }); } }
+  twists[DISTRICTS[4].key] = landmarkBlock(DISTRICTS[4], (D, A, R) => {
+    for (let i = 0; i < 9; i++) { const a = i / 9 * Math.PI * 2; A(i % 3 === 2 ? 'Migu' : 'Cassia', D.cx + Math.cos(a) * 8, D.cz + Math.sin(a) * 8, R() * 6, 1.2 + R() * 0.3, { r: 0.6 }); }
+    A('Danxue', D.cx + 10, D.cz - 6, rad(-20), 1.2, { r: 1.6, mark: 'danxue' });
+    A('QingqiuMound', D.cx - 9, D.cz + 6, 0.6, 1.1, { r: 1.8, mark: 'qingqiu' });
+    A('LotusPond', D.cx - 2, D.cz - 9, 0.3, 1, { r: 2.9 });
+    for (let i = 0; i < 10; i++) { const a = R() * Math.PI * 2, r = 4 + R() * 7; A('Zhuyu', D.cx + Math.cos(a) * r, D.cz + Math.sin(a) * r, R() * 6, 1 + R() * 0.3, { solid: false }); } });
 
   // ---- scatter
   const tables = {
@@ -602,7 +631,7 @@ export function generateMap(kit, scene, seed = 7) {
   const sets = {};
   const TREES = new Set(['Oak', 'Oak2', 'Pine', 'DeadTree', 'BambooGiant', 'LanggTree', 'Shatang', 'ZheTree', 'ZhenTree', 'Cassia', 'Migu', 'FusangTree']);
   for (const name of Object.keys(placements)) sets[name] = new InstanceSet(kit, name, placements[name], scene, { tint: true, cast: !['Tuft', 'Reed'].includes(name), material: TREES.has(name) ? MATS.tree : null });
-  return { placements, obstacles, landmarks, sets, forgePos, placedCount: placed };
+  return { placements, obstacles, landmarks, sets, forgePos, placedCount: placed, seed, twists };
 }
 
 // resolve a circle against static obstacles (in place)

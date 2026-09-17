@@ -121,6 +121,10 @@ autopilot(完美风筝的内置 AI)基线:v1.4 清修 通关 / 修行 通关(最
 | 筑基印记 | 单局达筑基 | 开局即练气三层,自带两门功法 |
 | 魔心 | 劫难档渡劫 | 筑基时多一条道途:魔修 |
 
+## 岛势(v4.1)
+
+`SET.island` = fixed / new / pin,`pickSeed()` 给 7 / 随机 1–999999 / `SET.seedPin`;开局 `rebuildWorld(seed)`。`world.js`:`setRoadSeed(seed)`(每条路相位 0–2π、幅度 3–6.5,种子 7 为 0 / 4.5)、`landmarkBlock(D, fn)`(地标组绕法阵转 `theta`,先干跑一遍检查实心件离路 ≥ 路半宽 + 半径 + 0.6 + 抖动,不行就 +15°,最多 24 次;抖动 ±1.6,地标自身朝向 `rotY − theta`)、`repaintGround(ground)`。`world.seed / world.twists` 可查。山海图足迹按 `mark` 记,不受位置影响。
+
 ## 中途存档(v3.8)
 
 `saveRun()` 在暂停 / 退出 / `beforeunload` 时写 `emberlight.run`,存修士对象里所有可序列化字段(跳过 WeakMap / 函数 / Object3D)、`S.t`、难度、无尽、战绩、法阵 done 状态、`miniDone`、`eliteWave`、山海图足迹等;`resumeRun()` 先走一遍 `startRun()` 再覆盖,并清掉筑基印记的开局灵气计时器,落点灵泉旁 (2.2, 2.6),2 s 无敌;`endRun()` 清档;v3.9 起每 30 s(`S.saveClock`)与 `visibilitychange` 隐藏时也写。不存的:妖邪、拾取、弹幕、燃地、正在守的法阵(退回 idle)、在场刑天(`bossSpawned` 置假让它回来时再现身)。
