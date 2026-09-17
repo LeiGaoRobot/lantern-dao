@@ -74,7 +74,7 @@ def bundle(esm):
     audio_iife = "// ---------------- audio.js ----------------\nconst AUDIO = (() => {\n" + re.sub(r"^export (?=(?:const|let|function|class) )", '', strip_imports(audio), flags=re.M) + \
                  "\nreturn { " + ', '.join(audio_names) + " };\n})();\n"
     world_iife = as_iife(world, 'world.js')
-    main_body = strip_imports(main).replace("'./assets/kit.glb?v=17'", 'KIT_URL').replace("'./assets/kit_haiwai.glb?v=1'", 'KIT_URL_HW')
+    main_body = strip_imports(main).replace("'./assets/kit.glb?v=17'", 'KIT_URL').replace("'./assets/kit_haiwai.glb?v=2'", 'KIT_URL_HW')
     return head + audio_iife + world_iife + "// ---------------- main.js ----------------\n" + main_body
 
 # ---- vendor three + addons so dist/index.html has no network dependency at all

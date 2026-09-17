@@ -498,7 +498,7 @@ const EN_HW = {
   'AN ASH BRUTE PROWLS NEARBY': 'A BO PROWLS NEARBY  ·  saw teeth; it eats tigers', 'THE ASH WARDEN STIRS': 'XIANGLIU COMES  ·  nine human faces on a green serpent', 'THE SKY DARKENS  ·  The tribulation is near.': 'ZHUYIN CLOSES ITS EYES  ·  and it is night.',
   'THE WARDEN CALLS ITS KIN': 'XIANGLIU CALLS THE BINGFENG', 'THE WARDEN BURNS BRIGHTER': 'XIANGLIU  ·  where it touches, marsh', 'THE ASH WARDEN FALLS  ·  The valley breathes again.': 'XIANGLIU FALLS  ·  its reeking blood lets no grain grow.',
 };
-const HW_WORDS_ZH = [['刑天', '相柳'], ['鬿雀', '比翼鸟'], ['山膏', '并封'], ['鸣蛇', '讙头国人'], ['毕方', '厌火国人'], ['穷奇', '駮'], ['九尾狐', '巫咸'], ['狍鸮', '夸父'], ['帝江', '凿齿'], ['丹粟', '明珠'], ['琅玕', '遗玉'], ['烛龙瞑目', '烛阴瞑'], ['青要密都', '君子之国'], ['青要', '君子国'], ['昆仑西山', '海外西'], ['发鸠北山', '海外北'], ['汤谷东山', '海外东'], ['招摇南山', '海外南'], ['昆仑', '海外西'], ['发鸠', '海外北'], ['招摇', '海外南'], ['天狗·御凶', '轩辕之丘·不敢西射'], ['猼訑·不畏', '共工之台·不敢北射'], ['鸓鸟·御火', '扶桑·浴日'], ['迷榖·不迷', '羽民·生羽'], ['山海图', '海外图'], ['五山', '海外四方']];
+const HW_WORDS_ZH = [['刑天', '相柳'], ['鬿雀', '比翼鸟'], ['山膏', '并封'], ['鸣蛇', '讙头国人'], ['毕方', '厌火国人'], ['穷奇', '駮'], ['九尾狐', '巫咸'], ['狍鸮', '夸父'], ['帝江', '凿齿'], ['丹粟', '明珠'], ['琅玕', '遗玉'], ['烛龙瞑目', '烛阴瞑'], ['青要密都', '君子之国'], ['青要', '君子国'], ['昆仑西山', '海外西'], ['发鸠北山', '海外北'], ['汤谷东山', '海外东'], ['招摇南山', '海外南'], ['昆仑', '海外西'], ['发鸠', '海外北'], ['招摇', '海外南'], ['天狗·御凶', '轩辕之丘·不敢西射'], ['猼訑·不畏', '共工之台·不敢北射'], ['鸓鸟·御火', '扶桑·浴日'], ['迷榖·不迷', '羽民·生羽'], ['山海图', '海外图'], ['五山', '海外四方'], ['大穰已过', '甘露已尽'], ['当康', '凤皇卵']];
 const HW_WORDS_EN = [[/Xingtian/g, 'Xiangliu'], [/XINGTIAN/g, 'XIANGLIU'], [/Qique/g, 'Biyi birds'], [/Shangao/g, 'Bingfeng'], [/Mingshe/g, 'Huantou folk'], [/Bifang/g, 'Yanhuo folk'], [/Qiongqi/g, 'Bo'], [/NINE-TAILED FOX/g, 'WUXIAN'], [/PAOXIAO/g, 'KUAFU'], [/\bFEI\b/g, 'TIANWU'], [/DIJIANG/g, 'ZAOCHI'], [/cinnabar grains?/g, 'pearls'], [/langgan jade/g, 'lost jade'], [/Zhulong/g, 'Zhuyin'], [/ZHULONG/g, 'ZHUYIN'], [/Tiangou: Ward Off Evil/g, 'Xuanyuan: None Dare Shoot West'], [/Boyi: Fear Nothing/g, 'Gonggong: None Dare Shoot North'], [/Lei Bird: Ward Off Fire/g, 'Fusang: Bathed by the Suns'], [/Migu: Never Lost/g, 'Yumin: Feathered']];
 function mapWords(s) { if (!HW || typeof s !== 'string') return s; if (SET.lang === 'zh') { for (const [a, b] of HW_WORDS_ZH) if (s.includes(a)) s = s.split(a).join(b); if (s.includes('蜚')) s = s.split('蜚').join('天吴'); } else for (const [a, b] of HW_WORDS_EN) s = s.replace(a, b); return s; }
 const tr = (t) => mapWords((HW && (SET.lang === 'zh' ? ZH_HW[t] : EN_HW[t])) || (SET.lang === 'zh' ? ZH[t] : EN[t]) || t);
@@ -621,7 +621,7 @@ function loadMeta() {
     out.byDiff = {}; if (m.byDiff && typeof m.byDiff === 'object') for (const k of ['calm', 'standard', 'ash', 'changyang']) if (m.byDiff[k]) out.byDiff[k] = { best: m.byDiff[k].best | 0, wins: m.byDiff[k].wins | 0, runs: m.byDiff[k].runs | 0 };
     out.guided = !!m.guided;
     out.hw = { places: {}, omens: {}, seen: {}, bestiary: {}, lit: {}, bossKills: 0 };
-    if (m.hw && typeof m.hw === 'object') { for (const f of ['places', 'omens', 'seen', 'bestiary', 'lit']) if (m.hw[f] && typeof m.hw[f] === 'object') for (const k in m.hw[f]) if (/^[a-z]{1,16}$/.test(k) && m.hw[f][k]) out.hw[f][k] = f === 'bestiary' ? String(m.hw[f][k]) : 1; out.hw.bossKills = Number.isFinite(m.hw.bossKills) ? Math.max(0, Math.floor(m.hw.bossKills)) : 0; }
+    if (m.hw && typeof m.hw === 'object') { for (const f of ['places', 'omens', 'seen', 'bestiary', 'lit']) if (m.hw[f] && typeof m.hw[f] === 'object') for (const k in m.hw[f]) if (/^[a-z]{1,16}$/.test(k) && m.hw[f][k]) out.hw[f][k] = f === 'bestiary' ? String(m.hw[f][k]) : 1; out.hw.bossKills = Number.isFinite(m.hw.bossKills) ? Math.max(0, Math.floor(m.hw.bossKills)) : 0; for (const k of ['eggs', 'zhuri']) out.hw[k] = Number.isFinite(m.hw[k]) ? Math.max(0, Math.floor(m.hw[k])) : 0; }
     out.lit = {}; if (m.lit && typeof m.lit === 'object') for (const k of ['wildwood', 'mossfall', 'cinder', 'silvermere']) if (m.lit[k]) out.lit[k] = 1;
     for (const k of ['dangkangCaught', 'jingweiStones']) out[k] = Number.isFinite(m[k]) ? Math.max(0, Math.floor(m[k])) : 0;
     out.omens = {}; if (m.omens && typeof m.omens === 'object') for (const k in OMENS) if (m.omens[k]) out.omens[k] = 1;
@@ -652,7 +652,7 @@ function recordRun(won) {
 function renderArchive() {
   const box = $('#archiveBody'); if (!box) return;
   const stat = (v, l) => `<div class="stat"><b>${v}</b><span>${l}</span></div>`;
-  let h = `<div class="statrow">${stat(fmtTime(META.bestTime), tr('longest run'))}${stat(META.totalKills, tr('creatures defeated'))}${stat(META.bossKills, tr('wardens felled'))}${stat(META.runsPlayed, tr('runs'))}${stat(META.dangkangCaught || 0, tr('dangkang caught'))}${stat(META.jingweiStones || 0, tr('stones to the sea'))}</div>`;
+  let h = `<div class="statrow">${stat(fmtTime(META.bestTime), tr('longest run'))}${stat(META.totalKills, tr('creatures defeated'))}${stat(META.bossKills, tr('wardens felled'))}${stat(META.runsPlayed, tr('runs'))}${HW ? stat(MM().eggs || 0, SET.lang === 'zh' ? '凤皇卵' : 'phoenix eggs') + stat(MM().zhuri || 0, SET.lang === 'zh' ? '逐日入日' : 'suns chased') : stat(META.dangkangCaught || 0, tr('dangkang caught')) + stat(META.jingweiStones || 0, tr('stones to the sea'))}</div>`;
   h += '<div class="achgrid">' + UNLOCKS.map((u) => `<div class="ach ${unlocked(u.key) ? 'on' : ''}"><div class="t">${tr(u.name)}</div><div class="d">${tr(u.how)}</div><div class="g">${unlocked(u.key) ? tr(u.gives) : tr('Locked')}</div></div>`).join('') + '</div>';
   const best = MM().bestiary || {};
   const zhL = SET.lang === 'zh';
@@ -672,7 +672,7 @@ const wdmg = (w) => w.dmg * ((P.weaponRank[w.key] || 0) >= 5 ? 1.25 : 1);   // �
 const dmgMult = () => P.dmgTalent * (1 + 0.2 * P.forge.edge) * ((S.cursedT || 0) > 0 ? 0.9 : 1);   // 山膏善詈: cursed for a few breaths after it lands a hit
 const armour = () => Math.min(0.75, P.armourTalent + 0.08 * P.forge.mail);
 const pickupR = () => 3.2 * P.pickupMult * (1 + 0.25 * P.forge.charm);
-const moveSpeed = () => 7.2 * P.speedMult * (S.jwQuest ? 0.88 : 1) * (S.inMarsh ? 0.72 : 1);
+const moveSpeed = () => 7.2 * P.speedMult * (S.jwQuest && !S.jwQuest.sun ? 0.88 : 1) * (S.inMarsh ? 0.72 : 1);
 const minute = () => S.t / 60;
 const threat = () => Math.floor(minute()) + 1;
 
@@ -683,7 +683,7 @@ const kit = new Kit();
 let world, ground, playerRig, wardenRig, enemySets = {}, pickupSets = {}, boltSet, spitSet;
 let craneSet = null, jingweiSet = null, dangkangSet = null;
 const loadBar = $('#loadBar'), loadText = $('#loadText');
-kit.load(HW ? './assets/kit_haiwai.glb?v=1' : './assets/kit.glb?v=17', (e) => { if (e.total) loadBar.style.transform = `scaleX(${(e.loaded / e.total) * 0.6})`; }).then(() => {
+kit.load(HW ? './assets/kit_haiwai.glb?v=2' : './assets/kit.glb?v=17', (e) => { if (e.total) loadBar.style.transform = `scaleX(${(e.loaded / e.total) * 0.6})`; }).then(() => {
   loadText.textContent = 'Planting the wildwood…';
   setTimeout(() => { const t0 = performance.now(); buildWorld(); console.log('world built in', Math.round(performance.now() - t0), 'ms'); }, 30);
 }).catch((err) => { loadText.textContent = 'Failed to load kit: ' + err.message; console.error(err); });
@@ -711,7 +711,7 @@ function buildWorld() {
   pickupSets.heart = new DynSet(kit, 'Heart', 40, scene, { cast: false, glowKey: 'HeartGlow' });
   craneSet = new DynSet(kit, 'Crane', 8, scene, { cast: false, outline: 0 });
   jingweiSet = new DynSet(kit, 'Jingwei', 8, scene, { cast: false, outline: 0 });
-  dangkangSet = new DynSet(kit, 'Dangkang', 2, scene, { cast: true, outline: 0 });
+  dangkangSet = new DynSet(kit, HW ? 'PhoenixEgg' : 'Dangkang', 2, scene, { cast: true, outline: 0 });
   buildJingweiRoutes();
   FX.cranes = []; for (let i = 0; i < 6; i++) FX.cranes.push({ a: i / 6 * Math.PI * 2, r: 10 + (i % 3) * 4, h: 7 + (i % 2) * 1.5, spd: 0.12 + (i % 3) * 0.02, ph: i * 1.3 }); FX.craneC = { x: 0, z: 0 };
   boltSet = new DynSet(kit, 'Ember', 200, scene, { cast: false, glowKey: 'Bolt', glowMat: new THREE.MeshBasicMaterial({ color: 0xffb060, toneMapped: false }) });
@@ -1576,10 +1576,14 @@ function initShrines() {
   for (const D of DISTRICTS) if (D.key !== 'hearth') S.shrines[D.key] = { key: D.key, x: D.cx, z: D.cz, state: 'idle', t: 0, cd: 0 };
   S.shrineActive = null;
 }
-function nearJingweiPile() { if (!world.landmarks) return false; for (const l of world.landmarks) if (l.kind === 'jingwei' && Math.hypot(P.x - l.x, P.z - l.z) < 3.8) return true; return false; }
+function nearJingweiPile() { if (!world.landmarks) return false; const kind = HW ? 'denglin' : 'jingwei'; for (const l of world.landmarks) if (l.kind === kind && Math.hypot(P.x - l.x, P.z - l.z) < 3.8) return true; return false; }
 function startJingweiErrand() {
   // 常衔西山之木石,以堙于东海: pick up a stone at the pile, carry it to the shore before it slips
   // the pile sits on Mount Fajiu in the north-east; the Eastern Sea is due east, a real walk away
+  if (HW) {   // 夸父與日逐走,入日…棄其杖,化為鄧林: take up the staff in Denglin and chase the sun west; you run unhindered, but thirst gnaws at you
+    S.jwQuest = { t: 70, x: -(PLAY_R - 5), z: -2, ringT: 0, sun: true };
+    showBanner(SET.lang === 'zh' ? '拾起夸父之杖 · 与日逐走,七十息内西至日入处 · 渴' : "KUAFU'S STAFF  ·  race the sun west within seventy breaths  ·  thirst gnaws at you", 5); AUDIO.sfx('district'); return;
+  }
   S.jwQuest = { t: 60, x: PLAY_R - 5, z: 2, ringT: 0 };
   showBanner(SET.lang === 'zh' ? '衔起西山之石 · 六十息内投入东海' : 'A STONE FROM THE WESTERN HILLS  ·  cast it into the Eastern Sea within sixty breaths', 4.5); AUDIO.sfx('district');
 }
@@ -2091,7 +2095,7 @@ function triggerOmen(key) {
   S.omens[key] = (o.dur || 1e9) * (key === 'fire' && P.wards && P.wards.ashwalker ? 0.5 : 1);
   S.stats.omens = (S.stats.omens || 0) + 1;   // 鸓鸟御火: strange fire burns out in half the time
   S.omenCd[key] = o.cd * (ill && P.wards && P.wards.wolfsbane ? 1.5 : 1) * (S.endless && ill ? 0.6 : 1);                          // 天狗御凶: ill omens return half as often
-  if (key === 'bounty' && !HW) { const a = Math.random() * 6.28; S.dangkang = { x: P.x + Math.cos(a) * 9, z: P.z + Math.sin(a) * 9, face: 0, spd: 0, wob: Math.random() * 6.28, callT: 1.5 }; const rr = Math.hypot(S.dangkang.x, S.dangkang.z); if (rr > PLAY_R - 4) { S.dangkang.x *= (PLAY_R - 4) / rr; S.dangkang.z *= (PLAY_R - 4) / rr; } }
+  if (key === 'bounty') { const a = Math.random() * 6.28, d0 = HW ? 16 : 9; S.dangkang = { x: P.x + Math.cos(a) * d0, z: P.z + Math.sin(a) * d0, face: 0, spd: 0, wob: Math.random() * 6.28, callT: 1.5, egg: HW }; const rr = Math.hypot(S.dangkang.x, S.dangkang.z); if (rr > PLAY_R - 4) { S.dangkang.x *= (PLAY_R - 4) / rr; S.dangkang.z *= (PLAY_R - 4) / rr; } }
   { const ot = OM(key); showBanner(SET.lang === 'zh' ? ot.zh : ot.en, 4.5); } AUDIO.sfx(o.sfx || 'district');
   MM().omens = MM().omens || {}; if (!MM().omens[key]) { MM().omens[key] = 1; saveMeta(); }
   if (key === 'bounty') burstParticles(P.x, 1, P.z, 30, [1, 0.85, 0.4], 4, 0.4, 0.7, -2);
@@ -2122,13 +2126,14 @@ function updateOmens(dt) {
   }
   if (S.jwQuest) {
     const q = S.jwQuest; q.t -= dt; q.ringT -= dt;
-    if (q.ringT <= 0) { q.ringT = 1.2; spawnRing(q.x, q.z, 3.5, 0xdfe8f0, 1.1, 0.14); }
+    if (q.sun && P.hp > 12) { q.thirst = (q.thirst || 0) + dt * 1.5; if (q.thirst >= 1) { q.thirst -= 1; P.hp = Math.max(12, P.hp - 1); } }   /* 渴,欲得飲 */
+    if (q.ringT <= 0) { q.ringT = 1.2; spawnRing(q.x, q.z, 3.5, q.sun ? 0xffc060 : 0xdfe8f0, 1.1, 0.14); }
     if (Math.hypot(P.x - q.x, P.z - q.z) < 4.2) {
-      S.jwQuest = null; S.jwDone = (S.jwDone || 0) + 1; const reward = 8; P.shards += reward;
+      S.jwQuest = null; S.jwDone = (S.jwDone || 0) + 1; const reward = q.sun ? 10 : 8; P.shards += reward;
       for (let k = 0; k < 24; k++) spawnParticle(q.x + (Math.random() - 0.5) * 3, 0.3, q.z + (Math.random() - 0.5) * 3, (Math.random() - 0.5) * 2, 1.5 + Math.random() * 2, (Math.random() - 0.5) * 2, 0.9, 0.95, 1.0, 0.16, 1.0, -4);
-      showBanner(SET.lang === 'zh' ? `以堙于东海 · +${reward} 丹粟` : `CAST INTO THE EASTERN SEA  ·  +${reward} cinnabar grains`, 4); AUDIO.sfx('win');
-      META.jingweiStones = (META.jingweiStones || 0) + 1; saveMeta();
-    } else if (q.t <= 0) { S.jwQuest = null; showBanner(SET.lang === 'zh' ? '石落半途 · 精卫又衔起一块' : 'THE STONE SLIPPED  ·  Jingwei picks up another', 3.5); AUDIO.sfx('lose', 0.5); }
+      if (q.sun) { showBanner(SET.lang === 'zh' ? `入日 · 弃其杖,化为邓林 · +${reward} 明珠` : `INTO THE SUN  ·  the staff he dropped became the forest of Deng  ·  +${reward} pearls`, 4.5); AUDIO.sfx('win'); MM().zhuri = (MM().zhuri || 0) + 1; saveMeta(); }
+      else { showBanner(SET.lang === 'zh' ? `以堙于东海 · +${reward} 丹粟` : `CAST INTO THE EASTERN SEA  ·  +${reward} cinnabar grains`, 4); AUDIO.sfx('win'); META.jingweiStones = (META.jingweiStones || 0) + 1; saveMeta(); }
+    } else if (q.t <= 0) { S.jwQuest = null; showBanner(q.sun ? (SET.lang === 'zh' ? '未至,道渴 · 杖落半途' : 'NOT THERE YET, AND PARCHED  ·  the staff falls by the road') : SET.lang === 'zh' ? '石落半途 · 精卫又衔起一块' : 'THE STONE SLIPPED  ·  Jingwei picks up another', 3.5); AUDIO.sfx('lose', 0.5); }
   }
   { const dancing = S.minis.some((m) => m.key === 'maw' && !m.dead);   // 帝江是识歌舞: while it dances, everyone's hands quicken
     if (dancing !== S.danceOn) { S.danceOn = dancing; P.speedTalent *= dancing ? 1.1 : 1 / 1.1; if (dancing) showBanner(SET.lang === 'zh' ? '帝江歌舞 · 出手加快一成' : 'DIJIANG DANCES  ·  your hands quicken by a tenth', 3.5); } }
@@ -2144,17 +2149,18 @@ function updateOmens(dt) {
     const dk = S.dangkang; const dx = dk.x - P.x, dz = dk.z - P.z, d = Math.hypot(dx, dz) || 1;
     dk.wob += dt * 2.2;
     // 其鸣自叫: it keeps calling its own name; it runs when you come near, trots when you don't
-    const scared = d < 11; dk.spd = lerp(dk.spd, scared ? 6.4 : 1.6, 1 - Math.pow(0.001, dt / 0.6));
+    const scared = d < 11 && !dk.egg; dk.spd = dk.egg ? 0 : lerp(dk.spd, scared ? 6.4 : 1.6, 1 - Math.pow(0.001, dt / 0.6));
     const ax = (scared ? dx / d : Math.cos(dk.wob * 0.7)) + Math.cos(dk.wob * 1.9) * 0.45, az = (scared ? dz / d : Math.sin(dk.wob * 0.7)) + Math.sin(dk.wob * 1.9) * 0.45; const al = Math.hypot(ax, az) || 1;
     dk.x += ax / al * dk.spd * dt; dk.z += az / al * dk.spd * dt; dk.face = Math.atan2(ax, az);
     const rr = Math.hypot(dk.x, dk.z); if (rr > PLAY_R - 4) { dk.x *= (PLAY_R - 4) / rr; dk.z *= (PLAY_R - 4) / rr; }
     collideStatic(dk, world.obstacles, 0.7);
-    if (d > 34) { const a = Math.atan2(dx, dz); dk.x = P.x + Math.sin(a) * 14; dk.z = P.z + Math.cos(a) * 14; }   // never lose it entirely
-    dk.callT -= dt; if (dk.callT <= 0) { dk.callT = 2.5 + Math.random() * 2; if (d < 26) AUDIO.sfx('dangkang', 0.5); }
+    if (d > 34 && !dk.egg) { const a = Math.atan2(dx, dz); dk.x = P.x + Math.sin(a) * 14; dk.z = P.z + Math.cos(a) * 14; }   // never lose it entirely
+    if (dk.egg) { dk.ringT = (dk.ringT || 0) - dt; if (dk.ringT <= 0) { dk.ringT = 1.6; spawnRing(dk.x, dk.z, 2.2, 0xffd98a, 1.2, 0.18); } }
+    dk.callT -= dt; if (dk.callT <= 0) { dk.callT = 2.5 + Math.random() * 2; if (d < 26 && !dk.egg) AUDIO.sfx('dangkang', 0.5); }
     if (d < 1.4 + P.r) {
       S.dangkang = null; P.shards += 6; const heal = Math.round(P.maxHp * 0.25 * healMul()); P.hp = Math.min(P.maxHp, P.hp + heal); showNumber(P.x, 1.6, P.z, '+' + heal, 'heal');
-      showBanner(SET.lang === 'zh' ? '当康到手 · +6 丹粟,命火 +25%' : 'DANGKANG CAUGHT  ·  +6 cinnabar grains, +25% health', 3.5); AUDIO.sfx('win'); burstParticles(P.x, 1, P.z, 40, [1, 0.85, 0.45], 5, 0.4, 0.8, -2);
-      S.stats.dangkang = (S.stats.dangkang || 0) + 1; META.dangkangCaught = (META.dangkangCaught || 0) + 1; saveMeta();
+      showBanner(dk.egg ? (SET.lang === 'zh' ? '凤皇卵,民食之 · +6 明珠,命火 +25%' : "THE PHOENIX'S EGG  ·  +6 pearls, +25% health") : SET.lang === 'zh' ? '当康到手 · +6 丹粟,命火 +25%' : 'DANGKANG CAUGHT  ·  +6 cinnabar grains, +25% health', 3.5); AUDIO.sfx('win'); burstParticles(P.x, 1, P.z, 40, [1, 0.85, 0.45], 5, 0.4, 0.8, -2);
+      S.stats.dangkang = (S.stats.dangkang || 0) + 1; if (dk.egg) MM().eggs = (MM().eggs || 0) + 1; else META.dangkangCaught = (META.dangkangCaught || 0) + 1; saveMeta();
     }
   }
   for (const k in S.omens) {
@@ -2658,7 +2664,7 @@ function updatePlayer(dt) {
   FX.playerRing.material.opacity = 0.35 + 0.25 * Math.sin(S.wall * 4);
   { const tier = realmTier(); if (tier !== S.ringTier) { S.ringTier = tier; FX.playerRing.material.color.setHex(REALM_RING[tier]); } }
   // forge hint
-  { const jw = !nearForge() && !S.jwQuest && nearJingweiPile(); const di = !nearForge() && !jw && nearDitai(); const wu = !nearForge() && !jw && !di && nearWuluo(); $('#forgeHint').classList.toggle('show', nearForge() || jw || di || wu); if (wu) $('#forgeHint').innerHTML = `<b>F</b> ${HW ? (SET.lang === 'zh' ? '君子之让 · 8 明珠' : 'The gentlemen yield · 8 pearls') : SET.lang === 'zh' ? '武罗之祝 · 8 丹粟' : "Wuluo's blessing · 8 grains"}`; else if (jw) $('#forgeHint').innerHTML = `<b>F</b> ${SET.lang === 'zh' ? '衔石' : 'Take a stone'}`; else if (di) $('#forgeHint').innerHTML = `<b>F</b> ${SET.lang === 'zh' ? '帝台之棋 · 5 丹粟' : 'Cast the Ditai stones · 5 grains'}`; else if (nearForge()) $('#forgeHint').innerHTML = `<b>F</b> ${tr('Enter forge')}`; }
+  { const jw = !nearForge() && !S.jwQuest && nearJingweiPile(); const di = !nearForge() && !jw && nearDitai(); const wu = !nearForge() && !jw && !di && nearWuluo(); $('#forgeHint').classList.toggle('show', nearForge() || jw || di || wu); if (wu) $('#forgeHint').innerHTML = `<b>F</b> ${HW ? (SET.lang === 'zh' ? '君子之让 · 8 明珠' : 'The gentlemen yield · 8 pearls') : SET.lang === 'zh' ? '武罗之祝 · 8 丹粟' : "Wuluo's blessing · 8 grains"}`; else if (jw) $('#forgeHint').innerHTML = `<b>F</b> ${HW ? (SET.lang === 'zh' ? '逐日' : 'Chase the sun') : SET.lang === 'zh' ? '衔石' : 'Take a stone'}`; else if (di) $('#forgeHint').innerHTML = `<b>F</b> ${SET.lang === 'zh' ? '帝台之棋 · 5 丹粟' : 'Cast the Ditai stones · 5 grains'}`; else if (nearForge()) $('#forgeHint').innerHTML = `<b>F</b> ${tr('Enter forge')}`; }
   FX.forgeRing.material.opacity = nearForge() ? 0.6 : 0.25;
 }
 
@@ -2790,7 +2796,7 @@ function updateHUD() {
   $('#xpText').textContent = `${Math.floor(P.xp)} / ${P.xpNext} ${tr('XP')}`;
   $('#shardText').textContent = mapWords(zh ? `${P.shards} 丹粟` : `${P.shards} cinnabar grain${P.shards === 1 ? '' : 's'}`);
   { const om = $('#omen'); const keys = S.omens ? Object.keys(S.omens).filter((k) => k !== 'dark') : [];
-    const parts = keys.map((k) => (zh ? OM(k).short : OM(k).shortEn) + ' ' + Math.ceil(S.omens[k])); if (S.jwQuest) parts.push((zh ? '衔石 ' : 'Stone ') + Math.ceil(S.jwQuest.t));
+    const parts = keys.map((k) => (zh ? OM(k).short : OM(k).shortEn) + ' ' + Math.ceil(S.omens[k])); if (S.jwQuest) parts.push((S.jwQuest.sun ? (zh ? '逐日 ' : 'Sun ') : zh ? '衔石 ' : 'Stone ') + Math.ceil(S.jwQuest.t));
     if (parts.length) { om.textContent = parts.join('  ·  '); om.className = 'show ' + (keys[0] || 'quest'); } else om.className = ''; }
   $('#forgeText').textContent = `${tr('Edge')} ${P.forge.edge} / 3 · ${tr('Mail')} ${P.forge.mail} / 3 · ${tr('Charm')} ${P.forge.charm} / 3`;
   $('#statText').textContent = `${tr('Damage')} ×${dmgMult().toFixed(2)} · ${tr('Armour')} ${Math.round(armour() * 100)}%${P.path ? ' · ' + tr({ sword: 'Sword Path', talisman: 'Talisman Path', body: 'Body Path', demon: 'Demon Path' }[P.path]) : ''}`;

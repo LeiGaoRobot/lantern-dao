@@ -155,3 +155,10 @@ for i in range(7):
     a = i / 7 * math.tau
     ball(f"FtFruit{i}", (math.cos(a) * 0.52, math.sin(a) * 0.52, 1.5 + (i % 3) * 0.18), 0.075, M["FruitGold"], P, sub=0)
 
+
+P = kit("PhoenixEgg")   # 諸夭之野: 鳳皇卵,民食之 — a phoenix egg in a nest of five-coloured feathers
+cyl("PeNest", (0, 0, 0.08), 0.5, 0.16, M["Twig"], P, verts=10, r2=0.4)
+ball("Lantern_PeEgg", (0, 0, 0.42), 0.3, M["Lantern"], P, scale=(0.8, 0.8, 1.1), sub=2)
+for i, col in enumerate(("Flag", "CassiaGold", "Jade", "CloakDark", "Blossom")):
+    a = i / 5 * math.tau
+    box(f"PeFeather{i}", (math.cos(a) * 0.5, math.sin(a) * 0.5, 0.2), (0.36, 0.08, 0.02), M[col], P, rot=(0, -0.5, a), bevel=0.0)

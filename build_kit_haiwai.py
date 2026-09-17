@@ -1196,6 +1196,13 @@ for i in range(7):
     ball(f"FtFruit{i}", (math.cos(a) * 0.52, math.sin(a) * 0.52, 1.5 + (i % 3) * 0.18), 0.075, M["FruitGold"], P, sub=0)
 
 
+P = kit("PhoenixEgg")   # 諸夭之野: 鳳皇卵,民食之 — a phoenix egg in a nest of five-coloured feathers
+cyl("PeNest", (0, 0, 0.08), 0.5, 0.16, M["Twig"], P, verts=10, r2=0.4)
+ball("Lantern_PeEgg", (0, 0, 0.42), 0.3, M["Lantern"], P, scale=(0.8, 0.8, 1.1), sub=2)
+for i, col in enumerate(("Flag", "CassiaGold", "Jade", "CloakDark", "Blossom")):
+    a = i / 5 * math.tau
+    box(f"PeFeather{i}", (math.cos(a) * 0.5, math.sin(a) * 0.5, 0.2), (0.36, 0.08, 0.02), M[col], P, rot=(0, -0.5, a), bevel=0.0)
+
 # ---------------------------------------------------------------- Player rig: robed cultivator with a spirit lamp and a flying sword
 P = kit("Player")
 body = empty("P_Body"); body.parent = P
@@ -1249,7 +1256,7 @@ P_RIG = (body, head, arm_l, arm_r)
 
 # ---------------------------------------------------------------- enemies (Z up; front = -Y) — Beyond the Seas (海外四經), same rig contract as the mountain kit
 M["BirdBlue"] = mat("BirdBlue", "#3f7f8f"); M["BirdRed"] = mat("BirdRed", "#c8452e"); M["PigBlack"] = mat("PigBlack", "#26242a"); M["PigSnout"] = mat("PigSnout", "#4a4048")
-M["HorseWhite"] = mat("HorseWhite", "#ece8de"); M["HorseMane"] = mat("HorseMane", "#b9b2a4"); M["XlBody"] = mat("XlBody", "#3f8a7a"); M["XlBelly"] = mat("XlBelly", "#a9c9a8")
+M["HorseWhite"] = mat("HorseWhite", "#cfc9bb"); M["HorseMane"] = mat("HorseMane", "#8f897c"); M["XlBody"] = mat("XlBody", "#3f8a7a"); M["XlBelly"] = mat("XlBelly", "#a9c9a8")
 M["SnakeRed"] = mat("SnakeRed", "#c8402e"); M["WuRobe"] = mat("WuRobe", "#5a3f6a")
 M["TwBlue"] = mat("TwBlue", "#3f6f8a"); M["TwYellow"] = mat("TwYellow", "#d2b04a"); M["BlackBeast"] = mat("BlackBeast", "#1f1d22")
 
@@ -1364,13 +1371,13 @@ for i in range(5):
     a = i / 5 * math.tau
     box(f"EmberCore_WVein{i}", (math.cos(a) * 0.6, math.sin(a) * 0.6, 1.7 + (i % 2) * 0.5), (0.24, 0.05, 0.12), M["EmberCore"], wb, rot=(0, 0, a + 0.3), bevel=0.0)   # the reeking blood under the scales
 wh = empty("W_Head"); wh.parent = wb; wh.location = (0, 0, 2.9)
-for k, (dx, dz, lean) in enumerate(((0, 0.95, 0.0), (-0.5, 0.7, -0.35), (0.5, 0.7, 0.35))):     # three middle heads
+for k, (dx, dz, lean) in enumerate(((0, 1.35, 0.0), (-0.85, 0.85, -0.6), (0.85, 0.85, 0.6))):     # three middle heads
     cyl(f"XlNeckC{k}", (dx * 0.5, -0.15, dz * 0.5), 0.17, 1.0, M["XlBody"], wh, verts=7, rot=(0.25, lean, 0))
     face(f"WC{k}", wh, (dx, -0.35, dz + 0.1), r=0.27)
 wl = empty("W_ArmL"); wl.parent = wb; wl.location = (-0.75, 0, 2.6)
 wr = empty("W_ArmR"); wr.parent = wb; wr.location = (0.75, 0, 2.6)
 for emp, sx, tag in ((wl, -1, "L"), (wr, 1, "R")):                                               # three heads a side on long necks: they strike like arms
-    for k, (out, up, fwd) in enumerate(((0.75, 0.45, -0.3), (1.15, -0.1, -0.55), (0.55, -0.55, -0.75))):
+    for k, (out, up, fwd) in enumerate(((1.2, 0.75, -0.2), (1.75, 0.05, -0.75), (0.95, -0.55, -1.25))):
         cyl(f"XlNeck{tag}{k}", (sx * out * 0.5, fwd * 0.5, up * 0.5), 0.14, 1.0 + k * 0.1, M["XlBody"], emp, verts=6, rot=(-0.5 - k * 0.2, sx * (1.0 - k * 0.15), 0))
         face(f"W{tag}{k}", emp, (sx * out, fwd - 0.2, up), r=0.23)
 wbl = empty("W_Blade"); wbl.parent = wr; wbl.location = (0.55, -0.95, -0.55)
