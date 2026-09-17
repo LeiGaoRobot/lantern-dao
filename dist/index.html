@@ -405,6 +405,8 @@
     <div class="desc">Walk the five mountains. Gather langgan jade.<br>Refine your artefacts. Face Xingtian.<br>Hold out ten minutes — then walk the endless Dao.</div>
     <div class="pickrow"><span class="plabel" id="diffLabel">Difficulty</span><div class="picks" id="diffPick"><button class="dp" data-d="calm"><span class="n">Serene</span></button><button class="dp on" data-d="standard"><span class="n">Cultivate</span></button><button class="dp" data-d="ash"><span class="n">Tribulation</span></button><button class="dp" data-d="changyang" hidden><span class="n">Changyang</span></button></div></div>
     <div class="pdesc" id="diffDesc"></div>
+    <div class="pickrow"><span class="plabel" id="islandLabel">Island</span><div class="picks" id="islandPick"><button class="dp on" data-i="fixed"><span class="n">Classic</span></button><button class="dp" data-i="new"><span class="n">New island</span></button><button class="dp" data-i="pin"><span class="n">By number</span></button><input id="seedPin" type="number" min="1" max="999999" value="7" hidden style="width:88px;margin-left:6px;padding:6px 8px;border-radius:6px;border:1px solid rgba(156,123,36,.5);background:transparent;color:inherit;font:inherit"></div></div>
+    <div class="pdesc" id="islandDesc"></div>
     <div class="pickrow" id="weaponRow"><span class="plabel" id="weaponLabel">Starting weapon</span><div class="picks" id="weaponPick" style="display:none"></div></div>
     <button class="btn" id="startBtn">Enter the valley &nbsp;→</button>
     <button class="btn ghost" id="resumeRunBtn" hidden style="margin-top:8px">Resume</button>
@@ -791,7 +793,7 @@ function sfxVolume(v) { if (sfxBus) sfxBus.gain.setTargetAtTime(v, ctx.currentTi
 return { audioEnabled, setEnabled, ensureAudio, resume, sfx, setDistrict, districtAmbience, setAmbience, setDance, layerState, setTension, musicVolume, sfxVolume };
 })();
 // ---------------- world.js ----------------
-const { ISLAND_R, PLAY_R, PLAZA_R, ROAD_W, mulberry32, vnoise, fbm, DISTRICTS, districtAt, ROADS, roadDist, Grid, Kit, MATS, treeUniforms, glowMat, setGlow, InstanceSet, DynSet, groundColor, buildGround, makeTransform, faceToward, generateMap, collideStatic } = (() => {
+const { ISLAND_R, PLAY_R, PLAZA_R, ROAD_W, mulberry32, vnoise, fbm, DISTRICTS, districtAt, ROADS, setRoadSeed, roadDist, Grid, Kit, MATS, treeUniforms, glowMat, setGlow, InstanceSet, DynSet, groundColor, repaintGround, buildGround, makeTransform, faceToward, generateMap, collideStatic } = (() => {
 // world.js — kit loading / baking, terrain, map generation, instancing, spatial grids.
 
 
@@ -847,8 +849,11 @@ function districtAt(x, z) {
 
 // ---------------------------------------------------------------- roads (polylines from plaza to each outer district)
 const ROADS = [];
-(function buildRoads() {
+function setRoadSeed(seed = 7) {
+  ROADS.length = 0;
+  const rr = mulberry32((seed * 2654435761) >>> 0);
   for (let d = 1; d < 5; d++) {
+    const ph = seed === 7 ? 0 : rr() * Math.PI * 2, amp = seed === 7 ? 4.5 : 3 + rr() * 3.5;
     const D = DISTRICTS[d];
     const ang = Math.atan2(D.cz, D.cx);
     const pts = [];
@@ -856,7 +861,7 @@ const ROADS = [];
     for (let i = 0; i <= n; i++) {
       const t = i / n;
       const r = PLAZA_R - 1 + t * (Math.hypot(D.cx, D.cz) - PLAZA_R - 6);
-      const wig = Math.sin(t * 5.3 + d) * 4.5 * Math.sin(t * Math.PI);
+      const wig = Math.sin(t * 5.3 + d + ph) * amp * Math.sin(t * Math.PI);
       const a = ang + wig / Math.max(r, 1);
       pts.push([Math.cos(a) * r, Math.sin(a) * r]);
     }
@@ -866,7 +871,8 @@ const ROADS = [];
   const ring = [];
   for (let i = 0; i <= 28; i++) { const a = i / 28 * Math.PI * 2; ring.push([Math.cos(a) * 9.4, Math.sin(a) * 9.4]); }
   ROADS.push(ring);
-})();
+}
+setRoadSeed(7);
 function segDist(px, pz, ax, az, bx, bz) {
   const dx = bx - ax, dz = bz - az;
   const l2 = dx * dx + dz * dz;
@@ -1167,6 +1173,11 @@ function groundColor(x, z, out) {
   return D.key;
 }
 
+function repaintGround(ground) {
+  const geo = ground.mesh.geometry, pos = geo.attributes.position, col = geo.attributes.color, sm = geo.attributes.snowMask, rm = geo.attributes.roadMask; const c = new THREE.Color();
+  for (let i = 0; i < pos.count; i++) { const kind = groundColor(pos.getX(i), pos.getZ(i), c); col.setXYZ(i, c.r, c.g, c.b); sm.setX(i, kind === 'water' ? 0 : (kind === 'road' ? 0.55 : 1)); rm.setX(i, kind === 'road' ? 1 : 0); }
+  col.needsUpdate = sm.needsUpdate = rm.needsUpdate = true;
+}
 function buildGround(scene) {
   const SIZE = 300, SEG = 200;
   const geo = new THREE.PlaneGeometry(SIZE, SIZE, SEG, SEG);
@@ -1328,32 +1339,52 @@ function generateMap(kit, scene, seed = 7) {
 
   // ---- district landmarks
   const shrine = (D) => { add('Shrine', D.cx, D.cz, 0, 1, { r: 1.2, mark: 'shrine' }); };
+  // every seed but 7 turns each mountain's landmark group about its shrine (the shrine, the quadrant and the vein stay put) and nudges each piece;
+  // the angle steps on by 15 degrees until no solid landmark sits on a road. Seed 7 is the original island, untouched.
+  const lrng = mulberry32((seed * 7919 + 13) >>> 0);
+  const spin = (D, x, z, th) => { const dx = x - D.cx, dz = z - D.cz, c = Math.cos(th), s = Math.sin(th); return { x: D.cx + dx * c - dz * s, z: D.cz + dx * s + dz * c }; };
+  const landmarkBlock = (D, fn) => {
+    shrine(D);
+    let theta = 0; const jit = seed === 7 ? 0 : 1.6;
+    if (seed !== 7) {
+      const t0 = lrng() * Math.PI * 2;
+      for (let k = 0; k < 24; k++) {
+        theta = t0 + k * Math.PI / 12; let ok = true;
+        fn(D, (name, x, z, rotY, scale = 1, opts = {}) => { if (!ok || opts.solid === false) return; const p = spin(D, x, z, theta); const rr0 = (opts.r != null ? opts.r : opts.rect ? Math.max(opts.rect.w, opts.rect.d) / 2 : 1) * scale; if (roadDist(p.x, p.z) < ROAD_W * 0.5 + rr0 + 0.6 + jit) ok = false; }, mulberry32(1));
+        if (ok) break;
+      }
+    }
+    const jr = mulberry32((seed * 31 + D.cx * 7 + D.cz + 1000) >>> 0);
+    fn(D, (name, x, z, rotY = 0, scale = 1, opts = {}) => { const p = spin(D, x, z, theta); const jx = jit ? (jr() - 0.5) * 2 * jit : 0, jz = jit ? (jr() - 0.5) * 2 * jit : 0; add(name, p.x + jx, p.z + jz, rotY - theta, scale, opts); }, rng);
+    return theta;
+  };
+  const twists = {};
   // West mountains (Kunlun / Huaijiang / Zhang'e): jade trees around the array, the nine-faced gate, the black Ruoshui pool, burning cliffs toward the edge
-  { const D = DISTRICTS[1]; shrine(D);
-    for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; add('LanggTree', D.cx + Math.cos(a) * 8, D.cz + Math.sin(a) * 8, rng() * 6, 1.2 + rng() * 0.3, { r: 0.6 }); }
-    add('KunlunGate', D.cx + 12, D.cz + 2, rad(-35), 1.1, { rect: { w: 4.4, d: 1.0 }, mark: 'kunlungate' });
-    add('Ruoshui', D.cx - 9, D.cz + 8, 0.2, 1, { r: 2.7, mark: 'ruoshui' });
-    add('YanhuoCliff', D.cx - 18, D.cz - 14, rad(40), 1.2, { rect: { w: 4.5, d: 1.4 }, mark: 'yanhuo' }); add('YanhuoCliff', D.cx - 24, D.cz - 6, rad(75), 1.0, { rect: { w: 4.5, d: 1.4 } });
-    add('Shatang', D.cx + 4, D.cz - 9, 0.7, 1.1, { r: 0.6 }); add('Shatang', D.cx - 5, D.cz - 6, 2.2, 1.0, { r: 0.6 }); }
+  twists[DISTRICTS[1].key] = landmarkBlock(DISTRICTS[1], (D, A, R) => {
+    for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; A('LanggTree', D.cx + Math.cos(a) * 8, D.cz + Math.sin(a) * 8, R() * 6, 1.2 + R() * 0.3, { r: 0.6 }); }
+    A('KunlunGate', D.cx + 12, D.cz + 2, rad(-35), 1.1, { rect: { w: 4.4, d: 1.0 }, mark: 'kunlungate' });
+    A('Ruoshui', D.cx - 9, D.cz + 8, 0.2, 1, { r: 2.7, mark: 'ruoshui' });
+    A('YanhuoCliff', D.cx - 18, D.cz - 14, rad(40), 1.2, { rect: { w: 4.5, d: 1.4 }, mark: 'yanhuo' }); A('YanhuoCliff', D.cx - 24, D.cz - 6, rad(75), 1.0, { rect: { w: 4.5, d: 1.4 } });
+    A('Shatang', D.cx + 4, D.cz - 9, 0.7, 1.1, { r: 0.6 }); A('Shatang', D.cx - 5, D.cz - 6, 2.2, 1.0, { r: 0.6 }); });
   // North mountains (Fajiu / Gouwu / Youdu): zhe woods, black foxes, Jingwei's heap of twigs at the eastern shore
-  { const D = DISTRICTS[2]; shrine(D);
-    for (let i = 0; i < 9; i++) { const a = i / 9 * Math.PI * 2; add('ZheTree', D.cx + Math.cos(a) * 8.5, D.cz + Math.sin(a) * 8.5, rng() * 6, 1.2 + rng() * 0.4, { r: 0.7 }); }
-    add('JingweiPile', D.cx + 18, D.cz - 18, 0.4, 1.4, { r: 2.0, mark: 'jingwei' }); add('JingweiPile', D.cx + 24, D.cz - 12, 1.9, 1.0, { r: 1.5 });
-    for (const [fx, fz] of [[-6, 4], [7, -5], [-3, -9]]) add('XuanFox', D.cx + fx, D.cz + fz, rng() * 6, 1, { r: 0.35 });
-    add('Boulder', D.cx - 11, D.cz + 7, 0.4, 1.0, { r: 1.7 }); }
+  twists[DISTRICTS[2].key] = landmarkBlock(DISTRICTS[2], (D, A, R) => {
+    for (let i = 0; i < 9; i++) { const a = i / 9 * Math.PI * 2; A('ZheTree', D.cx + Math.cos(a) * 8.5, D.cz + Math.sin(a) * 8.5, R() * 6, 1.2 + R() * 0.4, { r: 0.7 }); }
+    A('JingweiPile', D.cx + 18, D.cz - 18, 0.4, 1.4, { r: 2.0, mark: 'jingwei' }); A('JingweiPile', D.cx + 24, D.cz - 12, 1.9, 1.0, { r: 1.5 });
+    for (const [fx, fz] of [[-6, 4], [7, -5], [-3, -9]]) A('XuanFox', D.cx + fx, D.cz + fz, R() * 6, 1, { r: 0.35 });
+    A('Boulder', D.cx - 11, D.cz + 7, 0.4, 1.0, { r: 1.7 }); });
   // East mountains (Tai / Tanggu): the Fusang tree with its ten suns above the hot valley, privet woods
-  { const D = DISTRICTS[3]; shrine(D);
-    add('FusangTree', D.cx + 8, D.cz + 7, 0.3, 1.1, { r: 1.6, mark: 'fusang' });
-    add('Tanggu', D.cx + 3, D.cz + 12, 0.5, 1, { r: 2.3, mark: 'tanggu' });
-    for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2 + 0.4; add('ZhenTree', D.cx + Math.cos(a) * 9, D.cz + Math.sin(a) * 9, rng() * 6, 1.1 + rng() * 0.4, { r: 0.5 }); }
-    add('Boulder', D.cx - 12, D.cz + 6, 0.4, 1.1, { r: 1.9 }); add('Rock_L', D.cx + 11, D.cz - 8, 2.4, 1.2, { r: 1.2 }); }
+  twists[DISTRICTS[3].key] = landmarkBlock(DISTRICTS[3], (D, A, R) => {
+    A('FusangTree', D.cx + 8, D.cz + 7, 0.3, 1.1, { r: 1.6, mark: 'fusang' });
+    A('Tanggu', D.cx + 3, D.cz + 12, 0.5, 1, { r: 2.3, mark: 'tanggu' });
+    for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2 + 0.4; A('ZhenTree', D.cx + Math.cos(a) * 9, D.cz + Math.sin(a) * 9, R() * 6, 1.1 + R() * 0.4, { r: 0.5 }); }
+    A('Boulder', D.cx - 12, D.cz + 6, 0.4, 1.1, { r: 1.9 }); A('Rock_L', D.cx + 11, D.cz - 8, 2.4, 1.2, { r: 1.2 }); });
   // South mountains (Zhaoyao / Qingqiu / Danxue): cassia woods, the phoenix cliff, the fox mound
-  { const D = DISTRICTS[4]; shrine(D);
-    for (let i = 0; i < 9; i++) { const a = i / 9 * Math.PI * 2; add(i % 3 === 2 ? 'Migu' : 'Cassia', D.cx + Math.cos(a) * 8, D.cz + Math.sin(a) * 8, rng() * 6, 1.2 + rng() * 0.3, { r: 0.6 }); }
-    add('Danxue', D.cx + 10, D.cz - 6, rad(-20), 1.2, { r: 1.6, mark: 'danxue' });
-    add('QingqiuMound', D.cx - 9, D.cz + 6, 0.6, 1.1, { r: 1.8, mark: 'qingqiu' });
-    add('LotusPond', D.cx - 2, D.cz - 9, 0.3, 1, { r: 2.9 });
-    for (let i = 0; i < 10; i++) { const a = rng() * Math.PI * 2, r = 4 + rng() * 7; add('Zhuyu', D.cx + Math.cos(a) * r, D.cz + Math.sin(a) * r, rng() * 6, 1 + rng() * 0.3, { solid: false }); } }
+  twists[DISTRICTS[4].key] = landmarkBlock(DISTRICTS[4], (D, A, R) => {
+    for (let i = 0; i < 9; i++) { const a = i / 9 * Math.PI * 2; A(i % 3 === 2 ? 'Migu' : 'Cassia', D.cx + Math.cos(a) * 8, D.cz + Math.sin(a) * 8, R() * 6, 1.2 + R() * 0.3, { r: 0.6 }); }
+    A('Danxue', D.cx + 10, D.cz - 6, rad(-20), 1.2, { r: 1.6, mark: 'danxue' });
+    A('QingqiuMound', D.cx - 9, D.cz + 6, 0.6, 1.1, { r: 1.8, mark: 'qingqiu' });
+    A('LotusPond', D.cx - 2, D.cz - 9, 0.3, 1, { r: 2.9 });
+    for (let i = 0; i < 10; i++) { const a = R() * Math.PI * 2, r = 4 + R() * 7; A('Zhuyu', D.cx + Math.cos(a) * r, D.cz + Math.sin(a) * r, R() * 6, 1 + R() * 0.3, { solid: false }); } });
 
   // ---- scatter
   const tables = {
@@ -1395,7 +1426,7 @@ function generateMap(kit, scene, seed = 7) {
   const sets = {};
   const TREES = new Set(['Oak', 'Oak2', 'Pine', 'DeadTree', 'BambooGiant', 'LanggTree', 'Shatang', 'ZheTree', 'ZhenTree', 'Cassia', 'Migu', 'FusangTree']);
   for (const name of Object.keys(placements)) sets[name] = new InstanceSet(kit, name, placements[name], scene, { tint: true, cast: !['Tuft', 'Reed'].includes(name), material: TREES.has(name) ? MATS.tree : null });
-  return { placements, obstacles, landmarks, sets, forgePos, placedCount: placed };
+  return { placements, obstacles, landmarks, sets, forgePos, placedCount: placed, seed, twists };
 }
 
 // resolve a circle against static obstacles (in place)
@@ -1417,7 +1448,7 @@ function collideStatic(obj, obstacles, radius) {
   if (r > PLAY_R) { obj.x *= PLAY_R / r; obj.z *= PLAY_R / r; }
 }
 
-return { ISLAND_R, PLAY_R, PLAZA_R, ROAD_W, mulberry32, vnoise, fbm, DISTRICTS, districtAt, ROADS, roadDist, Grid, Kit, MATS, treeUniforms, glowMat, setGlow, InstanceSet, DynSet, groundColor, buildGround, makeTransform, faceToward, generateMap, collideStatic };
+return { ISLAND_R, PLAY_R, PLAZA_R, ROAD_W, mulberry32, vnoise, fbm, DISTRICTS, districtAt, ROADS, setRoadSeed, roadDist, Grid, Kit, MATS, treeUniforms, glowMat, setGlow, InstanceSet, DynSet, groundColor, repaintGround, buildGround, makeTransform, faceToward, generateMap, collideStatic };
 })();
 // ---------------- main.js ----------------
 // main.js — Emberlight: a survivors-like in a valley with its own weather.
@@ -1691,13 +1722,15 @@ let P = newPlayer();
 // settings (persisted) + translations
 // =====================================================================
 const SET_V = 1, META_V = 1;
-const SET = Object.assign({ v: SET_V, quality: 'high', shake: true, numbers: true, music: 0.28, sfx: 0.55, lang: 'zh', difficulty: 'standard', startWeapon: 0, cues: false }, (() => {
+const SET = Object.assign({ v: SET_V, quality: 'high', shake: true, numbers: true, music: 0.28, sfx: 0.55, lang: 'zh', difficulty: 'standard', startWeapon: 0, cues: false, island: 'fixed', seedPin: 7 }, (() => {
   try {
     const raw = JSON.parse(localStorage.getItem('emberlight.settings') || '{}');
     if (typeof raw !== 'object' || raw === null) return {};
     // migrations by version: v0 (no field) → v1: clamp volumes, drop unknown keys
     const out = {};
-    for (const k of ['quality', 'shake', 'numbers', 'music', 'sfx', 'lang', 'difficulty', 'startWeapon', 'cues']) if (k in raw) out[k] = raw[k];
+    for (const k of ['quality', 'shake', 'numbers', 'music', 'sfx', 'lang', 'difficulty', 'startWeapon', 'cues', 'island', 'seedPin']) if (k in raw) out[k] = raw[k];
+    if (!['fixed', 'new', 'pin'].includes(out.island)) delete out.island;
+    if (!Number.isInteger(out.seedPin) || out.seedPin < 1 || out.seedPin > 999999) delete out.seedPin;
     out.cues = !!out.cues;
     if (!['calm', 'standard', 'ash', 'changyang'].includes(out.difficulty)) delete out.difficulty;
     if (!Number.isInteger(out.startWeapon)) delete out.startWeapon;
@@ -1970,7 +2003,7 @@ const META = loadMeta();
 function saveMeta() { try { localStorage.setItem('emberlight.meta', JSON.stringify(META)); } catch (e) { window.__emberLog('save', 'meta write failed: ' + e.message); } }
 const unlocked = (k) => !!META.unlocks[k];
 function recordRun(won) {
-  const run = { time: Math.floor(S.t), kills: S.stats.kills, level: P.level, won, boss: !!S.bossKilled, date: new Date().toISOString().slice(0, 10), diff: SET.difficulty, shrines: S.shrines ? Object.values(S.shrines).filter((x) => x.state === 'done').length : 0 };
+  const run = { seed: S.seed, time: Math.floor(S.t), kills: S.stats.kills, level: P.level, won, boss: !!S.bossKilled, date: new Date().toISOString().slice(0, 10), diff: SET.difficulty, shrines: S.shrines ? Object.values(S.shrines).filter((x) => x.state === 'done').length : 0 };
   META.byDiff = META.byDiff || {}; const bd = META.byDiff[SET.difficulty] || (META.byDiff[SET.difficulty] = { best: 0, wins: 0, runs: 0 });
   bd.runs++; bd.best = Math.max(bd.best, run.time); if (won) bd.wins++;
   META.totalKills += S.stats.kills; META.runsPlayed++; if (S.bossKilled) META.bossKills++;
@@ -2021,6 +2054,7 @@ kit.load(KIT_URL, (e) => { if (e.total) loadBar.style.transform = `scaleX(${(e.l
 }).catch((err) => { loadText.textContent = 'Failed to load kit: ' + err.message; console.error(err); });
 
 function buildWorld() {
+  setRoadSeed(S.seed);
   ground = buildGround(scene);
   loadBar.style.transform = 'scaleX(0.75)';
   world = generateMap(kit, scene, S.seed);
@@ -2043,7 +2077,7 @@ function buildWorld() {
   craneSet = new DynSet(kit, 'Crane', 8, scene, { cast: false, outline: 0 });
   jingweiSet = new DynSet(kit, 'Jingwei', 8, scene, { cast: false, outline: 0 });
   dangkangSet = new DynSet(kit, 'Dangkang', 2, scene, { cast: true, outline: 0 });
-  FX.jingwei = []; { const jw = (world.landmarks || []).find((l) => l.kind === 'jingwei'); const D = DISTRICTS[2]; const from = jw ? { x: jw.x, z: jw.z } : { x: D.cx + 18, z: D.cz - 18 }; const fl = Math.hypot(from.x, from.z) || 1, to = { x: from.x / fl * (ISLAND_R + 9), z: from.z / fl * (ISLAND_R + 9) }; /* 常衔西山之木石,以堙于东海: out over the cloud sea and back */ const nj = 3 + Math.min(4, META.jingweiStones || 0); for (let i = 0; i < nj; i++) FX.jingwei.push({ from, to, t: i / nj, dir: 1, h: 6 + (i % 4) * 0.8, ph: i * 2.1 }); }
+  buildJingweiRoutes();
   FX.cranes = []; for (let i = 0; i < 6; i++) FX.cranes.push({ a: i / 6 * Math.PI * 2, r: 10 + (i % 3) * 4, h: 7 + (i % 2) * 1.5, spd: 0.12 + (i % 3) * 0.02, ph: i * 1.3 }); FX.craneC = { x: 0, z: 0 };
   boltSet = new DynSet(kit, 'Ember', 200, scene, { cast: false, glowKey: 'Bolt', glowMat: new THREE.MeshBasicMaterial({ color: 0xffb060, toneMapped: false }) });
   spitSet = new DynSet(kit, 'Ember', 120, scene, { cast: false, glowKey: 'Spit', glowMat: new THREE.MeshBasicMaterial({ color: 0xff5a2a, toneMapped: false }) });
@@ -2061,6 +2095,25 @@ function buildWorld() {
   setupTouch();
   applyWeatherInstant();
   requestAnimationFrame(loop);
+}
+// 岛势: tear the static world down and grow another island from a seed (rigs, dynamic sets, effects and the ground mesh are kept)
+function rebuildWorld(seed) {
+  seed = (seed | 0) || 7; if (world && world.seed === seed) return false;
+  if (world) for (const k in world.sets) for (const mesh of world.sets[k].meshes) { scene.remove(mesh); mesh.dispose(); }
+  S.seed = seed; setRoadSeed(seed); repaintGround(ground);
+  world = generateMap(kit, scene, seed);
+  buildAmbientSources(); buildJingweiRoutes(); buildMinimapBg();
+  forgeLight.position.set(world.forgePos.x, 1.4, world.forgePos.z);
+  S.cullX = null; S.snowVisible = null; S.fusangLm = null;
+  return true;
+}
+function pickSeed() { return SET.island === 'new' ? 1 + Math.floor(Math.random() * 999999) : SET.island === 'pin' ? (SET.seedPin | 0) || 7 : 7; }
+function renderIslandPick() {
+  const zh = SET.lang === 'zh';
+  for (const b of document.querySelectorAll('#islandPick .dp')) { b.classList.toggle('on', SET.island === b.dataset.i); b.querySelector('.n').textContent = ({ fixed: zh ? '定势' : 'Classic', new: zh ? '新岛' : 'New island', pin: zh ? '记岛' : 'By number' })[b.dataset.i]; }
+  const inp = $('#seedPin'); inp.hidden = SET.island !== 'pin'; if (document.activeElement !== inp) inp.value = SET.seedPin;
+  $('#islandLabel').textContent = zh ? '岛势' : 'Island';
+  $('#islandDesc').textContent = SET.island === 'fixed' ? (zh ? '原来的那座岛(岛势 #7)。' : 'The original island (#7).') : SET.island === 'new' ? (zh ? '每局换一座岛:四山的地标换了方位,山路换了弯。' : 'A different island every run: landmarks turn about their shrines, roads bend anew.') : (zh ? '输入岛势号,回到同一座岛。' : 'Type an island number to return to it.');
 }
 // Blender-authored clips: idle/walk are the base layer (weights cross-fade), the rest are additive one-shots
 const ANIM = {};
@@ -2229,6 +2282,12 @@ function buildEffects() {
     g.visible = false; scene.add(g);
     FX.orbs.push(g);
   }
+  buildAmbientSources();
+}
+function buildJingweiRoutes() {
+  FX.jingwei = []; { const jw = (world.landmarks || []).find((l) => l.kind === 'jingwei'); const D = DISTRICTS[2]; const from = jw ? { x: jw.x, z: jw.z } : { x: D.cx + 18, z: D.cz - 18 }; const fl = Math.hypot(from.x, from.z) || 1, to = { x: from.x / fl * (ISLAND_R + 9), z: from.z / fl * (ISLAND_R + 9) }; /* 常衔西山之木石,以堙于东海: out over the cloud sea and back */ const nj = 3 + Math.min(4, META.jingweiStones || 0); for (let i = 0; i < nj; i++) FX.jingwei.push({ from, to, t: i / nj, dir: 1, h: 6 + (i % 4) * 0.8, ph: i * 2.1 }); }
+}
+function buildAmbientSources() {
   // fire sparks at the forge & campfires are spawned from the particle system each frame
   FX.emberSources = [];
   for (const t of (world.placements.Campfire || [])) FX.emberSources.push({ x: t.x, z: t.z, y: 1.3, rate: 5, smoke: true });
@@ -2583,13 +2642,16 @@ function updateAim() {
 // =====================================================================
 // UI wiring
 // =====================================================================
-$('#startBtn').addEventListener('click', () => { AUDIO.ensureAudio(); AUDIO.resume(); startRun(); });
+$('#startBtn').addEventListener('click', () => { AUDIO.ensureAudio(); AUDIO.resume(); rebuildWorld(pickSeed()); startRun(); });
+for (const b of document.querySelectorAll('#islandPick .dp')) b.addEventListener('click', () => { SET.island = b.dataset.i; saveSettings(); renderIslandPick(); AUDIO.sfx('ui'); });
+$('#seedPin').addEventListener('input', (e) => { const v = parseInt(e.target.value, 10); if (Number.isInteger(v) && v >= 1 && v <= 999999) { SET.seedPin = v; saveSettings(); } });
+$('#seedPin').addEventListener('keydown', (e) => e.stopPropagation());
 for (const b of document.querySelectorAll('#diffPick .dp')) b.addEventListener('click', () => { SET.difficulty = b.dataset.d; saveSettings(); renderDiffPick(); AUDIO.sfx('ui'); });
 function renderDiffPick() {
   if (SET.difficulty === 'changyang' && !unlocked('demonpath')) SET.difficulty = 'standard';
   for (const b of document.querySelectorAll('#diffPick .dp')) { b.hidden = b.dataset.d === 'changyang' && !unlocked('demonpath'); const d = DIFFS[b.dataset.d]; b.classList.toggle('on', SET.difficulty === b.dataset.d); b.querySelector('.n').textContent = SET.lang === 'zh' ? d.zh : d.name; }
   const d = DIFF(); $('#diffDesc').textContent = SET.lang === 'zh' ? d.zhDesc : d.desc;
-  renderWeaponPick();
+  renderWeaponPick(); renderIslandPick();
 }
 function renderWeaponPick() {
   const box = $('#weaponPick'); if (!box) return;
@@ -2689,7 +2751,8 @@ function buildRows() {
   return `<div class="sub" style="margin:12px 0 4px">${zh ? '本局修行' : 'This run'}</div><div class="buildlist">${h}</div>`;
 }
 function statRows() {
-  return `<div>${tr('Time survived')} <b>${fmtTime(S.t)}</b></div><div>${tr('Level')} <b>${SET.lang === 'zh' ? realmName(P.level) : P.level}</b></div><div>${tr('Defeated')} <b>${S.stats.kills}</b></div><div>${tr('Elites')} <b>${S.stats.elites}</b></div><div>${tr('Damage dealt')} <b>${Math.round(S.stats.dmgDealt)}</b></div><div>${tr('Forge shards')} <b>${P.shards}</b></div><div>${tr('Shrines lit')} <b>${S.stats.shrines || 0} / 4</b></div><div>${tr('Elites felled')} <b>${S.stats.minis || 0}${S.endless ? '' : ' / 4'}</b></div><div>${tr('Omens')} <b>${S.stats.omens || 0}${S.stats.dangkang ? ' · ' + tr('Dangkang') + ' ' + S.stats.dangkang : ''}</b></div><div>${tr('Atlas')} <b>${S.stats.places || 0} / ${PLACES.length}</b></div>`;
+  const seedRow = `<div>${SET.lang === 'zh' ? '岛势' : 'Island'} <b>#${S.seed}</b></div>`;
+  return seedRow + `<div>${tr('Time survived')} <b>${fmtTime(S.t)}</b></div><div>${tr('Level')} <b>${SET.lang === 'zh' ? realmName(P.level) : P.level}</b></div><div>${tr('Defeated')} <b>${S.stats.kills}</b></div><div>${tr('Elites')} <b>${S.stats.elites}</b></div><div>${tr('Damage dealt')} <b>${Math.round(S.stats.dmgDealt)}</b></div><div>${tr('Forge shards')} <b>${P.shards}</b></div><div>${tr('Shrines lit')} <b>${S.stats.shrines || 0} / 4</b></div><div>${tr('Elites felled')} <b>${S.stats.minis || 0}${S.endless ? '' : ' / 4'}</b></div><div>${tr('Omens')} <b>${S.stats.omens || 0}${S.stats.dangkang ? ' · ' + tr('Dangkang') + ' ' + S.stats.dangkang : ''}</b></div><div>${tr('Atlas')} <b>${S.stats.places || 0} / ${PLACES.length}</b></div>`;
 }
 function showBanner(text, secs = 4) { const b = $('#banner'); b.textContent = tr(text); b.classList.add('show'); S.bannerT = secs; }
 
@@ -2733,7 +2796,7 @@ function saveRun() {
   if (S.phase !== 'run') return false;
   const P2 = {}; for (const k in P) { const v = P[k]; if (typeof v === 'function' || v instanceof WeakMap || v instanceof Map || v instanceof Set || (v && typeof v === 'object' && v.isObject3D)) continue; P2[k] = v; }
   const shr = {}; if (S.shrines) for (const k in S.shrines) shr[k] = { state: S.shrines[k].state === 'done' ? 'done' : 'idle', cd: 0 };
-  const snap = { v: 1, date: new Date().toISOString(), difficulty: SET.difficulty, t: S.t, endless: !!S.endless, P: P2, stats: S.stats, shrines: shr, miniDone: S.miniDone || {}, eliteWave: S.eliteWave || 0, bossKilled: !!S.bossKilled, bossSpawned: !!S.bossSpawned && !S.boss, tribWarned: !!S.tribWarned, placesSeen: S.placesSeen || {}, jwDone: S.jwDone || 0, discovered: [...(S.discovered || [])], wuluoCd: S.wuluoCd || 0, qiCd: S.qiCd || 0 };
+  const snap = { v: 1, date: new Date().toISOString(), seed: S.seed, difficulty: SET.difficulty, t: S.t, endless: !!S.endless, P: P2, stats: S.stats, shrines: shr, miniDone: S.miniDone || {}, eliteWave: S.eliteWave || 0, bossKilled: !!S.bossKilled, bossSpawned: !!S.bossSpawned && !S.boss, tribWarned: !!S.tribWarned, placesSeen: S.placesSeen || {}, jwDone: S.jwDone || 0, discovered: [...(S.discovered || [])], wuluoCd: S.wuluoCd || 0, qiCd: S.qiCd || 0 };
   try { localStorage.setItem(RUN_KEY, JSON.stringify(snap)); return true; } catch (e) { window.__emberLog('save', 'run save failed: ' + e.message); return false; }
 }
 function loadRunSnap() { try { const s = JSON.parse(localStorage.getItem(RUN_KEY) || 'null'); return s && s.v === 1 && s.P && Number.isFinite(s.t) ? s : null; } catch (e) { return null; } }
@@ -2741,6 +2804,7 @@ function clearRun() { try { localStorage.removeItem(RUN_KEY); } catch (e) { /* n
 function resumeRun() {
   const snap = loadRunSnap(); if (!snap) return false;
   if (['calm', 'standard', 'ash', 'changyang'].includes(snap.difficulty)) SET.difficulty = snap.difficulty;
+  rebuildWorld(Number.isInteger(snap.seed) ? snap.seed : 7);
   startRun();
   S.timers.length = 0;   /* no foundation-memory xp on top of a restored cultivator */
   for (const k in snap.P) if (!(P[k] instanceof WeakMap)) P[k] = snap.P[k];
@@ -4259,7 +4323,7 @@ function autopilot(dt) {
 // debug / capture hooks (used by the verification script)
 // =====================================================================
 window.__emberlight = {
-  S, P: () => P, W, world: () => world, startRun, endRun, spawnBoss, triggerOmen, omens: () => S.omens, playDitai, nearDitai, DITAI, prayWuluo, nearWuluo, WULUO, PLACES, visitPlace, hurtBig, realmTier, realmLamp, lampI: () => lampLight.intensity, WX_BIAS, wdmg, fireSecondary, saveRun, loadRunSnap, resumeRun, clearRun, ringColor: () => FX.playerRing.material.color.getHexString(), dangkang: () => S.dangkang, startJingweiErrand, jwQuest: () => S.jwQuest, spawnEnemy, spawnAround, setWeather: (tod, wx) => { W.tod = tod; W.wx = wx; W.auto = false; refreshWeatherButtons(); },
+  S, P: () => P, W, world: () => world, startRun, endRun, spawnBoss, triggerOmen, omens: () => S.omens, playDitai, nearDitai, DITAI, prayWuluo, nearWuluo, WULUO, PLACES, visitPlace, hurtBig, realmTier, realmLamp, lampI: () => lampLight.intensity, WX_BIAS, wdmg, rebuildWorld, pickSeed, renderer, fireSecondary, saveRun, loadRunSnap, resumeRun, clearRun, ringColor: () => FX.playerRing.material.color.getHexString(), dangkang: () => S.dangkang, startJingweiErrand, jwQuest: () => S.jwQuest, spawnEnemy, spawnAround, setWeather: (tod, wx) => { W.tod = tod; W.wx = wx; W.auto = false; refreshWeatherButtons(); },
   cheat: (o) => Object.assign(P, o), META, recordRun, SET, applyLang, applyQuality, applyCues, gainXp, AUDIO, camDist: (v) => { camDist = v; }, PAD, pollGamepad, lightShrine, nearShrine, shrines: () => S.shrines, DIFFS, rollTalents, TALENTS, WEAPONS, spawnMini, MINIS, minis: () => S.minis, hurtMini, killMini, GUIDE, ANIM, clips: () => kit.clips.map((c) => c.name + ':' + c.duration.toFixed(2)), post: () => ({ ao: gtaoPass && gtaoPass.enabled, bloom: bloomPass && bloomPass.enabled, passes: composer && composer.passes.length }),
   project: (x, y, z) => { const v = new THREE.Vector3(x, y, z).project(camera); return { sx: (v.x * 0.5 + 0.5) * window.innerWidth, sy: (-v.y * 0.5 + 0.5) * window.innerHeight }; },
   slashes: () => S.slashes.map((m) => ({ ry: m.rotation.y, arc: m.userData.arc })), giveShards: (n) => { P.shards += n; }, teleport: (x, z) => { P.x = x; P.z = z; }, cranes: () => craneSet ? { count: craneSet.count, body: !!craneSet.body, tris: craneSet.body ? craneSet.body.geometry.attributes.position.count / 3 : 0 } : null,
