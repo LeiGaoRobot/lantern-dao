@@ -121,6 +121,22 @@ autopilot(完美风筝的内置 AI)基线:v1.4 清修 通关 / 修行 通关(最
 | 筑基印记 | 单局达筑基 | 开局即练气三层,自带两门功法 |
 | 魔心 | 劫难档渡劫 | 筑基时多一条道途:魔修 |
 
+## 第二张图 · 海外(v5.0)
+
+`MAP_KEY`(启动时读设置,海外需 `META.bossKills > 0`)决定 Kit(`kit.glb` / `kit_haiwai.glb`)、`setMap()`(地面配色、坊市件、四域地标块、散布表)、`LORE` / `PLACES`、文字覆盖层(`ZH_HW` / `EN_HW` + `mapWords`)、`OMENS_HW` / `TIDE_QUOTE_HW` / `STARTS_HW`、`MM()`(分图记录 `META.hw`)。换图 = 写 `SET.map` 后整页重载。
+
+| 规则 | 数值 |
+|---|---|
+| 比翼鸟 | 每组 2 只;失偶者 `hasteT = 5`(移速 ×1.25)|
+| 厌火火弹 | 落点 60% 留敌对燃地 2.5 s |
+| 相柳毒沼 | 移动中每 0.7 s 一片,存 12 s,上限 40 片;半径约 1.6 丈内移速 ×0.72、每 0.6 s 4 伤(`S.marsh` / `S.inMarsh`)|
+| 相柳血地 | 伏诛 3.5 s 后 `S.blood = {r: 7}`,圈内 `dropPickup` 直接返回 |
+| 烛阴 | `S.t > 100` 且无劫主时每 95 s 交替:吹 = 雪 25 s + 妖邪移速 ×0.82(`S.blowT`);呼 = `triggerOmen('drought')` |
+| 不死民 | 南域法阵守满 `P.undying = 1`;命火归零时改为 1 并 2.5 s 无敌,一次 |
+| 维鸟·国亡 | 占大疫位;吉凶钟 75 s 一掷:40% 甘露(大穰)/ 30% 鸾鸟歌舞(安宁)/ 20% 维鸟(`S.t > 170`)|
+
+autopilot 基线(海外):修行 守满十分钟最低血 72;劫难 2:41 最低血 45。
+
 ## 起山(v4.2)
 
 `SET.startAt` ∈ hearth / wildwood / mossfall / cinder / silvermere,后四项需 `META.lit[key]`(守满该山法阵时写)。`startRun` 末尾:出生 `(D.cx + 2.4, D.cz + 2.0)`、1.5 s 无敌、`applyWard` 该山功法、`W.wx = STARTS[k].wx` 且 `wxTimer = 70`、`S.guide = null`、`S.startAt = k`。精英唤醒条件由 `S.t > 75` 且进山 8 s 改为:本山 `S.t > 45` 即现身。`resumeRun` 用 `S.resuming` 跳过起山逻辑,再从存档恢复 `S.startAt`。

@@ -46,6 +46,14 @@ export const DISTRICTS = [
   { key: 'silvermere', name: 'SILVERMERE SHORE', title: 'Silvermere Shore', cx: -50, cz: 50,
     intro: 'Reeds and mist. Crawlers move beneath the water.', ground: [0x5f9a5a, 0x7fb06a] },
 ];
+// 图: 'shanjing' (the five mountain classics) or 'haiwai' (beyond the seas). The quadrants and keys stay; colours, landmarks and scatter change.
+let MAP = 'shanjing';
+const GROUND = {
+  shanjing: DISTRICTS.map((d) => d.ground.slice()),
+  haiwai: [[0x9fb27a, 0xb7c08a], [0xa89a7a, 0xc2b592], [0x4a5a4a, 0x62705c], [0x8fb07a, 0xa9c48e], [0x7a9a4a, 0x9ab566]],
+};
+export function setMap(key) { MAP = key === 'haiwai' ? 'haiwai' : 'shanjing'; DISTRICTS.forEach((d, i) => { d.ground = GROUND[MAP][i].slice(); }); return MAP; }
+export function currentMap() { return MAP; }
 export function districtAt(x, z) {
   if (x * x + z * z < 24 * 24) return DISTRICTS[0];
   if (z < 0) return x < 0 ? DISTRICTS[1] : DISTRICTS[2];
@@ -528,8 +536,14 @@ export function generateMap(kit, scene, seed = 7) {
   add('Barrel', -10.8, -4.2, 0); add('Barrel', -11.4, -3.6, 0); add('Logpile', -6.2, -9.2, 0.3);
   add('Hay', 15.5, 8.5, 0.3, 1, { r: 0.6 }); add('Crate', -13.5, 14.5, 0.4); add('Barrel', -12.8, 15.1, 0);
   add('Signpost', 7.0, 7.0, rad(30), 1, { r: 0.2 }); add('Signpost', -7.0, -7.4, rad(-140), 1, { r: 0.2 });
-  add('WuluoStatue', -2.6, 2.4, faceToward(-2.6, 2.4, 0, 0), 1, { r: 0.7, mark: 'statue' });
-  add('DitaiStone', -5.6, -3.4, 0, 1, { r: 0.8, mark: 'ditai' });
+  if (MAP === 'haiwai') {
+    add('TigerStatue', -2.6, 2.4, faceToward(-2.6, 2.4, 0, 0), 1, { r: 0.8, mark: 'tiger' });     // 使二文虎在旁
+    add('TigerStatue', 2.8, 2.2, faceToward(2.8, 2.2, 0, 0), 1, { r: 0.8 });
+    for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2 + 0.2, r = 6.2 + (i % 3) * 0.9; add('Xunhua', Math.cos(a) * r, Math.sin(a) * r, a, 1 + (i % 2) * 0.2, { solid: false, mark: i === 0 ? 'xunhua' : undefined }); }
+  } else {
+    add('WuluoStatue', -2.6, 2.4, faceToward(-2.6, 2.4, 0, 0), 1, { r: 0.7, mark: 'statue' });
+    add('DitaiStone', -5.6, -3.4, 0, 1, { r: 0.8, mark: 'ditai' });
+  }
   // market stalls and banners around the plaza
   add('Stall', 6.2, -1.2, rad(25), 1, { rect: { w: 2.2, d: 1.3 } }); add('Stall', -4.8, 6.4, rad(-115), 1, { rect: { w: 2.2, d: 1.3 } }); add('Stall', 9.8, 2.8, rad(70), 1, { rect: { w: 2.2, d: 1.3 } });
   for (const [bx, bz] of [[7.6, -7.6], [-7.6, 7.6], [2.2, 9.6], [-2.4, -9.6]]) add('Banner', bx, bz, rad(-Math.atan2(bz, bx) * 180 / Math.PI), 1, { r: 0.2 });
@@ -565,6 +579,40 @@ export function generateMap(kit, scene, seed = 7) {
   };
   const twists = {};
   // West mountains (Kunlun / Huaijiang / Zhang'e): jade trees around the array, the nine-faced gate, the black Ruoshui pool, burning cliffs toward the edge
+  if (MAP === 'haiwai') {
+  // West beyond the seas: Mount Dengbao of the shamans, the corpse of Nvchou under ten suns, the square mound of Xuanyuan
+  twists[DISTRICTS[1].key] = landmarkBlock(DISTRICTS[1], (D, A, R) => {
+    for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; A(i % 2 ? 'DeadTree' : 'Oak', D.cx + Math.cos(a) * 8, D.cz + Math.sin(a) * 8, R() * 6, 1.1 + R() * 0.3, { r: 0.6 }); }
+    A('DengbaoPeak', D.cx + 12, D.cz + 3, 0.4, 1.1, { r: 2.0, mark: 'dengbao' });
+    A('NvchouCorpse', D.cx - 10, D.cz + 8, 0.2, 1, { r: 1.7, mark: 'nvchou' });
+    A('XuanyuanMound', D.cx - 16, D.cz - 12, rad(20), 1, { rect: { w: 3.4, d: 3.4 }, mark: 'xuanyuan' });
+    A('FruitTree', D.cx + 4, D.cz - 9, 0.7, 1.1, { r: 0.6 }); A('FruitTree', D.cx - 5, D.cz - 6, 2.2, 1.0, { r: 0.6 });
+  });
+  // North: the terrace of Gonggong, the marsh Xiangliu left, Denglin grown from Kuafu's staff, the Xun tree and the branchless mulberries
+  twists[DISTRICTS[2].key] = landmarkBlock(DISTRICTS[2], (D, A, R) => {
+    for (let i = 0; i < 9; i++) { const a = i / 9 * Math.PI * 2; A('DenglinTree', D.cx + Math.cos(a) * 8.5, D.cz + Math.sin(a) * 8.5, R() * 6, 1.1 + R() * 0.4, { r: 0.6, mark: i === 0 ? 'denglin' : undefined }); }
+    A('GonggongTerrace', D.cx + 13, D.cz - 5, 0, 1, { rect: { w: 3.8, d: 3.8 }, mark: 'gonggong' });
+    A('MarshPool', D.cx - 13, D.cz + 2, 0.3, 1, { solid: false, mark: 'marsh' }); A('MarshPool', D.cx - 21, D.cz - 6, 1.4, 0.8, { solid: false });
+    A('Xunmu', D.cx - 6, D.cz - 13, 0.5, 1, { r: 0.8, mark: 'xunmu' });
+    A('Sansang', D.cx + 17, D.cz + 12, 0.9, 1, { r: 1.0 });
+  });
+  // East: Tanggu and the Fusang tree, the valley of Chaoyang between two streams, the giant whittling his boat
+  twists[DISTRICTS[3].key] = landmarkBlock(DISTRICTS[3], (D, A, R) => {
+    A('FusangTree', D.cx + 8, D.cz + 7, 0.3, 1.1, { r: 1.6, mark: 'fusang' });
+    A('Tanggu', D.cx + 3, D.cz + 12, 0.5, 1, { r: 2.3, mark: 'tanggu' });
+    A('ChaoyangValley', D.cx - 12, D.cz + 6, 0.4, 1, { solid: false, mark: 'chaoyang' });
+    A('DarenBoat', D.cx + 14, D.cz - 10, rad(30), 1, { r: 2.2, mark: 'daren' });
+    for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2 + 0.4; A('FruitTree', D.cx + Math.cos(a) * 9, D.cz + Math.sin(a) * 9, R() * 6, 1.1 + R() * 0.4, { r: 0.5 }); }
+  });
+  // South: the three pearl trees above the Red Water, Mount Di where the emperors lie, the field of Shouhua where Yi shot Zaochi
+  twists[DISTRICTS[4].key] = landmarkBlock(DISTRICTS[4], (D, A, R) => {
+    for (let i = 0; i < 3; i++) { const a = i / 3 * Math.PI * 2 + 0.3; A('SanzhuTree', D.cx + 10 + Math.cos(a) * 2.2, D.cz - 6 + Math.sin(a) * 2.2, R() * 6, 1.2 + R() * 0.2, { r: 0.6, mark: i === 0 ? 'sanzhu' : undefined }); }
+    for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; A('Cassia', D.cx + Math.cos(a) * 8, D.cz + Math.sin(a) * 8, R() * 6, 1.2 + R() * 0.3, { r: 0.6 }); }
+    A('DishanMound', D.cx - 10, D.cz + 7, 0.6, 1, { r: 2.4, mark: 'dishan' });
+    A('ShouhuaField', D.cx - 2, D.cz - 11, 0.3, 1.2, { solid: false, mark: 'shouhua' });
+    A('LotusPond', D.cx + 2, D.cz + 12, 0.3, 1, { r: 2.9 });
+  });
+  } else {
   twists[DISTRICTS[1].key] = landmarkBlock(DISTRICTS[1], (D, A, R) => {
     for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; A('LanggTree', D.cx + Math.cos(a) * 8, D.cz + Math.sin(a) * 8, R() * 6, 1.2 + R() * 0.3, { r: 0.6 }); }
     A('KunlunGate', D.cx + 12, D.cz + 2, rad(-35), 1.1, { rect: { w: 4.4, d: 1.0 }, mark: 'kunlungate' });
@@ -591,8 +639,16 @@ export function generateMap(kit, scene, seed = 7) {
     A('LotusPond', D.cx - 2, D.cz - 9, 0.3, 1, { r: 2.9 });
     for (let i = 0; i < 10; i++) { const a = R() * Math.PI * 2, r = 4 + R() * 7; A('Zhuyu', D.cx + Math.cos(a) * r, D.cz + Math.sin(a) * r, R() * 6, 1 + R() * 0.3, { solid: false }); } });
 
+  }
+
   // ---- scatter
-  const tables = {
+  const tables = MAP === 'haiwai' ? {
+    hearth: [['Xunhua', 4], ['FruitTree', 2], ['Bush', 3], ['Tuft', 12], ['Rock_S', 2], ['Mushroom', 1]],
+    wildwood: [['Oak', 3], ['DeadTree', 4], ['FruitTree', 1], ['Rock_S', 6], ['Rock_L', 3], ['Boulder', 1], ['Tuft', 4], ['Bush', 2]],
+    mossfall: [['DenglinTree', 9], ['Sansang', 1], ['Reed', 3], ['Rock_S', 4], ['Rock_L', 2], ['Tuft', 4], ['Mushroom', 2]],
+    cinder: [['FruitTree', 7], ['ZhenTree', 3], ['Rock_S', 3], ['Rock_L', 1], ['Tuft', 6], ['Bush', 3]],
+    silvermere: [['Cassia', 6], ['SanzhuTree', 2], ['Bush', 4], ['Reed', 2], ['Rock_S', 2], ['Tuft', 6], ['Mushroom', 1]],
+  } : {
     hearth: [['Cassia', 3], ['Migu', 1], ['Zhuyu', 5], ['Bush', 3], ['Tuft', 12], ['Rock_S', 2], ['Mushroom', 1]],
     wildwood: [['LanggTree', 5], ['Shatang', 2], ['Rock_S', 7], ['Rock_L', 4], ['Boulder', 2], ['Tuft', 2], ['Mushroom', 1]],
     mossfall: [['ZheTree', 12], ['XuanFox', 1], ['Rock_S', 4], ['Rock_L', 2], ['Bush', 2], ['Tuft', 4], ['Mushroom', 2], ['Stump', 1]],
@@ -600,7 +656,7 @@ export function generateMap(kit, scene, seed = 7) {
     silvermere: [['Cassia', 9], ['Migu', 4], ['Zhuyu', 10], ['Bush', 3], ['Rock_S', 2], ['Tuft', 4], ['Mushroom', 1]],
   };
   const density = { hearth: 0.5, wildwood: 1.35, mossfall: 0.85, cinder: 0.95, silvermere: 0.95 };
-  const solidKinds = new Set(['Oak', 'Oak2', 'Pine', 'DeadTree', 'Rock_L', 'Boulder', 'Column', 'BrokenColumn', 'RuinWall', 'EmberRock', 'Stump', 'Rock_S', 'LanggTree', 'Shatang', 'ZheTree', 'ZhenTree', 'Cassia', 'Migu']);
+  const solidKinds = new Set(['Oak', 'Oak2', 'Pine', 'DeadTree', 'Rock_L', 'Boulder', 'Column', 'BrokenColumn', 'RuinWall', 'EmberRock', 'Stump', 'Rock_S', 'LanggTree', 'Shatang', 'ZheTree', 'ZhenTree', 'Cassia', 'Migu', 'FruitTree', 'DenglinTree', 'Sansang', 'SanzhuTree', 'Xunmu']);
   const tints = { wildwood: null, hearth: null, mossfall: new THREE.Color(0.85, 1.0, 0.9), cinder: new THREE.Color(0.75, 0.68, 0.7), silvermere: new THREE.Color(0.9, 1.0, 1.05) };
   const pick = (tab) => { let s = 0; for (const t of tab) s += t[1]; let r = rng() * s; for (const t of tab) { r -= t[1]; if (r <= 0) return t[0]; } return tab[0][0]; };
   const tmp = [];
@@ -629,9 +685,9 @@ export function generateMap(kit, scene, seed = 7) {
 
   // ---- upload instanced meshes
   const sets = {};
-  const TREES = new Set(['Oak', 'Oak2', 'Pine', 'DeadTree', 'BambooGiant', 'LanggTree', 'Shatang', 'ZheTree', 'ZhenTree', 'Cassia', 'Migu', 'FusangTree']);
+  const TREES = new Set(['Oak', 'Oak2', 'Pine', 'DeadTree', 'BambooGiant', 'LanggTree', 'Shatang', 'ZheTree', 'ZhenTree', 'Cassia', 'Migu', 'FusangTree', 'FruitTree', 'DenglinTree', 'Sansang', 'SanzhuTree', 'Xunmu']);
   for (const name of Object.keys(placements)) sets[name] = new InstanceSet(kit, name, placements[name], scene, { tint: true, cast: !['Tuft', 'Reed'].includes(name), material: TREES.has(name) ? MATS.tree : null });
-  return { placements, obstacles, landmarks, sets, forgePos, placedCount: placed, seed, twists };
+  return { placements, obstacles, landmarks, sets, forgePos, placedCount: placed, seed, twists, map: MAP };
 }
 
 // resolve a circle against static obstacles (in place)

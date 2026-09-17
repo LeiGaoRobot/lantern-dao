@@ -37,6 +37,7 @@ audio = read(os.path.join(SITE, 'audio.js'))
 main = read(os.path.join(SITE, 'main.js'))
 glb = open(os.path.join(SITE, 'assets', 'kit.glb'), 'rb').read()
 glb_uri = 'data:model/gltf-binary;base64,' + base64.b64encode(glb).decode('ascii')
+glb_hw_uri = 'data:model/gltf-binary;base64,' + base64.b64encode(open(os.path.join(SITE, 'assets', 'kit_haiwai.glb'), 'rb').read()).decode('ascii')
 
 def strip_imports(src):
     return re.sub(r"^import .*?;\s*$", '', src, flags=re.M)
@@ -68,12 +69,12 @@ def bundle(esm):
             lines.append(f"import {what} from 'three/addons/{path}';")
         if not any(p == 'loaders/GLTFLoader.js' for _, p in ADDON_IMPORTS): lines.append("import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';")
         if not any(p == 'utils/BufferGeometryUtils.js' for _, p in ADDON_IMPORTS): lines.append("import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';")
-    head = '\n'.join(lines) + f"\nconst KIT_URL = '{glb_uri}';\n"
+    head = '\n'.join(lines) + f"\nconst KIT_URL = '{glb_uri}';\nconst KIT_URL_HW = '{glb_hw_uri}';\n"
     audio_names = exported_names(audio)
     audio_iife = "// ---------------- audio.js ----------------\nconst AUDIO = (() => {\n" + re.sub(r"^export (?=(?:const|let|function|class) )", '', strip_imports(audio), flags=re.M) + \
                  "\nreturn { " + ', '.join(audio_names) + " };\n})();\n"
     world_iife = as_iife(world, 'world.js')
-    main_body = strip_imports(main).replace("'./assets/kit.glb?v=17'", 'KIT_URL')
+    main_body = strip_imports(main).replace("'./assets/kit.glb?v=17'", 'KIT_URL').replace("'./assets/kit_haiwai.glb?v=1'", 'KIT_URL_HW')
     return head + audio_iife + world_iife + "// ---------------- main.js ----------------\n" + main_body
 
 # ---- vendor three + addons so dist/index.html has no network dependency at all
